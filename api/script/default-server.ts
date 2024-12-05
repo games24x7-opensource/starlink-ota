@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as api from "./api";
+import { AwsStorage } from "./storage/aws-storage";
 import { AzureStorage } from "./storage/azure-storage";
 import { fileUploadMiddleware } from "./file-upload-manager";
 import { JsonStorage } from "./storage/json-storage";
@@ -43,20 +44,10 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
     .then(async () => {
       if (useJsonStorage) {
         storage = new JsonStorage();
-      } else if (!process.env.AZURE_KEYVAULT_ACCOUNT) {
-        storage = new AzureStorage();
-      } else {
-        isKeyVaultConfigured = true;
-
-        const credential = new DefaultAzureCredential();
-
-        const vaultName = process.env.AZURE_KEYVAULT_ACCOUNT;
-        const url = `https://${vaultName}.vault.azure.net`;
-
-        const keyvaultClient = new SecretClient(url, credential);
-        const secret = await keyvaultClient.getSecret(`storage-${process.env.AZURE_STORAGE_ACCOUNT}`);
-        storage = new AzureStorage(process.env.AZURE_STORAGE_ACCOUNT, secret);
+        return;
       }
+
+      storage = new AwsStorage();
     })
     .then(() => {
       const app = express();

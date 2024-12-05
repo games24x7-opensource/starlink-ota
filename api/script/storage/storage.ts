@@ -14,7 +14,11 @@ export enum ErrorCode {
   TooLarge = 3,
   Expired = 4,
   Invalid = 5,
-  Other = 99,
+  Unauthorized = 6,
+  ThrottlingError = 7,
+  ServiceError = 8,
+  ValidationError = 9,
+  Other = 99
 }
 
 // Human-readable strings
