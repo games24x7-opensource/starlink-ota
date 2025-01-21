@@ -432,7 +432,11 @@ function deserializeConnectionInfo(): ILoginConnectionInfo {
 }
 
 export function execute(command: cli.ICommand) {
-  connectionInfo = deserializeConnectionInfo();
+  // connectionInfo = deserializeConnectionInfo();
+
+  connectionInfo = {
+    accessKey: "test"
+  };
 
   return Q(<void>null).then(() => {
     switch (command.type) {
