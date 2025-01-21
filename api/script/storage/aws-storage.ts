@@ -788,9 +788,9 @@ export class AwsStorage implements storage.Storage {
         })
         .then((buffer: Buffer) => {
             const params = {
-                Bucket: AwsStorage.TABLE_NAME,
-                Key: blobId,
-                Body: buffer,
+              Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+              Key: `deployments/${blobId}`,
+              Body: Buffer.from(buffer),
                 ContentLength: streamLength,
                 ContentType: 'application/octet-stream'
             };
@@ -821,8 +821,8 @@ public getBlobUrl(blobId: string): q.Promise<string> {
       .then(() => {
           return q.Promise<string>((resolve, reject) => {
               const params = {
-                  Bucket: AwsStorage.TABLE_NAME,
-                  Key: blobId,
+                  Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+                  Key: `deployments/${blobId}`,
                   Expires: 3600 // URL expires in 1 hour
               };
 
@@ -855,8 +855,8 @@ public removeBlob(blobId: string): q.Promise<void> {
       .then(() => {
           return q.Promise<void>((resolve, reject) => {
               const params: S3.DeleteObjectRequest = {
-                  Bucket: AwsStorage.TABLE_NAME,
-                  Key: blobId
+                Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+                Key: `deployments/${blobId}`,
               };
 
               // First check if object exists
@@ -1240,7 +1240,7 @@ private getPackageHistoryFromBlob(blobId: string): q.Promise<storage.Package[]> 
   return q.Promise<storage.Package[]>((resolve, reject) => {
       const params: S3.GetObjectRequest = {
           Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-          Key: blobId
+          Key: `deployments/${blobId}`,
       };
 
       this._s3Client.getObject(params).promise()
@@ -1280,7 +1280,7 @@ private uploadToHistoryBlob(blobId: string, content: string): q.Promise<void> {
   return q.Promise<void>((resolve, reject) => {
       const params: S3.PutObjectRequest = {
           Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-          Key: blobId,
+          Key: `deployments/${blobId}`,
           Body: content,
           ContentType: 'application/json',
           ContentLength: Buffer.from(content).length
@@ -1305,7 +1305,7 @@ private deleteHistoryBlob(blobId: string): q.Promise<void> {
   return q.Promise<void>((resolve, reject) => {
       const params: S3.DeleteObjectRequest = {
           Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-          Key: blobId
+          Key: `deployments/${blobId}`,
       };
 
       // First check if object exists
