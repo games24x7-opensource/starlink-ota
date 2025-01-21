@@ -69,6 +69,22 @@ export function getManagementRouter(config: ManagementConfig): Router {
       .done();
   });
 
+  router.post("/account", (req: Request, res: Response, next: (err?: any) => void): any => {
+    const newUser: storageTypes.Account = {
+      createdTime: new Date().getTime(),
+      email: 'suraj.sharma@games24x7.com',
+      name: 'suraj.sharma',
+    };
+
+    storage
+      .addAccount(newUser)
+      .then((accountId: string) => {
+        res.send({ accountId: accountId });
+      })
+      .catch((error: error.CodePushError) => errorUtils.restErrorHandler(res, error, next))
+      .done();
+  });
+
   router.get("/accessKeys", (req: Request, res: Response, next: (err?: any) => void): any => {
     const accountId: string = req.user.id;
 

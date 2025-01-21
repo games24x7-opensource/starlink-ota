@@ -101,7 +101,7 @@ module Keys {
     // the email as-is (as a new account with a different casing would be rejected as a duplicate at creation time)
     return <Pointer>{
       partitionKeyPointer: "email" + DELIMITER + email.toLowerCase(),
-      rowKeyPointer: "",
+      rowKeyPointer: "EMAIL",
     };
   }
 
@@ -111,7 +111,7 @@ module Keys {
   }
 
   export function getShortcutDeploymentKeyRowKey(): string {
-    return "";
+    return "DeploymentKeyRowKey";
   }
 
   export function getShortcutAccessKeyPartitionKey(accessKeyName: string, hash: boolean = true): string {
@@ -250,7 +250,7 @@ export class AwsStorage implements storage.Storage {
 
   public addAccount(account: storage.Account): q.Promise<string> {
     account = storage.clone(account); // pass by value
-    account.id = shortid.generate();
+    account.id = 'g24x7' //shortid.generate();
 
     const hierarchicalAddress: Pointer = Keys.getAccountAddress(account.id);
     const emailShortcutAddress: Pointer = Keys.getEmailShortcutAddress(account.email);
@@ -1175,8 +1175,12 @@ public updateAccessKey(accountId: string, accessKey: storage.AccessKey): q.Promi
     const deferred = q.defer<void>();
 
     try {
-      const dynamoDBClient = new DynamoDB.DocumentClient();
-      const s3Client = new S3();
+      const awsConfig = {
+        region: process.env.AWS_REGION || 'ap-south-1'
+      };
+
+      const dynamoDBClient = new DynamoDB.DocumentClient(awsConfig);
+      const s3Client = new S3(awsConfig);
 
       this._dynamoDBClient = dynamoDBClient;
       this._s3Client = s3Client;
@@ -1576,77 +1580,121 @@ private removeAppPointer(accountId: string, appId: string): q.Promise<void> {
     return this.retrieveByKey(partitionKey, rowKey);
   }
 
+  /**
+   * Retrieves a collection of items based on hierarchical structure
+   * @param accountId - The account identifier
+   * @param appId - Optional application identifier
+   * @param deploymentId - Optional deployment identifier
+   * @returns Promise resolving to an array of enriched items
+   */
+  private async getCollectionByHierarchy(
+    accountId: string,
+    appId?: string,
+    deploymentId?: string
+  ): Promise<any[]> {
+    try {
+      // Prepare keys for querying
+      const searchKeyArgs = [true, ...Array.from(arguments), ""];
+      let partitionKey: string;
+      let rowKey: string;
+      let childrenSearchKey: string;
 
-  private getCollectionByHierarchy(accountId: string, appId?: string, deploymentId?: string): q.Promise<any[]> {
-    const deferred = q.defer<any[]>();
-    
-    let partitionKey: string;
-    let rowKey: string;
-    let childrenSearchKey: string;
-
-    // Construct search key for direct children
-    const searchKeyArgs: any[] = Array.prototype.slice.call(arguments);
-    searchKeyArgs.unshift(/*markLeaf=*/ true);
-    searchKeyArgs.push(/*leafId=*/ "");
-
-    if (appId) {
+      // Determine the keys based on whether appId is provided
+      if (appId) {
         searchKeyArgs.splice(1, 1); // remove accountId
         partitionKey = Keys.getAppPartitionKey(appId);
         rowKey = Keys.getHierarchicalAppRowKey(appId, deploymentId);
         childrenSearchKey = Keys.generateHierarchicalAppKey.apply(null, searchKeyArgs);
-    } else {
+      } else {
         partitionKey = Keys.getAccountPartitionKey(accountId);
         rowKey = Keys.getHierarchicalAccountRowKey(accountId);
         childrenSearchKey = Keys.generateHierarchicalAccountKey.apply(null, searchKeyArgs);
-    }
+      }
 
-    // DynamoDB query parameters
-    const params = {
+      // Query parameters for parent record
+      const parentParams: AWS.DynamoDB.DocumentClient.QueryInput = {
         TableName: AwsStorage.TABLE_NAME,
-        KeyConditionExpression: 'partitionKey = :pk AND rowKey BETWEEN :start AND :end',
+        KeyConditionExpression: "partitionKey = :pk AND rowKey = :rk",
         ExpressionAttributeValues: {
-            ':pk': partitionKey,
-            ':start': childrenSearchKey,
-            ':end': childrenSearchKey + '~'
+          ":pk": partitionKey,
+          ":rk": rowKey
         }
-    };
+      };
 
-    this._dynamoDBClient.query(params).promise()
-        .then(result => {
-            if (!result.Items || result.Items.length === 0) {
-                // Check if parent exists
-                return this._dynamoDBClient.get({
-                    TableName: AwsStorage.TABLE_NAME,
-                    Key: {
-                        partitionKey: partitionKey,
-                        rowKey: rowKey
-                    }
-                }).promise()
-                .then(parentResult => {
-                    if (!parentResult.Item) {
-                        throw new Error('Entity not found');
-                    }
-                    return []; // Parent exists but no children
-                });
-            }
-            return result.Items;
-        })
-        .then(items => {
-            const objects: any[] = [];
-            items.forEach(item => {
-                // Don't include the parent
-                if (item.rowKey !== rowKey) {
-                    objects.push(this.unwrap(item));
-                }
-            });
-            deferred.resolve(objects);
-        })
-        .catch(error => {
-            deferred.reject(error);
-        });
+      // Query parameters for children records
+      const childrenParams: AWS.DynamoDB.DocumentClient.QueryInput = {
+        TableName: AwsStorage.TABLE_NAME,
+        KeyConditionExpression: "partitionKey = :pk AND rowKey BETWEEN :start AND :end",
+        ExpressionAttributeValues: {
+          ":pk": partitionKey,
+          ":start": childrenSearchKey,
+          ":end": childrenSearchKey + "~"
+        }
+      };
 
-    return deferred.promise;
-}
+      console.log('childrenParams', childrenParams);
+
+      // Execute both queries concurrently
+      const [parentResult, childrenResult] = await Promise.all([
+        this._dynamoDBClient.query(parentParams).promise(),
+        this._dynamoDBClient.query(childrenParams).promise()
+      ]);
+
+      if (!parentResult.Items || parentResult.Items.length === 0) {
+        throw new Error('Entity not found');
+      }
+
+      // Process and enrich children items
+      const enrichedItems = await this.enrichChildrenItems(childrenResult.Items || []);
+
+      console.log('getCollectionByHierarchy final result', enrichedItems);
+      return enrichedItems;
+
+    } catch (error) {
+      console.error('Error in getCollectionByHierarchy:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Helper method to enrich children items with their pointer references
+   * @param items - Array of items to be enriched
+   * @returns Promise resolving to array of enriched items
+   */
+  private async enrichChildrenItems(
+    items: AWS.DynamoDB.DocumentClient.ItemList
+  ): Promise<any[]> {
+    const enrichmentPromises = items.map(async (item) => {
+      console.log('getCollectionByHierarchy Item childrenResult', item);
+
+      if (item.partitionKeyPointer && item.rowKeyPointer) {
+        const pointerParams: AWS.DynamoDB.DocumentClient.QueryInput = {
+          TableName: AwsStorage.TABLE_NAME,
+          KeyConditionExpression: "partitionKey = :pk AND rowKey = :rk",
+          ExpressionAttributeValues: {
+            ":pk": item.partitionKeyPointer,
+            ":rk": item.rowKeyPointer
+          }
+        };
+
+        const pointerResult = await this._dynamoDBClient.query(pointerParams).promise();
+
+        if (pointerResult.Items && pointerResult.Items.length > 0) {
+          // Remove pointer fields and merge with referenced item
+          const { partitionKeyPointer, rowKeyPointer, ...itemWithoutPointers } = item;
+          const enrichedItem = {
+            ...itemWithoutPointers,
+            ...pointerResult.Items[0]
+          };
+          return this.unwrap(enrichedItem);
+        }
+      }
+
+      return this.unwrap(item);
+    });
+
+    return Promise.all(enrichmentPromises);
+  }
 
 private cleanUpByAppHierarchy(appId: string, deploymentId?: string): q.Promise<void> {
   const deferred = q.defer<void>();

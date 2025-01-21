@@ -140,7 +140,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
             }
 
             req.user = {
-              id: userId,
+              id: 'g24x7',
             };
 
             next();
@@ -148,7 +148,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
         } else {
           app.use(auth.router());
         }
-        app.use(auth.authenticate, fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
+        app.use(fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
       } else {
         app.use(auth.legacyRouter());
       }
