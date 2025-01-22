@@ -252,7 +252,7 @@ export class AwsStorage implements storage.Storage {
 
   public addAccount(account: storage.Account): q.Promise<string> {
     account = storage.clone(account); // pass by value
-    account.id = 'g24x7' //shortid.generate();
+    account.id = "g24x7"; //shortid.generate();
 
     const hierarchicalAddress: Pointer = Keys.getAccountAddress(account.id);
     const emailShortcutAddress: Pointer = Keys.getEmailShortcutAddress(account.email);
@@ -787,31 +787,17 @@ export class AwsStorage implements storage.Storage {
 
   public addBlob(blobId: string, stream: stream.Readable, streamLength: number): q.Promise<string> {
     return this._setupPromise
-<<<<<<< Updated upstream
-        .then(() => {
-            return utils.streamToBuffer(stream);
-        })
-        .then((buffer: Buffer) => {
-            const params = {
-              Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-              Key: `deployments/${blobId}`,
-              Body: Buffer.from(buffer),
-                ContentLength: streamLength,
-                ContentType: 'application/octet-stream'
-            };
-=======
       .then(() => {
         return utils.streamToBuffer(stream);
       })
       .then((buffer: Buffer) => {
         const params = {
-          Bucket: AwsStorage.TABLE_NAME,
-          Key: blobId,
-          Body: buffer,
+          Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+          Key: `deployments/${blobId}`,
+          Body: Buffer.from(buffer),
           ContentLength: streamLength,
           ContentType: "application/octet-stream",
         };
->>>>>>> Stashed changes
 
         return q.Promise<void>((resolve, reject) => {
           this._s3Client
@@ -828,37 +814,28 @@ export class AwsStorage implements storage.Storage {
         });
       })
       .then(() => {
-<<<<<<< Updated upstream
-          return q.Promise<string>((resolve, reject) => {
-              const params = {
-                  Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-                  Key: `deployments/${blobId}`,
-                  Expires: 3600 // URL expires in 1 hour
-              };
+        return q.Promise<string>((resolve, reject) => {
+          const params = {
+            Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+            Key: `deployments/${blobId}`,
+            Expires: 3600, // URL expires in 1 hour
+          };
 
-              this._s3Client.getSignedUrlPromise('getObject', params)
-                  .then((url: string) => {
-                      if (!url) {
-                          reject(storage.storageError(
-                              storage.ErrorCode.NotFound,
-                              'Failed to generate signed URL'
-                          ));
-                      }
-                      resolve(url);
-                  })
-                  .catch(error => {
-                      if (error.code === 'NoSuchKey') {
-                          reject(storage.storageError(
-                              storage.ErrorCode.NotFound,
-                              `Blob ${blobId} not found`
-                          ));
-                      }
-                      reject(error);
-                  });
-          });
-=======
-        return blobId;
->>>>>>> Stashed changes
+          this._s3Client
+            .getSignedUrlPromise("getObject", params)
+            .then((url: string) => {
+              if (!url) {
+                reject(storage.storageError(storage.ErrorCode.NotFound, "Failed to generate signed URL"));
+              }
+              resolve(url);
+            })
+            .catch((error) => {
+              if (error.code === "NoSuchKey") {
+                reject(storage.storageError(storage.ErrorCode.NotFound, `Blob ${blobId} not found`));
+              }
+              reject(error);
+            });
+        });
       })
       .catch(AwsStorage.awsErrorHandler);
   }
@@ -866,24 +843,15 @@ export class AwsStorage implements storage.Storage {
   public getBlobUrl(blobId: string): q.Promise<string> {
     return this._setupPromise
       .then(() => {
-<<<<<<< Updated upstream
-          return q.Promise<void>((resolve, reject) => {
-              const params: S3.DeleteObjectRequest = {
-                Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-                Key: `deployments/${blobId}`,
-              };
-=======
-        return q.Promise<string>((resolve, reject) => {
-          const params = {
-            Bucket: AwsStorage.TABLE_NAME,
-            Key: blobId,
-            Expires: 3600, // URL expires in 1 hour
+        return q.Promise<void>((resolve, reject) => {
+          const params: S3.DeleteObjectRequest = {
+            Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+            Key: `deployments/${blobId}`,
           };
->>>>>>> Stashed changes
 
           this._s3Client
             .getSignedUrlPromise("getObject", params)
-            .then((url: string) => {
+            .then((url: any) => {
               if (!url) {
                 reject(storage.storageError(storage.ErrorCode.NotFound, "Failed to generate signed URL"));
               }
@@ -1239,24 +1207,12 @@ export class AwsStorage implements storage.Storage {
     const deferred = q.defer<void>();
 
     try {
-<<<<<<< Updated upstream
       const awsConfig = {
-        region: process.env.AWS_REGION || 'ap-south-1'
+        region: process.env.AWS_REGION || "ap-south-1",
       };
 
       const dynamoDBClient = new DynamoDB.DocumentClient(awsConfig);
       const s3Client = new S3(awsConfig);
-=======
-      const dynamoDBClient = new DynamoDB.DocumentClient({
-        endpoint: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000', // Use environment variable or default to LocalStack
-    });
-
-      // Configure S3 client to point to LocalStack using environment variables
-      const s3Client = new S3({
-        endpoint: process.env.S3_ENDPOINT || "http://localhost:4566", // Use environment variable or default to LocalStack
-        s3ForcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true", // Convert string to boolean
-      });
->>>>>>> Stashed changes
 
       this._dynamoDBClient = dynamoDBClient;
       this._s3Client = s3Client;
@@ -1269,16 +1225,11 @@ export class AwsStorage implements storage.Storage {
     return deferred.promise;
   }
 
-  private blobHealthCheck(bucket: string): q.Promise<void> {
+  private blobHealthCheck(blobId: string): q.Promise<void> {
     return q.Promise<void>((resolve, reject) => {
       const params: S3.GetObjectRequest = {
-<<<<<<< Updated upstream
-          Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-          Key: `deployments/${blobId}`,
-=======
-        Bucket: bucket,
-        Key: "health",
->>>>>>> Stashed changes
+        Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+        Key: `deployments/${blobId}`,
       };
 
       this._s3Client
@@ -1293,21 +1244,21 @@ export class AwsStorage implements storage.Storage {
           if (content !== "health") {
             throw storage.storageError(
               storage.ErrorCode.ConnectionFailed,
-              `The S3 service failed the health check for ${bucket}: invalid content`
+              `The S3 service failed the health check for ${blobId}: invalid content`
             );
           }
           resolve();
         })
         .catch((error) => {
           if (error.code === "NoSuchBucket") {
-            reject(storage.storageError(storage.ErrorCode.ConnectionFailed, `The S3 bucket ${bucket} does not exist`));
+            reject(storage.storageError(storage.ErrorCode.ConnectionFailed, `The S3 bucket ${blobId} does not exist`));
           } else if (error.code === "NoSuchKey") {
-            reject(storage.storageError(storage.ErrorCode.ConnectionFailed, `Health check object not found in bucket ${bucket}`));
+            reject(storage.storageError(storage.ErrorCode.ConnectionFailed, `Health check object not found in blobId ${blobId}`));
           } else {
             reject(
               storage.storageError(
                 storage.ErrorCode.ConnectionFailed,
-                `The S3 service failed the health check for ${bucket}: ${error.message}`
+                `The S3 service failed the health check for ${blobId}: ${error.message}`
               )
             );
           }
@@ -1319,7 +1270,7 @@ export class AwsStorage implements storage.Storage {
     return q.Promise<storage.Package[]>((resolve, reject) => {
       const params: S3.GetObjectRequest = {
         Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-        Key: blobId,
+        Key: `deployments/${blobId}`,
       };
 
       this._s3Client
@@ -1351,19 +1302,11 @@ export class AwsStorage implements storage.Storage {
   private uploadToHistoryBlob(blobId: string, content: string): q.Promise<void> {
     return q.Promise<void>((resolve, reject) => {
       const params: S3.PutObjectRequest = {
-<<<<<<< Updated upstream
-          Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-          Key: `deployments/${blobId}`,
-          Body: content,
-          ContentType: 'application/json',
-          ContentLength: Buffer.from(content).length
-=======
         Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-        Key: blobId,
+        Key: `deployments/${blobId}`,
         Body: content,
         ContentType: "application/json",
         ContentLength: Buffer.from(content).length,
->>>>>>> Stashed changes
       };
 
       this._s3Client
@@ -1385,13 +1328,8 @@ export class AwsStorage implements storage.Storage {
   private deleteHistoryBlob(blobId: string): q.Promise<void> {
     return q.Promise<void>((resolve, reject) => {
       const params: S3.DeleteObjectRequest = {
-<<<<<<< Updated upstream
-          Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-          Key: `deployments/${blobId}`,
-=======
         Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-        Key: blobId,
->>>>>>> Stashed changes
+        Key: `deployments/${blobId}`,
       };
 
       // First check if object exists
@@ -1675,7 +1613,6 @@ export class AwsStorage implements storage.Storage {
     return this.retrieveByKey(partitionKey, rowKey);
   }
 
-<<<<<<< Updated upstream
   /**
    * Retrieves a collection of items based on hierarchical structure
    * @param accountId - The account identifier
@@ -1683,11 +1620,7 @@ export class AwsStorage implements storage.Storage {
    * @param deploymentId - Optional deployment identifier
    * @returns Promise resolving to an array of enriched items
    */
-  private async getCollectionByHierarchy(
-    accountId: string,
-    appId?: string,
-    deploymentId?: string
-  ): Promise<any[]> {
+  private async getCollectionByHierarchy(accountId: string, appId?: string, deploymentId?: string): Promise<any[]> {
     try {
       // Prepare keys for querying
       const searchKeyArgs = [true, ...Array.from(arguments), ""];
@@ -1713,8 +1646,8 @@ export class AwsStorage implements storage.Storage {
         KeyConditionExpression: "partitionKey = :pk AND rowKey = :rk",
         ExpressionAttributeValues: {
           ":pk": partitionKey,
-          ":rk": rowKey
-        }
+          ":rk": rowKey,
+        },
       };
 
       // Query parameters for children records
@@ -1724,30 +1657,29 @@ export class AwsStorage implements storage.Storage {
         ExpressionAttributeValues: {
           ":pk": partitionKey,
           ":start": childrenSearchKey,
-          ":end": childrenSearchKey + "~"
-        }
+          ":end": childrenSearchKey + "~",
+        },
       };
 
-      console.log('childrenParams', childrenParams);
+      console.log("childrenParams", childrenParams);
 
       // Execute both queries concurrently
       const [parentResult, childrenResult] = await Promise.all([
         this._dynamoDBClient.query(parentParams).promise(),
-        this._dynamoDBClient.query(childrenParams).promise()
+        this._dynamoDBClient.query(childrenParams).promise(),
       ]);
 
       if (!parentResult.Items || parentResult.Items.length === 0) {
-        throw new Error('Entity not found');
+        throw new Error("Entity not found");
       }
 
       // Process and enrich children items
       const enrichedItems = await this.enrichChildrenItems(childrenResult.Items || []);
 
-      console.log('getCollectionByHierarchy final result', enrichedItems);
+      console.log("getCollectionByHierarchy final result", enrichedItems);
       return enrichedItems;
-
     } catch (error) {
-      console.error('Error in getCollectionByHierarchy:', error);
+      console.error("Error in getCollectionByHierarchy:", error);
       throw error;
     }
   }
@@ -1757,11 +1689,9 @@ export class AwsStorage implements storage.Storage {
    * @param items - Array of items to be enriched
    * @returns Promise resolving to array of enriched items
    */
-  private async enrichChildrenItems(
-    items: AWS.DynamoDB.DocumentClient.ItemList
-  ): Promise<any[]> {
+  private async enrichChildrenItems(items: AWS.DynamoDB.DocumentClient.ItemList): Promise<any[]> {
     const enrichmentPromises = items.map(async (item) => {
-      console.log('getCollectionByHierarchy Item childrenResult', item);
+      console.log("getCollectionByHierarchy Item childrenResult", item);
 
       if (item.partitionKeyPointer && item.rowKeyPointer) {
         const pointerParams: AWS.DynamoDB.DocumentClient.QueryInput = {
@@ -1769,8 +1699,8 @@ export class AwsStorage implements storage.Storage {
           KeyConditionExpression: "partitionKey = :pk AND rowKey = :rk",
           ExpressionAttributeValues: {
             ":pk": item.partitionKeyPointer,
-            ":rk": item.rowKeyPointer
-          }
+            ":rk": item.rowKeyPointer,
+          },
         };
 
         const pointerResult = await this._dynamoDBClient.query(pointerParams).promise();
@@ -1780,7 +1710,7 @@ export class AwsStorage implements storage.Storage {
           const { partitionKeyPointer, rowKeyPointer, ...itemWithoutPointers } = item;
           const enrichedItem = {
             ...itemWithoutPointers,
-            ...pointerResult.Items[0]
+            ...pointerResult.Items[0],
           };
           return this.unwrap(enrichedItem);
         }
@@ -1790,81 +1720,6 @@ export class AwsStorage implements storage.Storage {
     });
 
     return Promise.all(enrichmentPromises);
-=======
-  private getCollectionByHierarchy(accountId: string, appId?: string, deploymentId?: string): q.Promise<any[]> {
-    const deferred = q.defer<any[]>();
-
-    let partitionKey: string;
-    let rowKey: string;
-    let childrenSearchKey: string;
-
-    // Construct search key for direct children
-    const searchKeyArgs: any[] = Array.prototype.slice.call(arguments);
-    searchKeyArgs.unshift(/*markLeaf=*/ true);
-    searchKeyArgs.push(/*leafId=*/ "");
-
-    if (appId) {
-      searchKeyArgs.splice(1, 1); // remove accountId
-      partitionKey = Keys.getAppPartitionKey(appId);
-      rowKey = Keys.getHierarchicalAppRowKey(appId, deploymentId);
-      childrenSearchKey = Keys.generateHierarchicalAppKey.apply(null, searchKeyArgs);
-    } else {
-      partitionKey = Keys.getAccountPartitionKey(accountId);
-      rowKey = Keys.getHierarchicalAccountRowKey(accountId);
-      childrenSearchKey = Keys.generateHierarchicalAccountKey.apply(null, searchKeyArgs);
-    }
-
-    // DynamoDB query parameters
-    const params = {
-      TableName: AwsStorage.TABLE_NAME,
-      KeyConditionExpression: "partitionKey = :pk AND rowKey BETWEEN :start AND :end",
-      ExpressionAttributeValues: {
-        ":pk": partitionKey,
-        ":start": childrenSearchKey,
-        ":end": childrenSearchKey + "~",
-      },
-    };
-
-    this._dynamoDBClient
-      .query(params)
-      .promise()
-      .then((result) => {
-        if (!result.Items || result.Items.length === 0) {
-          // Check if parent exists
-          return this._dynamoDBClient
-            .get({
-              TableName: AwsStorage.TABLE_NAME,
-              Key: {
-                partitionKey: partitionKey,
-                rowKey: rowKey,
-              },
-            })
-            .promise()
-            .then((parentResult) => {
-              if (!parentResult.Item) {
-                throw new Error("Entity not found");
-              }
-              return []; // Parent exists but no children
-            });
-        }
-        return result.Items;
-      })
-      .then((items) => {
-        const objects: any[] = [];
-        items.forEach((item) => {
-          // Don't include the parent
-          if (item.rowKey !== rowKey) {
-            objects.push(this.unwrap(item));
-          }
-        });
-        deferred.resolve(objects);
-      })
-      .catch((error) => {
-        deferred.reject(error);
-      });
-
-    return deferred.promise;
->>>>>>> Stashed changes
   }
 
   private cleanUpByAppHierarchy(appId: string, deploymentId?: string): q.Promise<void> {
