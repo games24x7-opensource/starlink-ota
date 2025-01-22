@@ -9,7 +9,7 @@ import * as utils from "../utils/common";
 
 import { isPrototypePollutionKey } from "./storage";
 
-import {DynamoDB, S3} from 'aws-sdk';
+import { DynamoDB, S3 } from "aws-sdk";
 
 module Keys {
   // Can these symbols break us?
@@ -160,7 +160,6 @@ export class AwsStorage implements storage.Storage {
   private _dynamoDBClient: DynamoDB.DocumentClient;
   private _s3Client: S3;
 
-
   public constructor(accountName?: string, accountKey?: string) {
     shortid.characters("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-");
 
@@ -174,79 +173,82 @@ export class AwsStorage implements storage.Storage {
 
   public checkHealth(): q.Promise<void> {
     return q.Promise<void>((resolve, reject) => {
-        this._setupPromise
-            .then(() => {
-                // Check DynamoDB health
-                const tableCheck: q.Promise<void> = q.Promise<void>((tableResolve, tableReject) => {
-                    const params = {
-                        TableName: AwsStorage.TABLE_NAME,
-                        Key: {
-                            partitionKey: 'health',
-                            rowKey: 'health'
-                        }
-                    };
+      this._setupPromise
+        .then(() => {
+          // Check DynamoDB health
+          const tableCheck: q.Promise<void> = q.Promise<void>((tableResolve, tableReject) => {
+            const params = {
+              TableName: AwsStorage.TABLE_NAME,
+              Key: {
+                partitionKey: "health",
+                rowKey: "health",
+              },
+            };
 
-                    this._dynamoDBClient.get(params).promise()
-                        .then(result => {
-                            if (!result.Item || result.Item.health !== 'health') {
-                                tableReject(
-                                    storage.storageError(
-                                        storage.ErrorCode.ConnectionFailed,
-                                        'The DynamoDB service failed the health check'
-                                    )
-                                );
-                            } else {
-                                tableResolve();
-                            }
-                        })
-                        .catch(tableReject);
-                });
+            this._dynamoDBClient
+              .get(params)
+              .promise()
+              .then((result) => {
+                if (!result.Item || result.Item.health !== "health") {
+                  tableReject(
+                    storage.storageError(storage.ErrorCode.ConnectionFailed, "The DynamoDB service failed the health check")
+                  );
+                } else {
+                  tableResolve();
+                }
+              })
+              .catch(tableReject);
+          });
 
-                // Check S3 bucket health
-                const acquisitionBucketCheck: q.Promise<void> = q.Promise<void>((bucketResolve, bucketReject) => {
-                    const params = {
-                        Bucket: AwsStorage.TABLE_NAME,
-                        Key: 'health'
-                    };
+          // Check S3 bucket health
+          const acquisitionBucketCheck: q.Promise<void> = q.Promise<void>((bucketResolve, bucketReject) => {
+            const params = {
+              Bucket: AwsStorage.TABLE_NAME,
+              Key: "health",
+            };
 
-                    this._s3Client.headObject(params).promise()
-                        .then(() => bucketResolve())
-                        .catch(error => {
-                            bucketReject(
-                                storage.storageError(
-                                    storage.ErrorCode.ConnectionFailed,
-                                    `The S3 service failed the health check for ${AwsStorage.TABLE_NAME}: ${error.message}`
-                                )
-                            );
-                        });
-                });
+            this._s3Client
+              .headObject(params)
+              .promise()
+              .then(() => bucketResolve())
+              .catch((error) => {
+                bucketReject(
+                  storage.storageError(
+                    storage.ErrorCode.ConnectionFailed,
+                    `The S3 service failed the health check for ${AwsStorage.TABLE_NAME}: ${error.message}`
+                  )
+                );
+              });
+          });
 
-                const historyBucketCheck: q.Promise<void> = q.Promise<void>((bucketResolve, bucketReject) => {
-                    const params = {
-                        Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-                        Key: 'health'
-                    };
+          const historyBucketCheck: q.Promise<void> = q.Promise<void>((bucketResolve, bucketReject) => {
+            const params = {
+              Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+              Key: "health",
+            };
 
-                    this._s3Client.headObject(params).promise()
-                        .then(() => bucketResolve())
-                        .catch(error => {
-                            bucketReject(
-                                storage.storageError(
-                                    storage.ErrorCode.ConnectionFailed,
-                                    `The S3 service failed the health check for ${AwsStorage.HISTORY_BLOB_CONTAINER_NAME}: ${error.message}`
-                                )
-                            );
-                        });
-                });
+            this._s3Client
+              .headObject(params)
+              .promise()
+              .then(() => bucketResolve())
+              .catch((error) => {
+                bucketReject(
+                  storage.storageError(
+                    storage.ErrorCode.ConnectionFailed,
+                    `The S3 service failed the health check for ${AwsStorage.HISTORY_BLOB_CONTAINER_NAME}: ${error.message}`
+                  )
+                );
+              });
+          });
 
-                return q.all([tableCheck, acquisitionBucketCheck, historyBucketCheck]);
-            })
-            .then(() => {
-                resolve();
-            })
-            .catch(reject);
+          return q.all([tableCheck, acquisitionBucketCheck, historyBucketCheck]);
+        })
+        .then(() => {
+          resolve();
+        })
+        .catch(reject);
     });
-}
+  }
 
   public addAccount(account: storage.Account): q.Promise<string> {
     account = storage.clone(account); // pass by value
@@ -263,7 +265,7 @@ export class AwsStorage implements storage.Storage {
         const entity = this.wrap(account, emailShortcutAddress.partitionKeyPointer, emailShortcutAddress.rowKeyPointer);
         const params = {
           TableName: AwsStorage.TABLE_NAME,
-          Item: entity
+          Item: entity,
         };
         return this._dynamoDBClient.put(params).promise();
       })
@@ -271,7 +273,7 @@ export class AwsStorage implements storage.Storage {
         const entity = this.wrap(accountPointer, hierarchicalAddress.partitionKeyPointer, hierarchicalAddress.rowKeyPointer);
         const params = {
           TableName: AwsStorage.TABLE_NAME,
-          Item: entity
+          Item: entity,
         };
         return this._dynamoDBClient.put(params).promise();
       })
@@ -317,26 +319,24 @@ export class AwsStorage implements storage.Storage {
     if (!email) throw new Error("No account email");
     const address: Pointer = Keys.getEmailShortcutAddress(email);
 
-    const updateExpression = 'set azureAdId = :azureAdId, gitHubId = :gitHubId, microsoftId = :microsoftId';
+    const updateExpression = "set azureAdId = :azureAdId, gitHubId = :gitHubId, microsoftId = :microsoftId";
     const expressionValues = {
-      ':azureAdId': updateProperties.azureAdId,
-      ':gitHubId': updateProperties.gitHubId,
-      ':microsoftId': updateProperties.microsoftId
+      ":azureAdId": updateProperties.azureAdId,
+      ":gitHubId": updateProperties.gitHubId,
+      ":microsoftId": updateProperties.microsoftId,
     };
 
     const params = {
       TableName: AwsStorage.TABLE_NAME,
       Key: {
         partitionKey: address.partitionKeyPointer,
-        rowKey: address.rowKeyPointer
+        rowKey: address.rowKeyPointer,
       },
       UpdateExpression: updateExpression,
-      ExpressionAttributeValues: expressionValues
+      ExpressionAttributeValues: expressionValues,
     };
 
-    return this._setupPromise
-      .then(() => this._dynamoDBClient.update(params).promise())
-      .catch(AwsStorage.awsErrorHandler);
+    return this._setupPromise.then(() => this._dynamoDBClient.update(params).promise()).catch(AwsStorage.awsErrorHandler);
   }
 
   public getAccountIdFromAccessKey(accessKey: string): q.Promise<string> {
@@ -547,66 +547,70 @@ export class AwsStorage implements storage.Storage {
 
   public addDeployment(accountId: string, appId: string, deployment: storage.Deployment): q.Promise<string> {
     let deploymentId: string;
-    
+
     return this._setupPromise
-        .then(() => {
-            const flatDeployment: any = AwsStorage.flattenDeployment(deployment);
-            flatDeployment.id = shortid.generate();
+      .then(() => {
+        const flatDeployment: any = AwsStorage.flattenDeployment(deployment);
+        flatDeployment.id = shortid.generate();
 
-            return this.insertByAppHierarchy(flatDeployment, appId, flatDeployment.id);
-        })
-        .then((returnedId: string) => {
-            deploymentId = returnedId;
-            
-            // Upload empty history array to S3
-            const params = {
-                Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-                Key: `deployments/${deploymentId}`,
-                Body: JSON.stringify([]),
-                ContentType: 'application/json'
-            };
+        return this.insertByAppHierarchy(flatDeployment, appId, flatDeployment.id);
+      })
+      .then((returnedId: string) => {
+        deploymentId = returnedId;
 
-            return q.Promise<void>((resolve, reject) => {
-                this._s3Client.putObject(params).promise()
-                    .then(() => resolve())
-                    .catch(reject);
-            });
-        })
-        .then(() => {
-            const shortcutPartitionKey: string = Keys.getShortcutDeploymentKeyPartitionKey(deployment.key);
-            const shortcutRowKey: string = Keys.getShortcutDeploymentKeyRowKey();
-            
-            const pointer: DeploymentKeyPointer = {
-                appId: appId,
-                deploymentId: deploymentId,
-            };
+        // Upload empty history array to S3
+        const params = {
+          Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+          Key: `deployments/${deploymentId}`,
+          Body: JSON.stringify([]),
+          ContentType: "application/json",
+        };
 
-            const entity = this.wrap(pointer, shortcutPartitionKey, shortcutRowKey);
-            
-            // Store pointer in DynamoDB
-            const params = {
-                TableName: AwsStorage.TABLE_NAME,
-                Item: entity,
-                ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)'
-            };
-
-            return q.Promise<void>((resolve, reject) => {
-                this._dynamoDBClient.put(params).promise()
-                    .then(() => resolve())
-                    .catch(reject);
-            });
-        })
-        .then(() => {
-            return deploymentId;
-        })
-        .catch((error: any) => {
-            // Handle specific AWS errors
-            if (error.code === 'ConditionalCheckFailedException') {
-                throw storage.storageError(storage.ErrorCode.AlreadyExists, 'Deployment already exists');
-            }
-            return AwsStorage.awsErrorHandler(error);
+        return q.Promise<void>((resolve, reject) => {
+          this._s3Client
+            .putObject(params)
+            .promise()
+            .then(() => resolve())
+            .catch(reject);
         });
-}
+      })
+      .then(() => {
+        const shortcutPartitionKey: string = Keys.getShortcutDeploymentKeyPartitionKey(deployment.key);
+        const shortcutRowKey: string = Keys.getShortcutDeploymentKeyRowKey();
+
+        const pointer: DeploymentKeyPointer = {
+          appId: appId,
+          deploymentId: deploymentId,
+        };
+
+        const entity = this.wrap(pointer, shortcutPartitionKey, shortcutRowKey);
+
+        // Store pointer in DynamoDB
+        const params = {
+          TableName: AwsStorage.TABLE_NAME,
+          Item: entity,
+          ConditionExpression: "attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)",
+        };
+
+        return q.Promise<void>((resolve, reject) => {
+          this._dynamoDBClient
+            .put(params)
+            .promise()
+            .then(() => resolve())
+            .catch(reject);
+        });
+      })
+      .then(() => {
+        return deploymentId;
+      })
+      .catch((error: any) => {
+        // Handle specific AWS errors
+        if (error.code === "ConditionalCheckFailedException") {
+          throw storage.storageError(storage.ErrorCode.AlreadyExists, "Deployment already exists");
+        }
+        return AwsStorage.awsErrorHandler(error);
+      });
+  }
 
   public getDeploymentInfo(deploymentKey: string): q.Promise<storage.DeploymentInfo> {
     const partitionKey: string = Keys.getShortcutDeploymentKeyPartitionKey(deploymentKey);
@@ -783,6 +787,7 @@ export class AwsStorage implements storage.Storage {
 
   public addBlob(blobId: string, stream: stream.Readable, streamLength: number): q.Promise<string> {
     return this._setupPromise
+<<<<<<< Updated upstream
         .then(() => {
             return utils.streamToBuffer(stream);
         })
@@ -794,31 +799,36 @@ export class AwsStorage implements storage.Storage {
                 ContentLength: streamLength,
                 ContentType: 'application/octet-stream'
             };
-
-            return q.Promise<void>((resolve, reject) => {
-                this._s3Client.putObject(params).promise()
-                    .then(() => resolve())
-                    .catch(error => {
-                        if (error.code === 'NoSuchBucket') {
-                            reject(storage.storageError(
-                                storage.ErrorCode.NotFound,
-                                `Bucket ${AwsStorage.TABLE_NAME} not found`
-                            ));
-                        } else {
-                            reject(error);
-                        }
-                    });
-            });
-        })
-        .then(() => {
-            return blobId;
-        })
-        .catch(AwsStorage.awsErrorHandler);
-}
-
-public getBlobUrl(blobId: string): q.Promise<string> {
-  return this._setupPromise
+=======
       .then(() => {
+        return utils.streamToBuffer(stream);
+      })
+      .then((buffer: Buffer) => {
+        const params = {
+          Bucket: AwsStorage.TABLE_NAME,
+          Key: blobId,
+          Body: buffer,
+          ContentLength: streamLength,
+          ContentType: "application/octet-stream",
+        };
+>>>>>>> Stashed changes
+
+        return q.Promise<void>((resolve, reject) => {
+          this._s3Client
+            .putObject(params)
+            .promise()
+            .then(() => resolve())
+            .catch((error) => {
+              if (error.code === "NoSuchBucket") {
+                reject(storage.storageError(storage.ErrorCode.NotFound, `Bucket ${AwsStorage.TABLE_NAME} not found`));
+              } else {
+                reject(error);
+              }
+            });
+        });
+      })
+      .then(() => {
+<<<<<<< Updated upstream
           return q.Promise<string>((resolve, reject) => {
               const params = {
                   Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
@@ -846,98 +856,141 @@ public getBlobUrl(blobId: string): q.Promise<string> {
                       reject(error);
                   });
           });
+=======
+        return blobId;
+>>>>>>> Stashed changes
       })
       .catch(AwsStorage.awsErrorHandler);
-}
+  }
 
-public removeBlob(blobId: string): q.Promise<void> {
-  return this._setupPromise
+  public getBlobUrl(blobId: string): q.Promise<string> {
+    return this._setupPromise
       .then(() => {
+<<<<<<< Updated upstream
           return q.Promise<void>((resolve, reject) => {
               const params: S3.DeleteObjectRequest = {
                 Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
                 Key: `deployments/${blobId}`,
               };
+=======
+        return q.Promise<string>((resolve, reject) => {
+          const params = {
+            Bucket: AwsStorage.TABLE_NAME,
+            Key: blobId,
+            Expires: 3600, // URL expires in 1 hour
+          };
+>>>>>>> Stashed changes
 
-              // First check if object exists
-              this._s3Client.headObject(params).promise()
-                  .then(() => {
-                      // Object exists, proceed with deletion
-                      return this._s3Client.deleteObject(params).promise();
-                  })
-                  .then(() => {
-                      resolve();
-                  })
-                  .catch(error => {
-                      if (error.code === 'NotFound' || error.code === 'NoSuchKey') {
-                          reject(storage.storageError(
-                              storage.ErrorCode.NotFound,
-                              `Blob ${blobId} not found`
-                          ));
-                      } else {
-                          reject(error);
-                      }
-                  });
-          });
+          this._s3Client
+            .getSignedUrlPromise("getObject", params)
+            .then((url: string) => {
+              if (!url) {
+                reject(storage.storageError(storage.ErrorCode.NotFound, "Failed to generate signed URL"));
+              }
+              resolve(url);
+            })
+            .catch((error) => {
+              if (error.code === "NoSuchKey") {
+                reject(storage.storageError(storage.ErrorCode.NotFound, `Blob ${blobId} not found`));
+              }
+              reject(error);
+            });
+        });
       })
       .catch(AwsStorage.awsErrorHandler);
-}
+  }
+
+  public removeBlob(blobId: string): q.Promise<void> {
+    return this._setupPromise
+      .then(() => {
+        return q.Promise<void>((resolve, reject) => {
+          const params: S3.DeleteObjectRequest = {
+            Bucket: AwsStorage.TABLE_NAME,
+            Key: blobId,
+          };
+
+          // First check if object exists
+          this._s3Client
+            .headObject(params)
+            .promise()
+            .then(() => {
+              // Object exists, proceed with deletion
+              return this._s3Client.deleteObject(params).promise();
+            })
+            .then(() => {
+              resolve();
+            })
+            .catch((error) => {
+              if (error.code === "NotFound" || error.code === "NoSuchKey") {
+                reject(storage.storageError(storage.ErrorCode.NotFound, `Blob ${blobId} not found`));
+              } else {
+                reject(error);
+              }
+            });
+        });
+      })
+      .catch(AwsStorage.awsErrorHandler);
+  }
 
   public addAccessKey(accountId: string, accessKey: storage.AccessKey): q.Promise<string> {
     accessKey = storage.clone(accessKey); // pass by value
     accessKey.id = shortid.generate();
 
     return this._setupPromise
-        .then(() => {
-            // Store access key pointer
-            const partitionKey: string = Keys.getShortcutAccessKeyPartitionKey(accessKey.name);
-            const rowKey: string = "";
-            const accessKeyPointer: AccessKeyPointer = { 
-                accountId, 
-                expires: accessKey.expires 
-            };
+      .then(() => {
+        // Store access key pointer
+        const partitionKey: string = Keys.getShortcutAccessKeyPartitionKey(accessKey.name);
+        const rowKey: string = "";
+        const accessKeyPointer: AccessKeyPointer = {
+          accountId,
+          expires: accessKey.expires,
+        };
 
-            const params = {
-                TableName: AwsStorage.TABLE_NAME,
-                Item: this.wrap(accessKeyPointer, partitionKey, rowKey),
-                ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)'
-            };
+        const params = {
+          TableName: AwsStorage.TABLE_NAME,
+          Item: this.wrap(accessKeyPointer, partitionKey, rowKey),
+          ConditionExpression: "attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)",
+        };
 
-            return q.Promise<void>((resolve, reject) => {
-                this._dynamoDBClient.put(params).promise()
-                    .then(() => resolve())
-                    .catch(error => {
-                        if (error.code === 'ConditionalCheckFailedException') {
-                            reject(new Error('Access key name already exists'));
-                        } else {
-                            reject(error);
-                        }
-                    });
+        return q.Promise<void>((resolve, reject) => {
+          this._dynamoDBClient
+            .put(params)
+            .promise()
+            .then(() => resolve())
+            .catch((error) => {
+              if (error.code === "ConditionalCheckFailedException") {
+                reject(new Error("Access key name already exists"));
+              } else {
+                reject(error);
+              }
             });
-        })
-        .then(() => {
-            // Store actual access key
-            return this.insertAccessKey(accessKey, accountId);
-        })
-        .then((): string => {
-            return accessKey.id;
-        })
-        .catch((error: any) => {
-            // Clean up pointer if second operation fails
-            if (error.code !== 'ConditionalCheckFailedException') {
-                const deleteParams = {
-                    TableName: AwsStorage.TABLE_NAME,
-                    Key: {
-                        partitionKey: Keys.getShortcutAccessKeyPartitionKey(accessKey.name),
-                        rowKey: ""
-                    }
-                };
-                this._dynamoDBClient.delete(deleteParams).promise()
-                    .catch(() => {}); // Ignore cleanup errors
-            }
-            return AwsStorage.awsErrorHandler(error);
         });
-}
+      })
+      .then(() => {
+        // Store actual access key
+        return this.insertAccessKey(accessKey, accountId);
+      })
+      .then((): string => {
+        return accessKey.id;
+      })
+      .catch((error: any) => {
+        // Clean up pointer if second operation fails
+        if (error.code !== "ConditionalCheckFailedException") {
+          const deleteParams = {
+            TableName: AwsStorage.TABLE_NAME,
+            Key: {
+              partitionKey: Keys.getShortcutAccessKeyPartitionKey(accessKey.name),
+              rowKey: "",
+            },
+          };
+          this._dynamoDBClient
+            .delete(deleteParams)
+            .promise()
+            .catch(() => {}); // Ignore cleanup errors
+        }
+        return AwsStorage.awsErrorHandler(error);
+      });
+  }
 
   public getAccessKey(accountId: string, accessKeyId: string): q.Promise<storage.AccessKey> {
     const partitionKey: string = Keys.getAccountPartitionKey(accountId);
@@ -957,214 +1010,225 @@ public removeBlob(blobId: string): q.Promise<void> {
     const searchKey: string = Keys.getAccessKeyRowKey(accountId);
 
     const params = {
-        TableName: AwsStorage.TABLE_NAME,
-        KeyConditionExpression: 'partitionKey = :pk and rowKey BETWEEN :start AND :end',
-        ExpressionAttributeValues: {
-            ':pk': partitionKey,
-            ':start': searchKey,
-            ':end': searchKey + '~'
-        }
+      TableName: AwsStorage.TABLE_NAME,
+      KeyConditionExpression: "partitionKey = :pk and rowKey BETWEEN :start AND :end",
+      ExpressionAttributeValues: {
+        ":pk": partitionKey,
+        ":start": searchKey,
+        ":end": searchKey + "~",
+      },
     };
 
     // First check if account exists
     const accountCheckParams = {
-        TableName: AwsStorage.TABLE_NAME,
-        Key: {
-            partitionKey: partitionKey,
-            rowKey: rowKey
-        }
+      TableName: AwsStorage.TABLE_NAME,
+      Key: {
+        partitionKey: partitionKey,
+        rowKey: rowKey,
+      },
     };
 
     this._setupPromise
-        .then(() => {
-            return this._dynamoDBClient.get(accountCheckParams).promise();
-        })
-        .then(result => {
-            if (!result.Item) {
-                throw storage.storageError(storage.ErrorCode.NotFound, 'Account not found');
-            }
+      .then(() => {
+        return this._dynamoDBClient.get(accountCheckParams).promise();
+      })
+      .then((result) => {
+        if (!result.Item) {
+          throw storage.storageError(storage.ErrorCode.NotFound, "Account not found");
+        }
 
-            return this._dynamoDBClient.query(params).promise();
-        })
-        .then(async (result) => {
-            let items = result.Items || [];
-            let lastEvaluatedKey = result.LastEvaluatedKey;
+        return this._dynamoDBClient.query(params).promise();
+      })
+      .then(async (result) => {
+        let items = result.Items || [];
+        let lastEvaluatedKey = result.LastEvaluatedKey;
 
-            // Handle pagination if needed
-            while (lastEvaluatedKey) {
-                const nextParams = {
-                    ...params,
-                    ExclusiveStartKey: lastEvaluatedKey
-                };
-                const nextResult = await this._dynamoDBClient.query(nextParams).promise();
-                items = items.concat(nextResult.Items || []);
-                lastEvaluatedKey = nextResult.LastEvaluatedKey;
-            }
+        // Handle pagination if needed
+        while (lastEvaluatedKey) {
+          const nextParams = {
+            ...params,
+            ExclusiveStartKey: lastEvaluatedKey,
+          };
+          const nextResult = await this._dynamoDBClient.query(nextParams).promise();
+          items = items.concat(nextResult.Items || []);
+          lastEvaluatedKey = nextResult.LastEvaluatedKey;
+        }
 
-            const accessKeys: storage.AccessKey[] = items
-                .filter(item => item.rowKey !== rowKey) // Don't include the account
-                .map(item => this.unwrap(item));
+        const accessKeys: storage.AccessKey[] = items
+          .filter((item) => item.rowKey !== rowKey) // Don't include the account
+          .map((item) => this.unwrap(item));
 
-            deferred.resolve(accessKeys);
-        })
-        .catch((error: any) => {
-            if (error.code === 'ResourceNotFoundException') {
-                deferred.reject(storage.storageError(storage.ErrorCode.NotFound, 'Table not found'));
-            } else {
-                deferred.reject(AwsStorage.awsErrorHandler(error));
-            }
-        });
+        deferred.resolve(accessKeys);
+      })
+      .catch((error: any) => {
+        if (error.code === "ResourceNotFoundException") {
+          deferred.reject(storage.storageError(storage.ErrorCode.NotFound, "Table not found"));
+        } else {
+          deferred.reject(AwsStorage.awsErrorHandler(error));
+        }
+      });
 
     return deferred.promise;
-}
+  }
 
-public removeAccessKey(accountId: string, accessKeyId: string): q.Promise<void> {
-  return this._setupPromise
+  public removeAccessKey(accountId: string, accessKeyId: string): q.Promise<void> {
+    return this._setupPromise
       .then(() => {
-          return this.getAccessKey(accountId, accessKeyId);
+        return this.getAccessKey(accountId, accessKeyId);
       })
       .then((accessKey) => {
-          const mainDeleteParams = {
-              TableName: AwsStorage.TABLE_NAME,
-              Key: {
-                  partitionKey: Keys.getAccountPartitionKey(accountId),
-                  rowKey: Keys.getAccessKeyRowKey(accountId, accessKeyId)
-              },
-              ConditionExpression: 'attribute_exists(partitionKey) AND attribute_exists(rowKey)'
-          };
+        const mainDeleteParams = {
+          TableName: AwsStorage.TABLE_NAME,
+          Key: {
+            partitionKey: Keys.getAccountPartitionKey(accountId),
+            rowKey: Keys.getAccessKeyRowKey(accountId, accessKeyId),
+          },
+          ConditionExpression: "attribute_exists(partitionKey) AND attribute_exists(rowKey)",
+        };
 
-          const shortcutDeleteParams = {
-              TableName: AwsStorage.TABLE_NAME,
-              Key: {
-                  partitionKey: Keys.getShortcutAccessKeyPartitionKey(accessKey.name, false),
-                  rowKey: ""
-              },
-              ConditionExpression: 'attribute_exists(partitionKey) AND attribute_exists(rowKey)'
-          };
+        const shortcutDeleteParams = {
+          TableName: AwsStorage.TABLE_NAME,
+          Key: {
+            partitionKey: Keys.getShortcutAccessKeyPartitionKey(accessKey.name, false),
+            rowKey: "",
+          },
+          ConditionExpression: "attribute_exists(partitionKey) AND attribute_exists(rowKey)",
+        };
 
-          return q.all([
-              q.Promise<void>((resolve, reject) => {
-                  this._dynamoDBClient.delete(mainDeleteParams).promise()
-                      .then(() => resolve())
-                      .catch(error => {
-                          if (error.code === 'ConditionalCheckFailedException') {
-                              reject(storage.storageError(storage.ErrorCode.NotFound, 'Access key not found'));
-                          }
-                          reject(error);
-                      });
-              }),
-              q.Promise<void>((resolve, reject) => {
-                  this._dynamoDBClient.delete(shortcutDeleteParams).promise()
-                      .then(() => resolve())
-                      .catch(error => {
-                          if (error.code === 'ConditionalCheckFailedException') {
-                              // Ignore if shortcut doesn't exist
-                              resolve();
-                          }
-                          reject(error);
-                      });
-              })
-          ]);
+        return q.all([
+          q.Promise<void>((resolve, reject) => {
+            this._dynamoDBClient
+              .delete(mainDeleteParams)
+              .promise()
+              .then(() => resolve())
+              .catch((error) => {
+                if (error.code === "ConditionalCheckFailedException") {
+                  reject(storage.storageError(storage.ErrorCode.NotFound, "Access key not found"));
+                }
+                reject(error);
+              });
+          }),
+          q.Promise<void>((resolve, reject) => {
+            this._dynamoDBClient
+              .delete(shortcutDeleteParams)
+              .promise()
+              .then(() => resolve())
+              .catch((error) => {
+                if (error.code === "ConditionalCheckFailedException") {
+                  // Ignore if shortcut doesn't exist
+                  resolve();
+                }
+                reject(error);
+              });
+          }),
+        ]);
       })
       .catch(AwsStorage.awsErrorHandler);
-}
+  }
 
-public updateAccessKey(accountId: string, accessKey: storage.AccessKey): q.Promise<void> {
-  if (!accessKey) {
+  public updateAccessKey(accountId: string, accessKey: storage.AccessKey): q.Promise<void> {
+    if (!accessKey) {
       throw new Error("No access key");
-  }
+    }
 
-  if (!accessKey.id) {
+    if (!accessKey.id) {
       throw new Error("No access key id");
-  }
+    }
 
-  const partitionKey: string = Keys.getAccountPartitionKey(accountId);
-  const rowKey: string = Keys.getAccessKeyRowKey(accountId, accessKey.id);
+    const partitionKey: string = Keys.getAccountPartitionKey(accountId);
+    const rowKey: string = Keys.getAccessKeyRowKey(accountId, accessKey.id);
 
-  interface DynamoDBUpdateParams {
+    interface DynamoDBUpdateParams {
       TableName: string;
       Key: {
-          partitionKey: string;
-          rowKey: string;
+        partitionKey: string;
+        rowKey: string;
       };
       UpdateExpression: string;
       ExpressionAttributeNames: { [key: string]: string };
       ExpressionAttributeValues: { [key: string]: any };
       ConditionExpression: string;
-  }
+    }
 
-  return this._setupPromise
+    return this._setupPromise
       .then(() => {
-          // Main access key update
-          const mainUpdateFields = Object.entries(accessKey)
-              .filter(([key]) => !['partitionKey', 'rowKey'].includes(key))
-              .reduce((acc, [key, value], index) => {
-                  acc.expressions.push(`#field${index} = :value${index}`);
-                  acc.names[`#field${index}`] = key;
-                  acc.values[`:value${index}`] = value;
-                  return acc;
-              }, {
-                  expressions: [] as string[],
-                  names: {} as { [key: string]: string },
-                  values: {} as { [key: string]: any }
-              });
+        // Main access key update
+        const mainUpdateFields = Object.entries(accessKey)
+          .filter(([key]) => !["partitionKey", "rowKey"].includes(key))
+          .reduce(
+            (acc, [key, value], index) => {
+              acc.expressions.push(`#field${index} = :value${index}`);
+              acc.names[`#field${index}`] = key;
+              acc.values[`:value${index}`] = value;
+              return acc;
+            },
+            {
+              expressions: [] as string[],
+              names: {} as { [key: string]: string },
+              values: {} as { [key: string]: any },
+            }
+          );
 
-          const mainUpdateParams: DynamoDBUpdateParams = {
-              TableName: AwsStorage.TABLE_NAME,
-              Key: {
-                  partitionKey,
-                  rowKey
-              },
-              UpdateExpression: `SET ${mainUpdateFields.expressions.join(', ')}`,
-              ExpressionAttributeNames: mainUpdateFields.names,
-              ExpressionAttributeValues: mainUpdateFields.values,
-              ConditionExpression: 'attribute_exists(partitionKey) AND attribute_exists(rowKey)'
-          };
+        const mainUpdateParams: DynamoDBUpdateParams = {
+          TableName: AwsStorage.TABLE_NAME,
+          Key: {
+            partitionKey,
+            rowKey,
+          },
+          UpdateExpression: `SET ${mainUpdateFields.expressions.join(", ")}`,
+          ExpressionAttributeNames: mainUpdateFields.names,
+          ExpressionAttributeValues: mainUpdateFields.values,
+          ConditionExpression: "attribute_exists(partitionKey) AND attribute_exists(rowKey)",
+        };
 
-          return q.Promise<void>((resolve, reject) => {
-              this._dynamoDBClient.update(mainUpdateParams).promise()
-                  .then(() => resolve())
-                  .catch(error => {
-                      if (error.code === 'ConditionalCheckFailedException') {
-                          reject(storage.storageError(storage.ErrorCode.NotFound, 'Access key not found'));
-                      }
-                      reject(error);
-                  });
-          });
+        return q.Promise<void>((resolve, reject) => {
+          this._dynamoDBClient
+            .update(mainUpdateParams)
+            .promise()
+            .then(() => resolve())
+            .catch((error) => {
+              if (error.code === "ConditionalCheckFailedException") {
+                reject(storage.storageError(storage.ErrorCode.NotFound, "Access key not found"));
+              }
+              reject(error);
+            });
+        });
       })
       .then(() => {
-          // Pointer update
-          const pointerUpdateParams: DynamoDBUpdateParams = {
-              TableName: AwsStorage.TABLE_NAME,
-              Key: {
-                  partitionKey: Keys.getShortcutAccessKeyPartitionKey(accessKey.name, false),
-                  rowKey: ""
-              },
-              UpdateExpression: 'SET #accountId = :accountId, #expires = :expires',
-              ExpressionAttributeNames: {
-                  '#accountId': 'accountId',
-                  '#expires': 'expires'
-              },
-              ExpressionAttributeValues: {
-                  ':accountId': accountId,
-                  ':expires': accessKey.expires
-              },
-              ConditionExpression: 'attribute_exists(partitionKey) AND attribute_exists(rowKey)'
-          };
+        // Pointer update
+        const pointerUpdateParams: DynamoDBUpdateParams = {
+          TableName: AwsStorage.TABLE_NAME,
+          Key: {
+            partitionKey: Keys.getShortcutAccessKeyPartitionKey(accessKey.name, false),
+            rowKey: "",
+          },
+          UpdateExpression: "SET #accountId = :accountId, #expires = :expires",
+          ExpressionAttributeNames: {
+            "#accountId": "accountId",
+            "#expires": "expires",
+          },
+          ExpressionAttributeValues: {
+            ":accountId": accountId,
+            ":expires": accessKey.expires,
+          },
+          ConditionExpression: "attribute_exists(partitionKey) AND attribute_exists(rowKey)",
+        };
 
-          return q.Promise<void>((resolve, reject) => {
-              this._dynamoDBClient.update(pointerUpdateParams).promise()
-                  .then(() => resolve())
-                  .catch(error => {
-                      if (error.code === 'ConditionalCheckFailedException') {
-                          reject(storage.storageError(storage.ErrorCode.NotFound, 'Access key pointer not found'));
-                      }
-                      reject(error);
-                  });
-          });
+        return q.Promise<void>((resolve, reject) => {
+          this._dynamoDBClient
+            .update(pointerUpdateParams)
+            .promise()
+            .then(() => resolve())
+            .catch((error) => {
+              if (error.code === "ConditionalCheckFailedException") {
+                reject(storage.storageError(storage.ErrorCode.NotFound, "Access key pointer not found"));
+              }
+              reject(error);
+            });
+        });
       })
       .catch(AwsStorage.awsErrorHandler);
-}
+  }
 
   // No-op for safety, so that we don't drop the wrong db, pending a cleaner solution for removing test data.
   public dropAll(): q.Promise<void> {
@@ -1175,12 +1239,24 @@ public updateAccessKey(accountId: string, accessKey: storage.AccessKey): q.Promi
     const deferred = q.defer<void>();
 
     try {
+<<<<<<< Updated upstream
       const awsConfig = {
         region: process.env.AWS_REGION || 'ap-south-1'
       };
 
       const dynamoDBClient = new DynamoDB.DocumentClient(awsConfig);
       const s3Client = new S3(awsConfig);
+=======
+      const dynamoDBClient = new DynamoDB.DocumentClient({
+        endpoint: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000', // Use environment variable or default to LocalStack
+    });
+
+      // Configure S3 client to point to LocalStack using environment variables
+      const s3Client = new S3({
+        endpoint: process.env.S3_ENDPOINT || "http://localhost:4566", // Use environment variable or default to LocalStack
+        s3ForcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true", // Convert string to boolean
+      });
+>>>>>>> Stashed changes
 
       this._dynamoDBClient = dynamoDBClient;
       this._s3Client = s3Client;
@@ -1195,137 +1271,146 @@ public updateAccessKey(accountId: string, accessKey: storage.AccessKey): q.Promi
 
   private blobHealthCheck(bucket: string): q.Promise<void> {
     return q.Promise<void>((resolve, reject) => {
-        const params: S3.GetObjectRequest = {
-            Bucket: bucket,
-            Key: 'health'
-        };
-
-        this._s3Client.getObject(params).promise()
-            .then(response => {
-                if (!response.Body) {
-                    throw new Error('Health check object is empty');
-                }
-
-                const content = response.Body.toString();
-                if (content !== 'health') {
-                    throw storage.storageError(
-                        storage.ErrorCode.ConnectionFailed,
-                        `The S3 service failed the health check for ${bucket}: invalid content`
-                    );
-                }
-                resolve();
-            })
-            .catch(error => {
-                if (error.code === 'NoSuchBucket') {
-                    reject(storage.storageError(
-                        storage.ErrorCode.ConnectionFailed,
-                        `The S3 bucket ${bucket} does not exist`
-                    ));
-                } else if (error.code === 'NoSuchKey') {
-                    reject(storage.storageError(
-                        storage.ErrorCode.ConnectionFailed,
-                        `Health check object not found in bucket ${bucket}`
-                    ));
-                } else {
-                    reject(storage.storageError(
-                        storage.ErrorCode.ConnectionFailed,
-                        `The S3 service failed the health check for ${bucket}: ${error.message}`
-                    ));
-                }
-            });
-    });
-}
-
-private getPackageHistoryFromBlob(blobId: string): q.Promise<storage.Package[]> {
-  return q.Promise<storage.Package[]>((resolve, reject) => {
       const params: S3.GetObjectRequest = {
+<<<<<<< Updated upstream
           Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
           Key: `deployments/${blobId}`,
+=======
+        Bucket: bucket,
+        Key: "health",
+>>>>>>> Stashed changes
       };
 
-      this._s3Client.getObject(params).promise()
-          .then(response => {
-              if (!response.Body) {
-                  throw storage.storageError(
-                      storage.ErrorCode.NotFound,
-                      'Package history blob is empty'
-                  );
-              }
+      this._s3Client
+        .getObject(params)
+        .promise()
+        .then((response) => {
+          if (!response.Body) {
+            throw new Error("Health check object is empty");
+          }
 
-              try {
-                  const content = response.Body.toString('utf-8');
-                  const parsedContents = JSON.parse(content) as storage.Package[];
-                  resolve(parsedContents);
-              } catch (parseError) {
-                  reject(storage.storageError(
-                      storage.ErrorCode.Invalid,
-                      `Failed to parse package history: ${parseError.message}`
-                  ));
-              }
-          })
-          .catch(error => {
-              if (error.code === 'NoSuchKey') {
-                  reject(storage.storageError(
-                      storage.ErrorCode.NotFound,
-                      `Package history not found for ID: ${blobId}`
-                  ));
-              } else {
-                  reject(AwsStorage.awsErrorHandler(error));
-              }
-          });
-  });
-}
+          const content = response.Body.toString();
+          if (content !== "health") {
+            throw storage.storageError(
+              storage.ErrorCode.ConnectionFailed,
+              `The S3 service failed the health check for ${bucket}: invalid content`
+            );
+          }
+          resolve();
+        })
+        .catch((error) => {
+          if (error.code === "NoSuchBucket") {
+            reject(storage.storageError(storage.ErrorCode.ConnectionFailed, `The S3 bucket ${bucket} does not exist`));
+          } else if (error.code === "NoSuchKey") {
+            reject(storage.storageError(storage.ErrorCode.ConnectionFailed, `Health check object not found in bucket ${bucket}`));
+          } else {
+            reject(
+              storage.storageError(
+                storage.ErrorCode.ConnectionFailed,
+                `The S3 service failed the health check for ${bucket}: ${error.message}`
+              )
+            );
+          }
+        });
+    });
+  }
 
-private uploadToHistoryBlob(blobId: string, content: string): q.Promise<void> {
-  return q.Promise<void>((resolve, reject) => {
+  private getPackageHistoryFromBlob(blobId: string): q.Promise<storage.Package[]> {
+    return q.Promise<storage.Package[]>((resolve, reject) => {
+      const params: S3.GetObjectRequest = {
+        Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+        Key: blobId,
+      };
+
+      this._s3Client
+        .getObject(params)
+        .promise()
+        .then((response) => {
+          if (!response.Body) {
+            throw storage.storageError(storage.ErrorCode.NotFound, "Package history blob is empty");
+          }
+
+          try {
+            const content = response.Body.toString("utf-8");
+            const parsedContents = JSON.parse(content) as storage.Package[];
+            resolve(parsedContents);
+          } catch (parseError) {
+            reject(storage.storageError(storage.ErrorCode.Invalid, `Failed to parse package history: ${parseError.message}`));
+          }
+        })
+        .catch((error) => {
+          if (error.code === "NoSuchKey") {
+            reject(storage.storageError(storage.ErrorCode.NotFound, `Package history not found for ID: ${blobId}`));
+          } else {
+            reject(AwsStorage.awsErrorHandler(error));
+          }
+        });
+    });
+  }
+
+  private uploadToHistoryBlob(blobId: string, content: string): q.Promise<void> {
+    return q.Promise<void>((resolve, reject) => {
       const params: S3.PutObjectRequest = {
+<<<<<<< Updated upstream
           Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
           Key: `deployments/${blobId}`,
           Body: content,
           ContentType: 'application/json',
           ContentLength: Buffer.from(content).length
+=======
+        Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+        Key: blobId,
+        Body: content,
+        ContentType: "application/json",
+        ContentLength: Buffer.from(content).length,
+>>>>>>> Stashed changes
       };
 
-      this._s3Client.putObject(params).promise()
-          .then(() => resolve())
-          .catch(error => {
-              if (error.code === 'NoSuchBucket') {
-                  reject(storage.storageError(
-                      storage.ErrorCode.NotFound,
-                      `History bucket ${AwsStorage.HISTORY_BLOB_CONTAINER_NAME} not found`
-                  ));
-              } else {
-                  reject(AwsStorage.awsErrorHandler(error));
-              }
-          });
-  });
-}
+      this._s3Client
+        .putObject(params)
+        .promise()
+        .then(() => resolve())
+        .catch((error) => {
+          if (error.code === "NoSuchBucket") {
+            reject(
+              storage.storageError(storage.ErrorCode.NotFound, `History bucket ${AwsStorage.HISTORY_BLOB_CONTAINER_NAME} not found`)
+            );
+          } else {
+            reject(AwsStorage.awsErrorHandler(error));
+          }
+        });
+    });
+  }
 
-private deleteHistoryBlob(blobId: string): q.Promise<void> {
-  return q.Promise<void>((resolve, reject) => {
+  private deleteHistoryBlob(blobId: string): q.Promise<void> {
+    return q.Promise<void>((resolve, reject) => {
       const params: S3.DeleteObjectRequest = {
+<<<<<<< Updated upstream
           Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
           Key: `deployments/${blobId}`,
+=======
+        Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
+        Key: blobId,
+>>>>>>> Stashed changes
       };
 
       // First check if object exists
-      this._s3Client.headObject(params).promise()
-          .then(() => {
-              return this._s3Client.deleteObject(params).promise();
-          })
-          .then(() => resolve())
-          .catch(error => {
-              if (error.code === 'NotFound' || error.code === 'NoSuchKey') {
-                  reject(storage.storageError(
-                      storage.ErrorCode.NotFound,
-                      `History blob ${blobId} not found`
-                  ));
-              } else {
-                  reject(AwsStorage.awsErrorHandler(error));
-              }
-          });
-  });
-}
+      this._s3Client
+        .headObject(params)
+        .promise()
+        .then(() => {
+          return this._s3Client.deleteObject(params).promise();
+        })
+        .then(() => resolve())
+        .catch((error) => {
+          if (error.code === "NotFound" || error.code === "NoSuchKey") {
+            reject(storage.storageError(storage.ErrorCode.NotFound, `History blob ${blobId} not found`));
+          } else {
+            reject(AwsStorage.awsErrorHandler(error));
+          }
+        });
+    });
+  }
 
   private wrap(jsObject: any, partitionKey: string, rowKey: string): any {
     return {
@@ -1374,58 +1459,62 @@ private deleteHistoryBlob(blobId: string): q.Promise<void> {
     const accountRowKey: string = Keys.getHierarchicalAccountRowKey(accountId, appId);
 
     const entity = this.wrap(pointer, accountPartitionKey, accountRowKey);
-    
+
     const params = {
-        TableName: AwsStorage.TABLE_NAME,
-        Item: entity,
-        ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)'
+      TableName: AwsStorage.TABLE_NAME,
+      Item: entity,
+      ConditionExpression: "attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)",
     };
 
-    this._dynamoDBClient.put(params).promise()
-        .then(() => {
-            deferred.resolve();
-        })
-        .catch((error: any) => {
-            if (error.code === 'ConditionalCheckFailedException') {
-                deferred.reject(new Error('App pointer already exists'));
-            } else {
-                deferred.reject(error);
-            }
-        });
-
-    return deferred.promise;
-}
-
-private removeAppPointer(accountId: string, appId: string): q.Promise<void> {
-  const deferred = q.defer<void>();
-
-  const accountPartitionKey: string = Keys.getAccountPartitionKey(accountId);
-  const accountRowKey: string = Keys.getHierarchicalAccountRowKey(accountId, appId);
-
-  const params = {
-      TableName: AwsStorage.TABLE_NAME,
-      Key: {
-          partitionKey: accountPartitionKey,
-          rowKey: accountRowKey
-      },
-      // Ensure the item exists before deletion
-      ConditionExpression: 'attribute_exists(partitionKey) AND attribute_exists(rowKey)'
-  };
-
-  this._dynamoDBClient.delete(params).promise()
+    this._dynamoDBClient
+      .put(params)
+      .promise()
       .then(() => {
-          deferred.resolve();
+        deferred.resolve();
       })
       .catch((error: any) => {
-          if (error.code === 'ConditionalCheckFailedException') {
-              deferred.reject(new Error('App pointer not found'));
-          } else {
-              deferred.reject(error);
-          }
+        if (error.code === "ConditionalCheckFailedException") {
+          deferred.reject(new Error("App pointer already exists"));
+        } else {
+          deferred.reject(error);
+        }
       });
 
-  return deferred.promise;
-}
+    return deferred.promise;
+  }
+
+  private removeAppPointer(accountId: string, appId: string): q.Promise<void> {
+    const deferred = q.defer<void>();
+
+    const accountPartitionKey: string = Keys.getAccountPartitionKey(accountId);
+    const accountRowKey: string = Keys.getHierarchicalAccountRowKey(accountId, appId);
+
+    const params = {
+      TableName: AwsStorage.TABLE_NAME,
+      Key: {
+        partitionKey: accountPartitionKey,
+        rowKey: accountRowKey,
+      },
+      // Ensure the item exists before deletion
+      ConditionExpression: "attribute_exists(partitionKey) AND attribute_exists(rowKey)",
+    };
+
+    this._dynamoDBClient
+      .delete(params)
+      .promise()
+      .then(() => {
+        deferred.resolve();
+      })
+      .catch((error: any) => {
+        if (error.code === "ConditionalCheckFailedException") {
+          deferred.reject(new Error("App pointer not found"));
+        } else {
+          deferred.reject(error);
+        }
+      });
+
+    return deferred.promise;
+  }
 
   private removeAllCollaboratorsAppPointers(accountId: string, appId: string): q.Promise<void> {
     return this.getApp(accountId, appId, /*keepCollaboratorIds*/ true)
@@ -1442,7 +1531,7 @@ private removeAppPointer(accountId: string, appId: string): q.Promise<void> {
 
         return q.allSettled(removalPromises);
       })
-      .then(() => { });
+      .then(() => {});
   }
 
   private updateAppWithPermission(accountId: string, app: storage.App, updateCollaborator: boolean = false): q.Promise<void> {
@@ -1470,15 +1559,17 @@ private removeAppPointer(accountId: string, appId: string): q.Promise<void> {
         TableName: AwsStorage.TABLE_NAME,
         Key: {
           partitionKey: appPartitionKey,
-          rowKey: parentRowKey
-        }
+          rowKey: parentRowKey,
+        },
       };
 
       fetchParentPromise = q.Promise<void>((resolve, reject) => {
-        this._dynamoDBClient.get(parentParams).promise()
-          .then(result => {
+        this._dynamoDBClient
+          .get(parentParams)
+          .promise()
+          .then((result) => {
             if (!result.Item) {
-              reject(new Error('Parent entity not found'));
+              reject(new Error("Parent entity not found"));
             }
             resolve();
           })
@@ -1491,7 +1582,7 @@ private removeAppPointer(accountId: string, appId: string): q.Promise<void> {
         const appRowKey: string = Keys.getHierarchicalAppRowKey(appId, deploymentId);
         const pointer: Pointer = {
           partitionKeyPointer: appPartitionKey,
-          rowKeyPointer: appRowKey
+          rowKeyPointer: appRowKey,
         };
 
         const entity = this.wrap(jsObject, pointer.partitionKeyPointer, pointer.rowKeyPointer);
@@ -1499,22 +1590,24 @@ private removeAppPointer(accountId: string, appId: string): q.Promise<void> {
         const params = {
           TableName: AwsStorage.TABLE_NAME,
           Item: entity,
-          ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)'
+          ConditionExpression: "attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)",
         };
 
         return q.Promise<void>((resolve, reject) => {
-          this._dynamoDBClient.put(params).promise()
+          this._dynamoDBClient
+            .put(params)
+            .promise()
             .then(() => resolve())
-            .catch(error => {
-              if (error.code === 'ConditionalCheckFailedException') {
-                reject(new Error('Entity already exists'));
+            .catch((error) => {
+              if (error.code === "ConditionalCheckFailedException") {
+                reject(new Error("Entity already exists"));
               }
               reject(error);
             });
         });
       })
       .then(() => leafId)
-      .catch(error => {
+      .catch((error) => {
         throw error;
       });
   }
@@ -1531,33 +1624,35 @@ private removeAppPointer(accountId: string, appId: string): q.Promise<void> {
     const entity: any = this.wrap(accessKey, partitionKey, rowKey);
 
     const params = {
-        TableName: AwsStorage.TABLE_NAME,
-        Item: entity,
-        ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)'
+      TableName: AwsStorage.TABLE_NAME,
+      Item: entity,
+      ConditionExpression: "attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)",
     };
 
-    this._dynamoDBClient.put(params).promise()
-        .then(() => {
-            deferred.resolve(accessKey.id);
-        })
-        .catch((error: any) => {
-            if (error.code === 'ConditionalCheckFailedException') {
-                deferred.reject(new Error('Access key already exists'));
-            } else {
-                deferred.reject(error);
-            }
-        });
+    this._dynamoDBClient
+      .put(params)
+      .promise()
+      .then(() => {
+        deferred.resolve(accessKey.id);
+      })
+      .catch((error: any) => {
+        if (error.code === "ConditionalCheckFailedException") {
+          deferred.reject(new Error("Access key already exists"));
+        } else {
+          deferred.reject(error);
+        }
+      });
 
     return deferred.promise;
-}
+  }
 
   private retrieveByKey(partitionKey: string, rowKey: string): q.Promise<any> {
     const params = {
       TableName: AwsStorage.TABLE_NAME,
       Key: {
         partitionKey: partitionKey,
-        rowKey: rowKey
-      }
+        rowKey: rowKey,
+      },
     };
 
     return q.Promise((resolve, reject) => {
@@ -1580,6 +1675,7 @@ private removeAppPointer(accountId: string, appId: string): q.Promise<void> {
     return this.retrieveByKey(partitionKey, rowKey);
   }
 
+<<<<<<< Updated upstream
   /**
    * Retrieves a collection of items based on hierarchical structure
    * @param accountId - The account identifier
@@ -1694,79 +1790,158 @@ private removeAppPointer(accountId: string, appId: string): q.Promise<void> {
     });
 
     return Promise.all(enrichmentPromises);
+=======
+  private getCollectionByHierarchy(accountId: string, appId?: string, deploymentId?: string): q.Promise<any[]> {
+    const deferred = q.defer<any[]>();
+
+    let partitionKey: string;
+    let rowKey: string;
+    let childrenSearchKey: string;
+
+    // Construct search key for direct children
+    const searchKeyArgs: any[] = Array.prototype.slice.call(arguments);
+    searchKeyArgs.unshift(/*markLeaf=*/ true);
+    searchKeyArgs.push(/*leafId=*/ "");
+
+    if (appId) {
+      searchKeyArgs.splice(1, 1); // remove accountId
+      partitionKey = Keys.getAppPartitionKey(appId);
+      rowKey = Keys.getHierarchicalAppRowKey(appId, deploymentId);
+      childrenSearchKey = Keys.generateHierarchicalAppKey.apply(null, searchKeyArgs);
+    } else {
+      partitionKey = Keys.getAccountPartitionKey(accountId);
+      rowKey = Keys.getHierarchicalAccountRowKey(accountId);
+      childrenSearchKey = Keys.generateHierarchicalAccountKey.apply(null, searchKeyArgs);
+    }
+
+    // DynamoDB query parameters
+    const params = {
+      TableName: AwsStorage.TABLE_NAME,
+      KeyConditionExpression: "partitionKey = :pk AND rowKey BETWEEN :start AND :end",
+      ExpressionAttributeValues: {
+        ":pk": partitionKey,
+        ":start": childrenSearchKey,
+        ":end": childrenSearchKey + "~",
+      },
+    };
+
+    this._dynamoDBClient
+      .query(params)
+      .promise()
+      .then((result) => {
+        if (!result.Items || result.Items.length === 0) {
+          // Check if parent exists
+          return this._dynamoDBClient
+            .get({
+              TableName: AwsStorage.TABLE_NAME,
+              Key: {
+                partitionKey: partitionKey,
+                rowKey: rowKey,
+              },
+            })
+            .promise()
+            .then((parentResult) => {
+              if (!parentResult.Item) {
+                throw new Error("Entity not found");
+              }
+              return []; // Parent exists but no children
+            });
+        }
+        return result.Items;
+      })
+      .then((items) => {
+        const objects: any[] = [];
+        items.forEach((item) => {
+          // Don't include the parent
+          if (item.rowKey !== rowKey) {
+            objects.push(this.unwrap(item));
+          }
+        });
+        deferred.resolve(objects);
+      })
+      .catch((error) => {
+        deferred.reject(error);
+      });
+
+    return deferred.promise;
+>>>>>>> Stashed changes
   }
 
-private cleanUpByAppHierarchy(appId: string, deploymentId?: string): q.Promise<void> {
-  const deferred = q.defer<void>();
-  const partitionKey: string = Keys.getAppPartitionKey(appId);
-  const rowKey: string = Keys.getHierarchicalAppRowKey(appId, deploymentId);
-  const descendantsSearchKey: string = Keys.generateHierarchicalAppKey(false, appId, deploymentId);
+  private cleanUpByAppHierarchy(appId: string, deploymentId?: string): q.Promise<void> {
+    const deferred = q.defer<void>();
+    const partitionKey: string = Keys.getAppPartitionKey(appId);
+    const rowKey: string = Keys.getHierarchicalAppRowKey(appId, deploymentId);
+    const descendantsSearchKey: string = Keys.generateHierarchicalAppKey(false, appId, deploymentId);
 
-  const queryParams = {
+    const queryParams = {
       TableName: AwsStorage.TABLE_NAME,
-      KeyConditionExpression: 'partitionKey = :pk and rowKey BETWEEN :start AND :end',
+      KeyConditionExpression: "partitionKey = :pk and rowKey BETWEEN :start AND :end",
       ExpressionAttributeValues: {
-          ':pk': partitionKey,
-          ':start': descendantsSearchKey,
-          ':end': descendantsSearchKey + '~'
-      }
-  };
+        ":pk": partitionKey,
+        ":start": descendantsSearchKey,
+        ":end": descendantsSearchKey + "~",
+      },
+    };
 
-  const processItems = (items: any[]) => {
+    const processItems = (items: any[]) => {
       const chunks: any[][] = [];
       // Split items into chunks of 25 (DynamoDB batch limit)
       for (let i = 0; i < items.length; i += 25) {
-          chunks.push(items.slice(i, i + 25));
+        chunks.push(items.slice(i, i + 25));
       }
 
-      const batchPromises = chunks.map(chunk => {
-          const deleteRequests = chunk.map(item => ({
-              DeleteRequest: {
-                  Key: {
-                      partitionKey: item.partitionKey,
-                      rowKey: item.rowKey
-                  }
-              }
-          }));
+      const batchPromises = chunks.map((chunk) => {
+        const deleteRequests = chunk.map((item) => ({
+          DeleteRequest: {
+            Key: {
+              partitionKey: item.partitionKey,
+              rowKey: item.rowKey,
+            },
+          },
+        }));
 
-          const batchParams = {
-              RequestItems: {
-                  [AwsStorage.TABLE_NAME]: deleteRequests
-              }
-          };
+        const batchParams = {
+          RequestItems: {
+            [AwsStorage.TABLE_NAME]: deleteRequests,
+          },
+        };
 
-          return this._dynamoDBClient.batchWrite(batchParams).promise();
+        return this._dynamoDBClient.batchWrite(batchParams).promise();
       });
 
       return q.all(batchPromises);
-  };
+    };
 
-  // First query all items
-  this._dynamoDBClient.query(queryParams).promise()
-      .then(result => {
-          if (!result.Items || result.Items.length === 0) {
-              return deferred.resolve();
-          }
+    // First query all items
+    this._dynamoDBClient
+      .query(queryParams)
+      .promise()
+      .then((result) => {
+        if (!result.Items || result.Items.length === 0) {
+          return deferred.resolve();
+        }
 
-          return processItems(result.Items)
-              .then(() => {
-                  // Handle pagination if there are more items
-                  if (result.LastEvaluatedKey) {
-                      const paginatedQuery = {
-                          ...queryParams,
-                          ExclusiveStartKey: result.LastEvaluatedKey
-                      };
-                      return this._dynamoDBClient.query(paginatedQuery).promise()
-                          .then(nextResult => processItems(nextResult.Items));
-                  }
-              })
-              .then(() => deferred.resolve())
-              .catch(error => deferred.reject(error));
+        return processItems(result.Items)
+          .then(() => {
+            // Handle pagination if there are more items
+            if (result.LastEvaluatedKey) {
+              const paginatedQuery = {
+                ...queryParams,
+                ExclusiveStartKey: result.LastEvaluatedKey,
+              };
+              return this._dynamoDBClient
+                .query(paginatedQuery)
+                .promise()
+                .then((nextResult) => processItems(nextResult.Items));
+            }
+          })
+          .then(() => deferred.resolve())
+          .catch((error) => deferred.reject(error));
       })
-      .catch(error => deferred.reject(error));
+      .catch((error) => deferred.reject(error));
 
-  return deferred.promise;
-}
+    return deferred.promise;
+  }
 
   private getEntityByAppHierarchy(jsObject: Object, appId: string, deploymentId?: string): any {
     const partitionKey: string = Keys.getAppPartitionKey(appId);
@@ -1784,87 +1959,91 @@ private cleanUpByAppHierarchy(appId: string, deploymentId?: string): q.Promise<v
     const expressionAttributeValues: { [key: string]: any } = {};
 
     Object.keys(entity).forEach((key, index) => {
-        if (key !== 'partitionKey' && key !== 'rowKey') {
-            const attributeName = `#attr${index}`;
-            const attributeValue = `:val${index}`;
-            updateExpressions.push(`${attributeName} = ${attributeValue}`);
-            expressionAttributeNames[attributeName] = key;
-            expressionAttributeValues[attributeValue] = entity[key];
-        }
+      if (key !== "partitionKey" && key !== "rowKey") {
+        const attributeName = `#attr${index}`;
+        const attributeValue = `:val${index}`;
+        updateExpressions.push(`${attributeName} = ${attributeValue}`);
+        expressionAttributeNames[attributeName] = key;
+        expressionAttributeValues[attributeValue] = entity[key];
+      }
     });
 
     const params = {
-        TableName: AwsStorage.TABLE_NAME,
-        Key: {
-            partitionKey: entity.partitionKey,
-            rowKey: entity.rowKey
-        },
-        UpdateExpression: `SET ${updateExpressions.join(', ')}`,
-        ExpressionAttributeNames: expressionAttributeNames,
-        ExpressionAttributeValues: expressionAttributeValues,
-        ConditionExpression: 'attribute_exists(partitionKey) AND attribute_exists(rowKey)'
-    };
-
-    this._dynamoDBClient.update(params).promise()
-        .then(() => {
-            deferred.resolve();
-        })
-        .catch((error: any) => {
-            if (error.code === 'ConditionalCheckFailedException') {
-                deferred.reject(new Error('Entity does not exist'));
-            } else {
-                deferred.reject(error);
-            }
-        });
-
-    return deferred.promise;
-}
-
-private updateByAppHierarchy(jsObject: Object, appId: string, deploymentId?: string): q.Promise<void> {
-  const deferred = q.defer<void>();
-  const entity: any = this.getEntityByAppHierarchy(jsObject, appId, deploymentId);
-
-  // Build update expressions
-  const updateExpressions: string[] = [];
-  const expressionAttributeNames: { [key: string]: string } = {};
-  const expressionAttributeValues: { [key: string]: any } = {};
-
-  Object.keys(entity).forEach((key, index) => {
-      if (key !== 'partitionKey' && key !== 'rowKey') {
-          const attributeName = `#attr${index}`;
-          const attributeValue = `:val${index}`;
-          updateExpressions.push(`${attributeName} = ${attributeValue}`);
-          expressionAttributeNames[attributeName] = key;
-          expressionAttributeValues[attributeValue] = entity[key];
-      }
-  });
-
-  const params = {
       TableName: AwsStorage.TABLE_NAME,
       Key: {
-          partitionKey: entity.partitionKey,
-          rowKey: entity.rowKey
+        partitionKey: entity.partitionKey,
+        rowKey: entity.rowKey,
       },
-      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+      UpdateExpression: `SET ${updateExpressions.join(", ")}`,
       ExpressionAttributeNames: expressionAttributeNames,
       ExpressionAttributeValues: expressionAttributeValues,
-      ConditionExpression: 'attribute_exists(partitionKey) AND attribute_exists(rowKey)'
-  };
+      ConditionExpression: "attribute_exists(partitionKey) AND attribute_exists(rowKey)",
+    };
 
-  this._dynamoDBClient.update(params).promise()
+    this._dynamoDBClient
+      .update(params)
+      .promise()
       .then(() => {
-          deferred.resolve();
+        deferred.resolve();
       })
       .catch((error: any) => {
-          if (error.code === 'ConditionalCheckFailedException') {
-              deferred.reject(new Error('Entity does not exist'));
-          } else {
-              deferred.reject(error);
-          }
+        if (error.code === "ConditionalCheckFailedException") {
+          deferred.reject(new Error("Entity does not exist"));
+        } else {
+          deferred.reject(error);
+        }
       });
 
-  return deferred.promise;
-}
+    return deferred.promise;
+  }
+
+  private updateByAppHierarchy(jsObject: Object, appId: string, deploymentId?: string): q.Promise<void> {
+    const deferred = q.defer<void>();
+    const entity: any = this.getEntityByAppHierarchy(jsObject, appId, deploymentId);
+
+    // Build update expressions
+    const updateExpressions: string[] = [];
+    const expressionAttributeNames: { [key: string]: string } = {};
+    const expressionAttributeValues: { [key: string]: any } = {};
+
+    Object.keys(entity).forEach((key, index) => {
+      if (key !== "partitionKey" && key !== "rowKey") {
+        const attributeName = `#attr${index}`;
+        const attributeValue = `:val${index}`;
+        updateExpressions.push(`${attributeName} = ${attributeValue}`);
+        expressionAttributeNames[attributeName] = key;
+        expressionAttributeValues[attributeValue] = entity[key];
+      }
+    });
+
+    const params = {
+      TableName: AwsStorage.TABLE_NAME,
+      Key: {
+        partitionKey: entity.partitionKey,
+        rowKey: entity.rowKey,
+      },
+      UpdateExpression: `SET ${updateExpressions.join(", ")}`,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ConditionExpression: "attribute_exists(partitionKey) AND attribute_exists(rowKey)",
+    };
+
+    this._dynamoDBClient
+      .update(params)
+      .promise()
+      .then(() => {
+        deferred.resolve();
+      })
+      .catch((error: any) => {
+        if (error.code === "ConditionalCheckFailedException") {
+          deferred.reject(new Error("Entity does not exist"));
+        } else {
+          deferred.reject(error);
+        }
+      });
+
+    return deferred.promise;
+  }
 
   private getNextLabel(packageHistory: storage.Package[]): string {
     if (packageHistory.length === 0) {
@@ -1881,84 +2060,84 @@ private updateByAppHierarchy(jsObject: Object, appId: string, deploymentId?: str
     overrideMessage: boolean = false,
     overrideCondition?: string,
     overrideValue?: string
-): any {
+  ): any {
     let errorCodeRaw: string;
     let errorMessage: string;
 
     // Extract error details from AWS error
     try {
-        errorCodeRaw = awsError.code || awsError.name;
-        errorMessage = awsError.message;
+      errorCodeRaw = awsError.code || awsError.name;
+      errorMessage = awsError.message;
     } catch (error) {
-        errorCodeRaw = 'UnknownError';
-        errorMessage = awsError.toString();
+      errorCodeRaw = "UnknownError";
+      errorMessage = awsError.toString();
     }
 
     if (overrideMessage && overrideCondition === errorCodeRaw) {
-        errorMessage = overrideValue;
+      errorMessage = overrideValue;
     }
 
     // Map AWS error codes to storage error codes
     let errorCode: storage.ErrorCode;
     switch (errorCodeRaw) {
-        // DynamoDB Errors
-        case 'ResourceNotFoundException':
-        case 'NoSuchKey':               // S3
-        case 'NotFound':
-            errorCode = storage.ErrorCode.NotFound;
-            break;
+      // DynamoDB Errors
+      case "ResourceNotFoundException":
+      case "NoSuchKey": // S3
+      case "NotFound":
+        errorCode = storage.ErrorCode.NotFound;
+        break;
 
-        case 'ConditionalCheckFailedException':
-        case 'ResourceInUseException':
-            errorCode = storage.ErrorCode.AlreadyExists;
-            break;
+      case "ConditionalCheckFailedException":
+      case "ResourceInUseException":
+        errorCode = storage.ErrorCode.AlreadyExists;
+        break;
 
-        case 'ItemCollectionSizeLimitExceededException':
-        case 'EntityTooLarge':          // S3
-            errorCode = storage.ErrorCode.TooLarge;
-            break;
+      case "ItemCollectionSizeLimitExceededException":
+      case "EntityTooLarge": // S3
+        errorCode = storage.ErrorCode.TooLarge;
+        break;
 
-        // Connection/Network Errors
-        case 'NetworkingError':
-        case 'TimeoutError':
-        case 'RequestTimeout':
-        case 'RequestTimeoutException':
-            errorCode = storage.ErrorCode.ConnectionFailed;
-            break;
+      // Connection/Network Errors
+      case "NetworkingError":
+      case "TimeoutError":
+      case "RequestTimeout":
+      case "RequestTimeoutException":
+        errorCode = storage.ErrorCode.ConnectionFailed;
+        break;
 
-        // Authentication/Authorization
-        case 'UnauthorizedOperation':
-        case 'AccessDeniedException':
-        case 'InvalidAccessKeyId':
-        case 'SignatureDoesNotMatch':
-            errorCode = storage.ErrorCode.Unauthorized;
-            break;
+      // Authentication/Authorization
+      case "UnauthorizedOperation":
+      case "AccessDeniedException":
+      case "InvalidAccessKeyId":
+      case "SignatureDoesNotMatch":
+        errorCode = storage.ErrorCode.Unauthorized;
+        break;
 
-        // Throttling
-        case 'ProvisionedThroughputExceededException':
-        case 'ThrottlingException':
-            errorCode = storage.ErrorCode.ThrottlingError;
-            break;
+      // Throttling
+      case "ProvisionedThroughputExceededException":
+      case "ThrottlingException":
+        errorCode = storage.ErrorCode.ThrottlingError;
+        break;
 
-        // Service errors
-        case 'InternalServerError':
-        case 'ServiceUnavailable':
-            errorCode = storage.ErrorCode.ServiceError;
-            break;
+      // Service errors
+      case "InternalServerError":
+      case "ServiceUnavailable":
+        errorCode = storage.ErrorCode.ServiceError;
+        break;
 
-        // Validation errors
-        case 'ValidationException':
-        case 'InvalidParameterException':
-            errorCode = storage.ErrorCode.ValidationError;
-            break;
+      // Validation errors
+      case "ValidationException":
+      case "InvalidParameterException":
+        errorCode = storage.ErrorCode.ValidationError;
+        break;
 
-        default:
-            errorCode = storage.ErrorCode.Other;
-            break;
+      default:
+        errorCode = storage.ErrorCode.Other;
+        break;
     }
 
     throw storage.storageError(errorCode, errorMessage);
-}
+  }
 
   private static deleteIsCurrentAccountProperty(map: storage.CollaboratorMap): void {
     if (map) {

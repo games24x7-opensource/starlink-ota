@@ -9,10 +9,10 @@ Please refer to [react-native-code-push](https://github.com/microsoft/react-nati
 ### Local
 
 #### Prerequisites
+- There is a `docker-compose.yml` file at root to run **Dynamo,Redis,S3** services locally
+- Run `docker-compose up -d` to start the services
 
-The CodePush Server requires Azure Blob Storage to operate. For the local setup, there is an option to use emulated local storage with Azurite. 
-Please follow Azurite [official documentation](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite) to [install](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio#install-azurite) and [run](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio#running-azurite-from-the-command-line) it locally.
-Additionally, you need to specify [EMULATED](ENVIRONMENT.md#emulated) flag equals true in the environmental variables.
+
 
 #### Steps
 To run the CodePush Server locally, follow these steps:
@@ -27,7 +27,6 @@ By default, local CodePush server runs on HTTP. To run CodePush Server on HTTPS:
 1. Create a `certs` directory and place `cert.key` (private key) and `cert.crt` (certificate) files there.
 2. Set environment variable [HTTPS](./ENVIRONMENT.md#https) to true.
  
-> **Warning!** When hosting CodePush on Azure App Service HTTPS is enabled by default.
 
 For more detailed instructions and configuration options, please refer to the [ENVIRONMENT.md](./ENVIRONMENT.md) file.
 
