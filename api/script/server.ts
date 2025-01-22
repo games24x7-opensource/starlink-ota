@@ -19,7 +19,6 @@ defaultServer.start(function (err: Error, app: express.Express) {
   let server: any;
 
   if (httpsEnabled) {
-    console.log(httpsEnabled, "loki:: https enabled");
     const options = {
       key: fs.readFileSync("./certs/cert.key", "utf8"),
       cert: fs.readFileSync("./certs/cert.crt", "utf8"),
@@ -29,7 +28,6 @@ defaultServer.start(function (err: Error, app: express.Express) {
       console.log("API host listening at https://localhost:" + port);
     });
   } else {
-    console.log(process.env.HTTPS, "loki::port");
     server = app.listen(port, function () {
       console.log("API host listening at http://localhost:" + port);
     });
