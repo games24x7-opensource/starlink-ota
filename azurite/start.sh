@@ -1,1 +1,0 @@
-npx azurite --location '/Users/amruth-skanda1/AsmWorkspace/MyPlayground/code-push-server/azurite' --debug '/Users/amruth-skanda1/AsmWorkspace/MyPlayground/code-push-server/azurite/debug.log' --blobHost 192.168.72.245 --queueHost 192.168.72.245 --tableHost 192.168.72.245
