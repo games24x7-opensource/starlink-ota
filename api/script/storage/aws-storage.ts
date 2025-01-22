@@ -151,7 +151,14 @@ interface AccessKeyPointer {
 export class AwsStorage implements storage.Storage {
   public static NO_ID_ERROR = "No id set";
 
-  private static HISTORY_BLOB_CONTAINER_NAME = "my11circle-logs";
+  static PACKAGE_HISTORY_S3_BUCKET_NAME = "my11circle-logs";
+  static PACKAGE_HISTORY_S3_PREFIX = "ota-v1/package-history";
+
+  static PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME = "g24x7.stage-reverie-website";
+  static PACKAGE_DOWNLOAD_CDN_S3_PREFIX = "ota-v1/package-downloads";
+
+  static PACKAGE_DOWNLOAD_CDN_URL = "https://stage-cdn.my11circle.com"
+
   private static MAX_PACKAGE_HISTORY_LENGTH = 50;
   private static TABLE_NAME = "code-push-server-stage-v1";
 
@@ -223,8 +230,8 @@ export class AwsStorage implements storage.Storage {
 
                 const historyBucketCheck: q.Promise<void> = q.Promise<void>((bucketResolve, bucketReject) => {
                     const params = {
-                        Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-                        Key: 'health'
+                        Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,
+                        Key: `${AwsStorage.PACKAGE_HISTORY_S3_PREFIX}/health`
                     };
 
                     this._s3Client.headObject(params).promise()
@@ -233,7 +240,7 @@ export class AwsStorage implements storage.Storage {
                             bucketReject(
                                 storage.storageError(
                                     storage.ErrorCode.ConnectionFailed,
-                                    `The S3 service failed the health check for ${AwsStorage.HISTORY_BLOB_CONTAINER_NAME}: ${error.message}`
+                                    `The S3 service failed the health check for ${AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME}: ${error.message}`
                                 )
                             );
                         });
@@ -559,12 +566,12 @@ export class AwsStorage implements storage.Storage {
             deploymentId = returnedId;
             
             // Upload empty history array to S3
-            const params = {
-                Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-                Key: `deployments/${deploymentId}`,
-                Body: JSON.stringify([]),
-                ContentType: 'application/json'
-            };
+          const params = {
+            Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,
+            Key: `${AwsStorage.PACKAGE_HISTORY_S3_PREFIX}/${deploymentId}`,
+            Body: JSON.stringify([]),
+            ContentType: 'application/json'
+          };
 
             return q.Promise<void>((resolve, reject) => {
                 this._s3Client.putObject(params).promise()
@@ -788,9 +795,9 @@ export class AwsStorage implements storage.Storage {
         })
         .then((buffer: Buffer) => {
             const params = {
-              Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-              Key: `deployments/${blobId}`,
-              Body: Buffer.from(buffer),
+                Bucket: AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME,
+                Key: `${AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_PREFIX}/${blobId}`,
+                Body: Buffer.from(buffer),
                 ContentLength: streamLength,
                 ContentType: 'application/octet-stream'
             };
@@ -820,31 +827,7 @@ public getBlobUrl(blobId: string): q.Promise<string> {
   return this._setupPromise
       .then(() => {
           return q.Promise<string>((resolve, reject) => {
-              const params = {
-                  Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-                  Key: `deployments/${blobId}`,
-                  Expires: 3600 // URL expires in 1 hour
-              };
-
-              this._s3Client.getSignedUrlPromise('getObject', params)
-                  .then((url: string) => {
-                      if (!url) {
-                          reject(storage.storageError(
-                              storage.ErrorCode.NotFound,
-                              'Failed to generate signed URL'
-                          ));
-                      }
-                      resolve(url);
-                  })
-                  .catch(error => {
-                      if (error.code === 'NoSuchKey') {
-                          reject(storage.storageError(
-                              storage.ErrorCode.NotFound,
-                              `Blob ${blobId} not found`
-                          ));
-                      }
-                      reject(error);
-                  });
+              resolve(`${AwsStorage.PACKAGE_DOWNLOAD_CDN_URL}/${AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_PREFIX}/${blobId}`);
           });
       })
       .catch(AwsStorage.awsErrorHandler);
@@ -855,8 +838,8 @@ public removeBlob(blobId: string): q.Promise<void> {
       .then(() => {
           return q.Promise<void>((resolve, reject) => {
               const params: S3.DeleteObjectRequest = {
-                Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-                Key: `deployments/${blobId}`,
+                Bucket: AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME,
+                Key: `${AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_PREFIX}/${blobId}`,
               };
 
               // First check if object exists
@@ -1236,11 +1219,11 @@ public updateAccessKey(accountId: string, accessKey: storage.AccessKey): q.Promi
     });
 }
 
-private getPackageHistoryFromBlob(blobId: string): q.Promise<storage.Package[]> {
+private getPackageHistoryFromBlob(deploymentId: string): q.Promise<storage.Package[]> {
   return q.Promise<storage.Package[]>((resolve, reject) => {
       const params: S3.GetObjectRequest = {
-          Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-          Key: `deployments/${blobId}`,
+        Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,
+        Key: `${AwsStorage.PACKAGE_HISTORY_S3_PREFIX}/${deploymentId}`,
       };
 
       this._s3Client.getObject(params).promise()
@@ -1267,7 +1250,7 @@ private getPackageHistoryFromBlob(blobId: string): q.Promise<storage.Package[]> 
               if (error.code === 'NoSuchKey') {
                   reject(storage.storageError(
                       storage.ErrorCode.NotFound,
-                      `Package history not found for ID: ${blobId}`
+                      `Package history not found for ID: ${deploymentId}`
                   ));
               } else {
                   reject(AwsStorage.awsErrorHandler(error));
@@ -1276,11 +1259,11 @@ private getPackageHistoryFromBlob(blobId: string): q.Promise<storage.Package[]> 
   });
 }
 
-private uploadToHistoryBlob(blobId: string, content: string): q.Promise<void> {
+private uploadToHistoryBlob(deploymentId: string, content: string): q.Promise<void> {
   return q.Promise<void>((resolve, reject) => {
       const params: S3.PutObjectRequest = {
-          Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-          Key: `deployments/${blobId}`,
+          Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,
+          Key: `${AwsStorage.PACKAGE_HISTORY_S3_PREFIX}/${deploymentId}`,
           Body: content,
           ContentType: 'application/json',
           ContentLength: Buffer.from(content).length
@@ -1292,7 +1275,7 @@ private uploadToHistoryBlob(blobId: string, content: string): q.Promise<void> {
               if (error.code === 'NoSuchBucket') {
                   reject(storage.storageError(
                       storage.ErrorCode.NotFound,
-                      `History bucket ${AwsStorage.HISTORY_BLOB_CONTAINER_NAME} not found`
+                      `History bucket ${AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME} not found`
                   ));
               } else {
                   reject(AwsStorage.awsErrorHandler(error));
@@ -1301,11 +1284,11 @@ private uploadToHistoryBlob(blobId: string, content: string): q.Promise<void> {
   });
 }
 
-private deleteHistoryBlob(blobId: string): q.Promise<void> {
+private deleteHistoryBlob(deploymentId: string): q.Promise<void> {
   return q.Promise<void>((resolve, reject) => {
       const params: S3.DeleteObjectRequest = {
-          Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-          Key: `deployments/${blobId}`,
+        Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,
+        Key: `${AwsStorage.PACKAGE_HISTORY_S3_PREFIX}/${deploymentId}`,
       };
 
       // First check if object exists
@@ -1318,7 +1301,7 @@ private deleteHistoryBlob(blobId: string): q.Promise<void> {
               if (error.code === 'NotFound' || error.code === 'NoSuchKey') {
                   reject(storage.storageError(
                       storage.ErrorCode.NotFound,
-                      `History blob ${blobId} not found`
+                      `History blob ${deploymentId} not found`
                   ));
               } else {
                   reject(AwsStorage.awsErrorHandler(error));
