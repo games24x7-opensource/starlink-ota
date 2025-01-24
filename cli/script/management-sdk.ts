@@ -88,7 +88,7 @@ class AccountManager {
     return Promise<any>((resolve, reject, notify) => {
       resolve(true);
       return;
-      
+
       const request: superagent.Request<any> = superagent.get(`${this._serverUrl}${urlEncode(["/authenticated"])}`);
       this.attachCredentials(request);
 

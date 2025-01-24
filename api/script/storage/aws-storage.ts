@@ -152,10 +152,10 @@ export class AwsStorage implements storage.Storage {
   public static NO_ID_ERROR = "No id set";
 
   static PACKAGE_HISTORY_S3_BUCKET_NAME = "my11circle-logs";
-  static PACKAGE_HISTORY_S3_PREFIX = "ota-v1/package-history";
+  static PACKAGE_HISTORY_S3_PREFIX = "ota-history/package-history";
 
   static PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME = "g24x7.stage-reverie-website";
-  static PACKAGE_DOWNLOAD_CDN_S3_PREFIX = "ota-v1/package-downloads";
+  static PACKAGE_DOWNLOAD_CDN_S3_PREFIX = "ota-releases/package-downloads";
 
   static PACKAGE_DOWNLOAD_CDN_URL = "https://stage-cdn.my11circle.com";
 
@@ -569,14 +569,6 @@ export class AwsStorage implements storage.Storage {
         const params = {
           Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,
           Key: `${AwsStorage.PACKAGE_HISTORY_S3_PREFIX}/${deploymentId}`,
-          Body: JSON.stringify([]),
-          ContentType: "application/json",
-        };
-
-        // Upload empty history array to S3
-        const params = {
-          Bucket: AwsStorage.HISTORY_BLOB_CONTAINER_NAME,
-          Key: `deployments/${deploymentId}`,
           Body: JSON.stringify([]),
           ContentType: "application/json",
         };
@@ -1224,7 +1216,7 @@ export class AwsStorage implements storage.Storage {
   private blobHealthCheck(blobId: string): q.Promise<void> {
     return q.Promise<void>((resolve, reject) => {
       const params: S3.GetObjectRequest = {
-        Bucket: bucket,
+        Bucket: blobId,
         Key: "health",
       };
 
@@ -1240,21 +1232,21 @@ export class AwsStorage implements storage.Storage {
           if (content !== "health") {
             throw storage.storageError(
               storage.ErrorCode.ConnectionFailed,
-              `The S3 service failed the health check for ${bucket}: invalid content`
+              `The S3 service failed the health check for ${blobId}: invalid content`
             );
           }
           resolve();
         })
         .catch((error) => {
           if (error.code === "NoSuchBucket") {
-            reject(storage.storageError(storage.ErrorCode.ConnectionFailed, `The S3 bucket ${bucket} does not exist`));
+            reject(storage.storageError(storage.ErrorCode.ConnectionFailed, `The S3 bucket ${blobId} does not exist`));
           } else if (error.code === "NoSuchKey") {
-            reject(storage.storageError(storage.ErrorCode.ConnectionFailed, `Health check object not found in bucket ${bucket}`));
+            reject(storage.storageError(storage.ErrorCode.ConnectionFailed, `Health check object not found in bucket ${blobId}`));
           } else {
             reject(
               storage.storageError(
                 storage.ErrorCode.ConnectionFailed,
-                `The S3 service failed the health check for ${bucket}: ${error.message}`
+                `The S3 service failed the health check for ${blobId}: ${error.message}`
               )
             );
           }

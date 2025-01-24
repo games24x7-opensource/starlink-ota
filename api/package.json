@@ -23,6 +23,8 @@
   },
   "author": "Microsoft",
   "dependencies": {
+    "lynx": "0.2.0",
+    "prom-client": "14.2.0",
     "@azure/data-tables": "^13.2.2",
     "@azure/identity": "^4.2.1",
     "@azure/keyvault-secrets": "^4.7.0",

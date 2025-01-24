@@ -9,13 +9,14 @@ import { JsonStorage } from "./storage/json-storage";
 import { RedisManager } from "./redis-manager";
 import { Storage } from "./storage/storage";
 import { Response } from "express";
-const { DefaultAzureCredential } = require("@azure/identity");
-const { SecretClient } = require("@azure/keyvault-secrets");
+
 
 import * as bodyParser from "body-parser";
 const domain = require("express-domain-middleware");
 import * as express from "express";
 import * as q from "q";
+
+
 
 interface Secret {
   id: string;
@@ -140,7 +141,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
             }
 
             req.user = {
-              id: 'g24x7',
+              id: "g24x7",
             };
 
             next();
