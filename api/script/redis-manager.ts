@@ -111,12 +111,25 @@ export class RedisManager {
       this._opsClient = redis.createClient(redisConfig);
       this._metricsClient = redis.createClient(redisConfig);
       this._opsClient.on("error", (err: Error) => {
-        console.error(err);
+        console.error("Redis ops client error:", err);
       });
 
       this._metricsClient.on("error", (err: Error) => {
-        console.error(err);
+        console.error("Redis metrics client error:", err);
       });
+
+      // Add end event handlers
+      this._opsClient.on("end", () => {
+        console.log("Redis ops client connection closed");
+      });
+
+      this._metricsClient.on("end", () => {
+        console.log("Redis metrics client connection closed");
+      });
+
+      // Handle process termination
+      // process.on("SIGTERM", () => this.gracefulShutdown());
+      // process.on("SIGINT", () => this.gracefulShutdown());
 
       this._promisifiedOpsClient = new PromisifiedRedisClient(this._opsClient);
       this._promisifiedMetricsClient = new PromisifiedRedisClient(this._metricsClient);
@@ -127,6 +140,16 @@ export class RedisManager {
       console.warn("No REDIS_HOST or REDIS_PORT environment variable configured.");
     }
   }
+
+  // private async gracefulShutdown(): Promise<any> {
+  //   console.log("Initiating graceful shutdown of Redis connections...");
+  //   try {
+  //     await this.close();
+  //     console.log("Redis connections closed successfully");
+  //   } catch (error) {
+  //     console.error("Error during Redis shutdown:", error);
+  //   }
+  // }
 
   public get isEnabled(): boolean {
     return !!this._opsClient && !!this._metricsClient;

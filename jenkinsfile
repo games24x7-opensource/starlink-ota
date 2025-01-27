@@ -22,7 +22,7 @@ pipeline {
                     commonProperties.checkoutToSubdirectory(dir: 'assets')
                     nodeWorkflow.call(file: 'assets/config-arm64-nodeworkflow.yaml')
                    // commonProperties.checkoutToSubdirectory(dir: 'assets')
-                    dockerArmWorkflow.call(file: 'assets/config-arm64-dockerarmworkflow.yaml', appName: 'warden')
+                    dockerArmWorkflow.call(file: 'assets/config-arm64-dockerarmworkflow.yaml', appName: 'code-push-server')
                 }
             }
         }

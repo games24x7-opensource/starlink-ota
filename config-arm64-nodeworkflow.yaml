@@ -1,0 +1,65 @@
+notification:
+  slack:
+    enabled: false
+    success:
+    failure:
+  email:
+    enabled: false
+    to:
+    cc:
+    bcc:
+appUniqueName:
+  appName: code-push-server
+code_build:
+  enabled: true
+code_testing:
+  enabled: true
+  unit_test:
+    enabled: false
+  doc_gen:
+    enabled: false
+code_quality:
+  sonar_test:
+    enabled: false
+artifact_backup:
+  enabled: false
+
+docker:
+  keep_workspace: true
+  linting:
+    enabled: false
+    report_path: ""
+    report_name: "result.html"
+  image_build:
+    enabled: false
+    docker_file_path:
+  image_scanning:
+    enabled: false
+    image_name: "docker-linter"
+  publish_image:
+    enabled: false
+    registry:
+      - name: "ecr"
+        jenkins_credentials: ""
+        admin_role: true
+
+image_promotion:
+  enabled: false
+  registry:
+    - name: "ecr"
+      jenkins_credentials: ""
+      admin_role: true
+
+security_gates:
+  sast:
+    enabled: false
+    org: "platform-o8s"
+    team: "Frontend"
+    fail_build: false
+    fail_build_severity: "high" # <low|medium|high>
+  sca:
+    enabled: false
+    org: "platform-o8s"
+    team: "Frontend"
+    fail_build: true
+    fail_build_severity: "critical" # <low|medium|high|critical>

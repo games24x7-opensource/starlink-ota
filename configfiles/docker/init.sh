@@ -8,38 +8,50 @@
 ###################################################################################################################
 
 set -x
-python=`which python`
-
-# Reference: Home path of most apps(home_property_path)
-# home_property_path is app/resource location
-# /var/lib/jetty/
-# /usr/local/tomcat/
-# /home/tomcat/
-# /home/deploy/
+python=`which python3`
 
 
-if [ $ENV = 'k8s' ]; then
-  # Replace placeholder in zookeeper.json
-  sed -i "s/docker-stack-name/$SETUP_NAME/g" /home/deploy/docker/zookeeper_k8s.json
+log_directory_escape_char="\/home\/deploy\/code-push-server\/logs"
 
-  home_property_path="/home/deploy/robin"
+replace_and_import_zk() {
+  local file=$1
+  local zk_url=$2
+  local replacement_docker_stack=$3
+  sed -i "s/docker-stack-name/$replacement_docker_stack/g" $file
+  if [ -n "$RUN_NODE_CONTAINER" ] && [ "$RUN_NODE_CONTAINER" = 'true' ]; then
+    $python /usr/local/scripts/zk_v3.py --import --overwrite --file "$file" $zk_url
+  fi
+}
 
-  echo "Replacing all docker hardcoded vars with kub vars"
-  find $home_property_path -type f -exec sed -i "s/zk\.docker\.dev/zookeeper/g" {} +
-  find $home_property_path -type f -exec sed -i "s/mysql\.docker\.dev/mysqlha-0\.mysqlha/g" {} +
-  find $home_property_path -type f -exec sed -i "s/kafka\.docker\.dev/kafka/g" {} +
-  find $home_property_path -type f -exec sed -i "s/mongo\.docker\.dev/mongodb-ha/g"  {} +
-  find $home_property_path -type f -exec sed -i "s/ftp\.docker\.dev/ftp-vsftpd/g"  {} +
-  find $home_property_path -type f -exec sed -i "s/smtp\.docker\.dev/smtp/g"  {} +
+if [ $ENV = 'k8s-stage' ] || [ $ENV = "k8s-pt" ]; then
+  echo "environment -> $ENV"
 
-  # Start Zookeeper import process
-  $python /usr/local/scripts/zk.py --import --overwrite --file /home/deploy/docker/zookeeper_k8s.json $ZK_URL:2181/
+  if [ $ENV = "k8s-pt" ]; then
+    # Replace placeholder in zookeeper.json and Start Zookeeper import process
+    replace_and_import_zk /home/deploy/docker/zookeeper_pt.json $ZK_URL $SETUP_NAME
+  else
+    # Used for regression test suite. As many services are still on docker we need to make the K8 ZK point to the docker stack
+    if
+      [ -n "$RUN_REGRESSION" ] &&
+      [ "$RUN_REGRESSION" = 'true' ] &&
+      [ -n "$REGRESSION_DOCKER_STACK" ] &&
+      [ "$REGRESSION_DOCKER_STACK" != 'NA' ];
+    then
+      # Replace placeholder in zookeeper.json and Start Zookeeper import process
+      replace_and_import_zk /home/deploy/docker/zookeeper.json $ZK_URL $REGRESSION_DOCKER_STACK
+    else
+      # Replace placeholder in zookeeper.json and Start Zookeeper import process
+      replace_and_import_zk /home/deploy/docker/zookeeper_k8s.json $ZK_URL $SETUP_NAME
+    fi
+  fi
+elif [ $ENV = 'k8s-prod' ]; then
+  echo "environment -> $ENV"
 else
+  echo "environment -> $ENV"
   # Replace placeholder in zookeeper.json
   sed -i "s/docker-stack-name/$SETUP_NAME/g" /home/deploy/docker/zookeeper.json
-  
   # Start Zookeeper import process
-  $python /usr/local/scripts/zk.py --import --overwrite --file /home/deploy/docker/zookeeper.json $ZK_URL:2181/
+  $python /usr/local/scripts/zk_v3.py --import --overwrite --file /home/deploy/docker/zookeeper.json $ZK_URL:2181/
 fi
 
 status=$?
