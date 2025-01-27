@@ -17,6 +17,9 @@ ENV log_directory=/home/deploy/code-push-server/logs
 ENV app_directory=/home/deploy/code-push-server
 ENV node_server_port=8080
 
+# Create necessary directories first
+RUN mkdir -p ${app_directory}/api
+
 COPY api/package.json ${app_directory}/api
 COPY .npmrc ${app_directory}/
 # move api and cli folders to docker machine
