@@ -10,6 +10,7 @@ import * as utils from "../utils/common";
 import { isPrototypePollutionKey } from "./storage";
 
 import { DynamoDB, S3 } from "aws-sdk";
+import AWS = require("aws-sdk");
 
 module Keys {
   // Can these symbols break us?
@@ -1197,6 +1198,7 @@ export class AwsStorage implements storage.Storage {
     try {
       const awsConfig = {
         region: process.env.AWS_REGION || "ap-south-1",
+        credentials: new AWS.SharedIniFileCredentials({ profile: "272110293415_Dev-L3-Poker-Stage" }),
       };
 
       const dynamoDBClient = new DynamoDB.DocumentClient(awsConfig);

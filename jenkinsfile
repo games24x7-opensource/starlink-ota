@@ -1,0 +1,5 @@
+@Library('Utilities') _
+node('node_docker_build') {
+  commonProperties.checkoutToSubdirectory(dir: 'assets')
+  nodeWorkflow.call(file: 'assets/config.yaml')
+}
