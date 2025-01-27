@@ -11,9 +11,9 @@ if [ -n "$RUN_NGINX_CONTAINER" ] && [ "$RUN_NGINX_CONTAINER" = 'true' ]; then
   nginx -g "daemon off;"
 elif [ -n "$RUN_NODE_CONTAINER" ] && [ "$RUN_NODE_CONTAINER" = 'true' ]; then
   echo "Running NODE_CONTAINER"
-   cd /app/cli && npm run  start:env
+   cd /api && npm run  start:env
 else
   echo "Running both NGINX_CONTAINER and NODE_CONTAINER"
-  cd /app/cli && npm run  start:env & 
+  cd /api && npm run  start:env& 
   nginx -g "daemon off;"
 fi

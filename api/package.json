@@ -4,11 +4,11 @@
   "description": "Source code for the CodePush service API",
   "main": "./script/server.js",
   "scripts": {
-    "start": "REDIS_HOST=127.0.0.1 REDIS_PORT=6379 DEBUG_DISABLE_AUTH=true LOGGING=true node --inspect ./bin/script/server.js",
-    "start:env": "node --inspect -r dotenv/config ./bin/script/server.js dotenv_config_path=.env dotenv_config_silent=true",
-    "start:prod": "node  -r dotenv/config ./bin/script/server.js dotenv_config_path=.prod-env dotenv_config_silent=true",
-    "clean": "rimraf bin",
-    "build": "tsc && shx cp -r ./script/views ./bin/script",
+    "start": "REDIS_HOST=127.0.0.1 REDIS_PORT=6379 DEBUG_DISABLE_AUTH=true LOGGING=true node --inspect ./dist/script/server.js",
+    "start:env": "node --inspect -r dotenv/config ./dist/script/server.js dotenv_config_path=.env dotenv_config_silent=true",
+    "start:prod": "node  -r dotenv/config ./dist/script/server.js dotenv_config_path=.prod-env dotenv_config_silent=true",
+    "clean": "rimraf dist",
+    "build": "tsc && shx cp -r ./script/views ./dist/script",
     "prettier": "prettier --write \"./**/*.ts\"",
     "lint": "npx eslint ./script/**/*.ts",
     "lint:fix": "npx eslint ./script/**/*.ts --fix"

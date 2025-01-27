@@ -17,13 +17,13 @@ ENV log_directory=/home/deploy/code-push-server/logs
 ENV app_directory=/home/deploy/code-push-server
 ENV node_server_port=8080
 
-COPY package.json ${app_directory}/
+COPY api/package.json ${app_directory}/api
 COPY .npmrc ${app_directory}/
 # move api and cli folders to docker machine
-COPY dist/api ${app_directory}/api
+COPY api/dist ${app_directory}/api/dist
+COPY api/node_modules ${app_directory}/api/node_modules
 # COPY dist/cli ${app_directory}/cli
 
-# COPY dist/app.js ${app_directory}/
 # COPY dist/appInit.js ${app_directory}/
 # COPY dist/shutdown.js ${app_directory}/
 # COPY dist/server.js ${app_directory}/
