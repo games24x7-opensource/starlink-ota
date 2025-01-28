@@ -22,17 +22,10 @@ RUN mkdir -p ${app_directory}/api
 
 COPY api/package.json ${app_directory}/api
 COPY .npmrc ${app_directory}/
+
 # move api and cli folders to docker machine
 COPY api/dist ${app_directory}/api/dist
 COPY api/node_modules ${app_directory}/api/node_modules
-# COPY dist/cli ${app_directory}/cli
-
-# COPY dist/appInit.js ${app_directory}/
-# COPY dist/shutdown.js ${app_directory}/
-# COPY dist/server.js ${app_directory}/
-# COPY node_modules ${app_directory}/node_modules
-# COPY core/util/sessionServiceRedisCluster/redisLuaScripts/getAllAndUpdateTTL.lua ${app_directory}/core/util/sessionServiceRedisCluster/redisLuaScripts/getAllAndUpdateTTL.lua
-# COPY core/util/redisluascripts/ ${app_directory}/core/util/redisluascripts/
 
 #zk segregation pre requisites
 COPY configfiles/docker/zookeeper.json /home/deploy/docker/zookeeper.json

@@ -10,13 +10,10 @@ import { RedisManager } from "./redis-manager";
 import { Storage } from "./storage/storage";
 import { Response } from "express";
 
-
 import * as bodyParser from "body-parser";
 const domain = require("express-domain-middleware");
 import * as express from "express";
 import * as q from "q";
-
-
 
 interface Secret {
   id: string;
@@ -119,6 +116,12 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
         res.send("Welcome to the CodePush REST API!");
       });
 
+      app.get("/alb/healthCheck", (req: express.Request, res: express.Response, next: (err?: Error) => void): any => {
+        res.status(200).send({ status: true });
+      });
+
+
+      
       app.set("etag", false);
       app.set("views", __dirname + "/views");
       app.set("view engine", "ejs");
