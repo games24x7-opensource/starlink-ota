@@ -1,0 +1,58 @@
+# .api-local.env
+
+# Mandatory parameters
+
+
+NODE_ENV = development
+API_PORT=3000  # URL of your server for local deployment
+REQUEST_TIMEOUT_IN_MILLISECONDS = 120000
+CORS_ORIGIN = http://localhost:3002
+
+# GitHub OAuth
+GITHUB_CLIENT_ID=your_github_client_id  # Your GitHub client ID
+GITHUB_CLIENT_SECRET=your_github_client_secret  # Your GitHub client secret
+
+# Optional parameters
+HTTPS=false  # Set to 'true' to enable HTTPS for local deployment
+LOGGING=true  # Turn on CodePush-specific logging of API and Storage requests
+DEBUG_DISABLE_AUTH=true  # Set to 'true' to skip authentication
+DEBUG_USER_ID=default  # Backend id of existing user to impersonate
+
+# Redis
+REDIS_HOST=localhost  # IP address where the Redis server is hosted
+REDIS_PORT=6379  # Port which Redis is listening on
+REDIS_KEY=your_redis_key  # Key used to authenticate requests to the Redis cache (if enabled)
+
+AWS_REGION=ap-south-1
+# S3 Configuration
+S3_ENDPOINT=http://localhost:4566  # LocalStack endpoint for S3
+S3_FORCE_PATH_STYLE=true  # Set to 'true' to use path-style URLs
+PACKAGE_HISTORY_S3_BUCKET_NAME = "my11circle-logs";
+PACKAGE_HISTORY_S3_PREFIX = "ota-history/package-history";
+PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME = "g24x7.stage-reverie-website";
+PACKAGE_DOWNLOAD_CDN_S3_PREFIX = "ota-releases/package-downloads";
+PACKAGE_DOWNLOAD_CDN_URL = "https://stage-cdn.my11circle.com"
+
+# DynamoDB Configuration
+DYNAMODB_ENDPOINT=http://localhost:8000  # LocalStack endpoint for DynamoDB
+
+# Unit testing
+TEST_AZURE_STORAGE=true  # Set to 'true' to run API unit tests against Azure storage
+AZURE_MANAGEMENT_URL=your_azure_management_url  # Azure URL for management tests
+AZURE_ACQUISITION_URL=your_azure_acquisition_url  # Azure URL for acquisition tests
+
+# Other
+DISABLE_ACQUISITION=false  # Set to 'true' to disable acquisition routes
+DISABLE_MANAGEMENT=false  # Set to 'true' to disable management routes
+ENABLE_ACCOUNT_REGISTRATION=true  # Set to 'false' to disable account registration
+TIMEOUT=5000  # Set to a number (in ms) to override the default mocha timeout
+APP_INSIGHTS_INSTRUMENTATION_KEY=your_app_insights_key  # App Insights Instrumentation Key
+LOG_INVALID_JSON_REQUESTS=true  # Set to 'true' to log raw request data to AppInsights
+UPLOAD_SIZE_LIMIT_MB=200  # Max number of megabytes allowed for file uploads
+ENABLE_PACKAGE_DIFFING=true  # Set to 'true' to enable generating diffs for releases
+
+# KeyVault credential resolution
+AZURE_KEYVAULT_ACCOUNT=your_keyvault_account  # Your Azure KeyVault account name
+CLIENT_ID=your_client_id  # Client ID of an Active Directory app
+CERTIFICATE_THUMBPRINT=your_certificate_thumbprint  # Thumbprint of the certificate
+REFRESH_CREDENTIALS_INTERVAL=86400000  # Frequency to re-retrieve credentials from Key Vault (in ms)
