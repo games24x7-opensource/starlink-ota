@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getManagementRouter = getManagementRouter;
+exports.getManagementRouter = void 0;
 const file_upload_manager_1 = require("../file-upload-manager");
 const rest_headers_1 = require("../utils/rest-headers");
 const rollout_selector_1 = require("../utils/rollout-selector");
@@ -58,8 +58,8 @@ function getManagementRouter(config) {
     router.post("/account", (req, res, next) => {
         const newUser = {
             createdTime: new Date().getTime(),
-            email: 'suraj.sharma@games24x7.com',
-            name: 'suraj.sharma',
+            email: "starlink-user@games24x7.com",
+            name: "starlink.user",
         };
         storage
             .addAccount(newUser)
@@ -665,7 +665,7 @@ function getManagementRouter(config) {
             .done();
     });
     const releaseRateLimiter = (0, express_rate_limit_1.default)({
-        windowMs: 15 * 60 * 1000, // 15 minutes
+        windowMs: 15 * 60 * 1000,
         max: 100, // limit each IP to 100 requests per windowMs
     });
     router.post("/apps/:appName/deployments/:deploymentName/release", releaseRateLimiter, (req, res, next) => {
@@ -835,6 +835,9 @@ function getManagementRouter(config) {
             .catch((error) => errorUtils.restErrorHandler(res, error, next))
             .done();
     });
+    /**
+     * TODO: Not working API Timeout
+     */
     router.get("/apps/:appName/deployments/:deploymentName/metrics", (req, res, next) => {
         if (!redisManager.isEnabled) {
             res.send({ metrics: {} });
@@ -1120,3 +1123,4 @@ function getManagementRouter(config) {
     }
     return router;
 }
+exports.getManagementRouter = getManagementRouter;

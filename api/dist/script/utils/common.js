@@ -2,9 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertObjectToSnakeCase = convertObjectToSnakeCase;
-exports.streamToBuffer = streamToBuffer;
-exports.hashWithSHA256 = hashWithSHA256;
+exports.hashWithSHA256 = exports.streamToBuffer = exports.convertObjectToSnakeCase = void 0;
 const streamToArray = require("stream-to-array");
 const crypto = require("crypto");
 function toSnakeCase(str) {
@@ -26,6 +24,7 @@ function convertObjectToSnakeCase(obj) {
         return acc;
     }, {});
 }
+exports.convertObjectToSnakeCase = convertObjectToSnakeCase;
 async function streamToBuffer(readableStream) {
     return new Promise((resolve, reject) => {
         streamToArray(readableStream, (err, arr) => {
@@ -40,8 +39,10 @@ async function streamToBuffer(readableStream) {
         });
     });
 }
+exports.streamToBuffer = streamToBuffer;
 function hashWithSHA256(input) {
     const hash = crypto.createHash("sha256");
     hash.update(input);
     return hash.digest("hex");
 }
+exports.hashWithSHA256 = hashWithSHA256;

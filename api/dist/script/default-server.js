@@ -2,11 +2,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.start = start;
+exports.start = void 0;
 const api = require("./api");
 const aws_storage_1 = require("./storage/aws-storage");
 const file_upload_manager_1 = require("./file-upload-manager");
-const json_storage_1 = require("./storage/json-storage");
+const json_storage_1 = require("@/storage/json-storage");
 const redis_manager_1 = require("./redis-manager");
 const bodyParser = require("body-parser");
 const domain = require("express-domain-middleware");
@@ -92,11 +92,14 @@ function start(done, useJsonStorage) {
         app.get("/", (req, res, next) => {
             res.send("Welcome to the CodePush REST API!");
         });
+        app.get("/alb/healthCheck", (req, res, next) => {
+            res.status(200).send({ status: true });
+        });
         app.set("etag", false);
         app.set("views", __dirname + "/views");
         app.set("view engine", "ejs");
         app.use("/auth/images/", express.static(__dirname + "/views/images"));
-        app.use(api.headers({ origin: process.env.CORS_ORIGIN || "http://localhost:4000" }));
+        app.use(api.headers({ origin: process.env.CORS_ORIGIN || "http://localhost:3002" }));
         app.use(api.health({ storage: storage, redisManager: redisManager }));
         if (process.env.DISABLE_ACQUISITION !== "true") {
             app.use(api.acquisition({ storage: storage, redisManager: redisManager }));
@@ -146,3 +149,4 @@ function start(done, useJsonStorage) {
     })
         .done();
 }
+exports.start = start;

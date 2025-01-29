@@ -2,8 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHealthRouter = getHealthRouter;
-exports.getAcquisitionRouter = getAcquisitionRouter;
+exports.getAcquisitionRouter = exports.getHealthRouter = void 0;
 const express = require("express");
 const semver = require("semver");
 const utils = require("../utils/common");
@@ -103,6 +102,7 @@ function getHealthRouter(config) {
     });
     return router;
 }
+exports.getHealthRouter = getHealthRouter;
 function getAcquisitionRouter(config) {
     const storage = config.storage;
     const redisManager = config.redisManager;
@@ -241,3 +241,4 @@ function getAcquisitionRouter(config) {
     router.post("/v0.1/public/codepush/report_status/download", reportStatusDownload);
     return router;
 }
+exports.getAcquisitionRouter = getAcquisitionRouter;

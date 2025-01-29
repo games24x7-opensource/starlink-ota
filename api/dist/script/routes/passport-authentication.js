@@ -18,7 +18,7 @@ const storage = require("../storage/storage");
 const validationUtils = require("../utils/validation");
 const DEFAULT_SESSION_EXPIRY = 1000 * 60 * 60 * 24 * 60; // 60 days
 const limiter = (0, express_rate_limit_1.default)({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000,
     max: 100, // limit each IP to 100 requests per windowMs
 });
 class PassportAuthentication {
@@ -34,7 +34,7 @@ class PassportAuthentication {
         // By default, the 'secure' flag will be set if the node process is using SSL
         this._cookieSessionMiddleware = cookieSession({
             httpOnly: true,
-            ttl: 3600000, // One hour in milliseconds
+            ttl: 3600000,
             name: "oauth.session",
             path: "/",
             signed: false,
@@ -368,8 +368,8 @@ class PassportAuthentication {
             responseMode: "query",
             responseType: "code",
             scope: ["email", "profile"],
-            skipUserProfile: true, // Should be set to true for Azure AD
-            validateIssuer: false, // We allow AD authentication across multiple tenants
+            skipUserProfile: true,
+            validateIssuer: false,
             allowHttpForRedirectUrl: true,
         };
         passport.use(new passportActiveDirectory.OIDCStrategy(options, (iss, sub, profile, accessToken, refreshToken, done) => {

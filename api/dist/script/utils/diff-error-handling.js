@@ -2,9 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ErrorCode = void 0;
-exports.diffError = diffError;
-exports.diffErrorHandler = diffErrorHandler;
+exports.diffErrorHandler = exports.diffError = exports.ErrorCode = void 0;
 const errorModule = require("../error");
 const storageTypes = require("../storage/storage");
 var ErrorCode;
@@ -19,6 +17,7 @@ function diffError(errorCode, message) {
     diffError.code = errorCode;
     return diffError;
 }
+exports.diffError = diffError;
 function diffErrorHandler(error) {
     if (error.source === errorModule.ErrorSource.Storage) {
         let handledError;
@@ -39,3 +38,4 @@ function diffErrorHandler(error) {
         throw error;
     }
 }
+exports.diffErrorHandler = diffErrorHandler;

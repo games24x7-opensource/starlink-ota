@@ -2,21 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ErrorCode = void 0;
-exports.restError = restError;
-exports.restErrorHandler = restErrorHandler;
-exports.sendMalformedRequestError = sendMalformedRequestError;
-exports.sendForbiddenError = sendForbiddenError;
-exports.sendForbiddenPage = sendForbiddenPage;
-exports.sendNotFoundError = sendNotFoundError;
-exports.sendNotRegisteredError = sendNotRegisteredError;
-exports.sendConflictError = sendConflictError;
-exports.sendAlreadyExistsPage = sendAlreadyExistsPage;
-exports.sendResourceGoneError = sendResourceGoneError;
-exports.sendResourceGonePage = sendResourceGonePage;
-exports.sendTooLargeError = sendTooLargeError;
-exports.sendConnectionFailedError = sendConnectionFailedError;
-exports.sendUnknownError = sendUnknownError;
+exports.sendUnknownError = exports.sendConnectionFailedError = exports.sendTooLargeError = exports.sendResourceGonePage = exports.sendResourceGoneError = exports.sendAlreadyExistsPage = exports.sendConflictError = exports.sendNotRegisteredError = exports.sendNotFoundError = exports.sendForbiddenPage = exports.sendForbiddenError = exports.sendMalformedRequestError = exports.restErrorHandler = exports.restError = exports.ErrorCode = void 0;
 const errorModule = require("../error");
 const storageTypes = require("../storage/storage");
 const passportAuthentication = require("../routes/passport-authentication");
@@ -35,6 +21,7 @@ function restError(errorCode, message) {
     restError.code = errorCode;
     return restError;
 }
+exports.restError = restError;
 function restErrorHandler(res, error, next) {
     if (!error || (error.source !== errorModule.ErrorSource.Storage && error.source !== errorModule.ErrorSource.Rest)) {
         console.log("Unknown error source");
@@ -65,6 +52,7 @@ function restErrorHandler(res, error, next) {
         }
     }
 }
+exports.restErrorHandler = restErrorHandler;
 function sendMalformedRequestError(res, message) {
     if (message) {
         res.status(400).send(sanitizeHtml(message));
@@ -73,6 +61,7 @@ function sendMalformedRequestError(res, message) {
         res.sendStatus(400);
     }
 }
+exports.sendMalformedRequestError = sendMalformedRequestError;
 function sendForbiddenError(res, message) {
     if (message) {
         res.status(403).send(sanitizeHtml(message));
@@ -81,9 +70,11 @@ function sendForbiddenError(res, message) {
         res.sendStatus(403);
     }
 }
+exports.sendForbiddenError = sendForbiddenError;
 function sendForbiddenPage(res, message) {
     res.status(403).render("message", { message: message });
 }
+exports.sendForbiddenPage = sendForbiddenPage;
 function sendNotFoundError(res, message) {
     if (message) {
         res.status(404).send(sanitizeHtml(message));
@@ -92,6 +83,7 @@ function sendNotFoundError(res, message) {
         res.sendStatus(404);
     }
 }
+exports.sendNotFoundError = sendNotFoundError;
 function sendNotRegisteredError(res) {
     if (passportAuthentication.PassportAuthentication.isAccountRegistrationEnabled()) {
         res.status(403).render("message", {
@@ -104,25 +96,32 @@ function sendNotRegisteredError(res) {
         });
     }
 }
+exports.sendNotRegisteredError = sendNotRegisteredError;
 function sendConflictError(res, message) {
     message = message ? sanitizeHtml(message) : "The provided resource already exists";
     res.status(409).send(message);
 }
+exports.sendConflictError = sendConflictError;
 function sendAlreadyExistsPage(res, message) {
     res.status(409).render("message", { message: message });
 }
+exports.sendAlreadyExistsPage = sendAlreadyExistsPage;
 function sendResourceGoneError(res, message) {
     res.status(410).send(sanitizeHtml(message));
 }
+exports.sendResourceGoneError = sendResourceGoneError;
 function sendResourceGonePage(res, message) {
     res.status(410).render("message", { message: message });
 }
+exports.sendResourceGonePage = sendResourceGonePage;
 function sendTooLargeError(res) {
     res.status(413).send("The provided resource is too large");
 }
+exports.sendTooLargeError = sendTooLargeError;
 function sendConnectionFailedError(res) {
     res.status(503).send("The CodePush server temporarily timed out. Please try again.");
 }
+exports.sendConnectionFailedError = sendConnectionFailedError;
 function sendUnknownError(res, error, next) {
     error = error || new Error("Unknown error");
     if (typeof error["stack"] === "string") {
@@ -138,6 +137,7 @@ function sendUnknownError(res, error, next) {
         res.sendStatus(500);
     }
 }
+exports.sendUnknownError = sendUnknownError;
 function storageErrorHandler(res, error, next) {
     switch (error.code) {
         case storageTypes.ErrorCode.NotFound:

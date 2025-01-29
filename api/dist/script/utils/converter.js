@@ -2,23 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.accessKeyRequestFromBody = accessKeyRequestFromBody;
-exports.accountFromBody = accountFromBody;
-exports.appFromBody = appFromBody;
-exports.appCreationRequestFromBody = appCreationRequestFromBody;
-exports.deploymentFromBody = deploymentFromBody;
-exports.toRestAccount = toRestAccount;
-exports.sortAndUpdateDisplayNameOfRestAppsList = sortAndUpdateDisplayNameOfRestAppsList;
-exports.toRestApp = toRestApp;
-exports.toRestCollaboratorMap = toRestCollaboratorMap;
-exports.toRestDeployment = toRestDeployment;
-exports.toRestDeploymentMetrics = toRestDeploymentMetrics;
-exports.toRestPackage = toRestPackage;
-exports.toStorageAccessKey = toStorageAccessKey;
-exports.toStorageApp = toStorageApp;
-exports.toStorageCollaboratorMap = toStorageCollaboratorMap;
-exports.toStorageDeployment = toStorageDeployment;
-exports.toStoragePackage = toStoragePackage;
+exports.toStoragePackage = exports.toStorageDeployment = exports.toStorageCollaboratorMap = exports.toStorageApp = exports.toStorageAccessKey = exports.toRestPackage = exports.toRestDeploymentMetrics = exports.toRestDeployment = exports.toRestCollaboratorMap = exports.toRestApp = exports.sortAndUpdateDisplayNameOfRestAppsList = exports.toRestAccount = exports.deploymentFromBody = exports.appCreationRequestFromBody = exports.appFromBody = exports.accountFromBody = exports.accessKeyRequestFromBody = void 0;
 const nodeDeepCopy = require("node-deepcopy");
 const Storage = require("../storage/storage");
 const redis = require("../redis-manager");
@@ -40,29 +24,34 @@ function accessKeyRequestFromBody(body) {
     accessKeyRequest.description = accessKeyRequest.friendlyName;
     return accessKeyRequest;
 }
+exports.accessKeyRequestFromBody = accessKeyRequestFromBody;
 function accountFromBody(body) {
     const account = {};
     account.name = body.name;
     account.email = body.email;
     return account;
 }
+exports.accountFromBody = accountFromBody;
 function appFromBody(body) {
     const app = {};
     app.name = body.name;
     return app;
 }
+exports.appFromBody = appFromBody;
 function appCreationRequestFromBody(body) {
     const appCreationRequest = {};
     appCreationRequest.name = body.name;
     appCreationRequest.manuallyProvisionDeployments = body.manuallyProvisionDeployments;
     return appCreationRequest;
 }
+exports.appCreationRequestFromBody = appCreationRequestFromBody;
 function deploymentFromBody(body) {
     const deployment = {};
     deployment.name = body.name;
     deployment.key = body.key;
     return deployment;
 }
+exports.deploymentFromBody = deploymentFromBody;
 function toRestAccount(storageAccount) {
     const restAccount = {
         name: storageAccount.name,
@@ -77,6 +66,7 @@ function toRestAccount(storageAccount) {
         restAccount.linkedProviders.push("Microsoft");
     return restAccount;
 }
+exports.toRestAccount = toRestAccount;
 function sortAndUpdateDisplayNameOfRestAppsList(apps) {
     const nameToCountMap = {};
     apps.forEach((app) => {
@@ -98,6 +88,7 @@ function sortAndUpdateDisplayNameOfRestAppsList(apps) {
         return toRestApp(storageApp, name, app.deployments);
     });
 }
+exports.sortAndUpdateDisplayNameOfRestAppsList = sortAndUpdateDisplayNameOfRestAppsList;
 function toRestApp(storageApp, displayName, deploymentNames) {
     const sortedDeploymentNames = deploymentNames
         ? deploymentNames.sort((first, second) => {
@@ -110,6 +101,7 @@ function toRestApp(storageApp, displayName, deploymentNames) {
         deployments: sortedDeploymentNames,
     };
 }
+exports.toRestApp = toRestApp;
 function toRestCollaboratorMap(storageCollaboratorMap) {
     const collaboratorMap = {};
     Object.keys(storageCollaboratorMap)
@@ -122,6 +114,7 @@ function toRestCollaboratorMap(storageCollaboratorMap) {
     });
     return collaboratorMap;
 }
+exports.toRestCollaboratorMap = toRestCollaboratorMap;
 function toRestDeployment(storageDeployment) {
     const restDeployment = {
         name: storageDeployment.name,
@@ -133,6 +126,7 @@ function toRestDeployment(storageDeployment) {
     }
     return restDeployment;
 }
+exports.toRestDeployment = toRestDeployment;
 function toRestDeploymentMetrics(metricsFromRedis) {
     if (!metricsFromRedis) {
         return {};
@@ -173,6 +167,7 @@ function toRestDeploymentMetrics(metricsFromRedis) {
     });
     return restDeploymentMetrics;
 }
+exports.toRestDeploymentMetrics = toRestDeploymentMetrics;
 function toRestPackage(storagePackage) {
     const copy = nodeDeepCopy.deepCopy(storagePackage);
     const cast = copy;
@@ -181,6 +176,7 @@ function toRestPackage(storagePackage) {
         copy.rollout = 100;
     return copy;
 }
+exports.toRestPackage = toRestPackage;
 function toStorageAccessKey(restAccessKey) {
     const storageAccessKey = {
         name: restAccessKey.name,
@@ -192,6 +188,7 @@ function toStorageAccessKey(restAccessKey) {
     };
     return storageAccessKey;
 }
+exports.toStorageAccessKey = toStorageAccessKey;
 function toStorageApp(restApp, createdTime) {
     const storageApp = {
         createdTime: createdTime,
@@ -200,11 +197,13 @@ function toStorageApp(restApp, createdTime) {
     };
     return storageApp;
 }
+exports.toStorageApp = toStorageApp;
 function toStorageCollaboratorMap(restCollaboratorMap) {
     if (!restCollaboratorMap)
         return null;
     return nodeDeepCopy.deepCopy(restCollaboratorMap);
 }
+exports.toStorageCollaboratorMap = toStorageCollaboratorMap;
 function toStorageDeployment(restDeployment, createdTime) {
     const storageDeployment = {
         createdTime: createdTime,
@@ -214,6 +213,8 @@ function toStorageDeployment(restDeployment, createdTime) {
     };
     return storageDeployment;
 }
+exports.toStorageDeployment = toStorageDeployment;
 function toStoragePackage(restPackage) {
     return nodeDeepCopy.deepCopy(restPackage);
 }
+exports.toStoragePackage = toStoragePackage;

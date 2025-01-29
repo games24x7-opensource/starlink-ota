@@ -2,19 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateKey = generateKey;
-exports.makeAccount = makeAccount;
-exports.makeStorageAccessKey = makeStorageAccessKey;
-exports.makeAccessKeyRequest = makeAccessKeyRequest;
-exports.makeStorageApp = makeStorageApp;
-exports.makeRestApp = makeRestApp;
-exports.makeStorageDeployment = makeStorageDeployment;
-exports.makeRestDeployment = makeRestDeployment;
-exports.makePackage = makePackage;
-exports.makeStreamFromString = makeStreamFromString;
-exports.makeStringFromStream = makeStringFromStream;
-exports.getStreamAndSizeForFile = getStreamAndSizeForFile;
-exports.retrieveStringContentsFromUrl = retrieveStringContentsFromUrl;
+exports.retrieveStringContentsFromUrl = exports.getStreamAndSizeForFile = exports.makeStringFromStream = exports.makeStreamFromString = exports.makePackage = exports.makeRestDeployment = exports.makeStorageDeployment = exports.makeRestApp = exports.makeStorageApp = exports.makeAccessKeyRequest = exports.makeStorageAccessKey = exports.makeAccount = exports.generateKey = void 0;
 const fs = require("fs");
 const http = require("http");
 const https = require("https");
@@ -25,6 +13,7 @@ const ACCESS_KEY_EXPIRY = 1000 * 60 * 60 * 24 * 60; // 60 days.
 function generateKey() {
     return shortid.generate() + shortid.generate(); // The REST API validates that keys must be at least 10 characters long
 }
+exports.generateKey = generateKey;
 function makeAccount() {
     var account = {
         createdTime: new Date().getTime(),
@@ -33,6 +22,7 @@ function makeAccount() {
     };
     return account;
 }
+exports.makeAccount = makeAccount;
 function makeStorageAccessKey() {
     var now = new Date().getTime();
     var friendlyName = shortid.generate();
@@ -46,6 +36,7 @@ function makeStorageAccessKey() {
     };
     return accessKey;
 }
+exports.makeStorageAccessKey = makeStorageAccessKey;
 function makeAccessKeyRequest() {
     var accessKeyRequest = {
         name: generateKey(),
@@ -55,6 +46,7 @@ function makeAccessKeyRequest() {
     };
     return accessKeyRequest;
 }
+exports.makeAccessKeyRequest = makeAccessKeyRequest;
 function makeStorageApp() {
     var app = {
         createdTime: new Date().getDate(),
@@ -62,6 +54,7 @@ function makeStorageApp() {
     };
     return app;
 }
+exports.makeStorageApp = makeStorageApp;
 function makeRestApp() {
     var app = {
         name: shortid.generate(),
@@ -69,6 +62,7 @@ function makeRestApp() {
     };
     return app;
 }
+exports.makeRestApp = makeRestApp;
 function makeStorageDeployment() {
     var deployment = {
         createdTime: new Date().getDate(),
@@ -77,12 +71,14 @@ function makeStorageDeployment() {
     };
     return deployment;
 }
+exports.makeStorageDeployment = makeStorageDeployment;
 function makeRestDeployment() {
     var deployment = {
         name: shortid.generate(),
     };
     return deployment;
 }
+exports.makeRestDeployment = makeRestDeployment;
 function makePackage(version, isMandatory, packageHash, label) {
     var storagePackage = {
         blobUrl: "testUrl.com",
@@ -99,12 +95,14 @@ function makePackage(version, isMandatory, packageHash, label) {
     };
     return storagePackage;
 }
+exports.makePackage = makePackage;
 function makeStreamFromString(stringValue) {
     var blobStream = new stream.Readable();
     blobStream.push(stringValue);
     blobStream.push(null);
     return blobStream;
 }
+exports.makeStreamFromString = makeStreamFromString;
 function makeStringFromStream(stream) {
     var stringValue = "";
     return (0, q_1.Promise)((resolve) => {
@@ -117,6 +115,7 @@ function makeStringFromStream(stream) {
         });
     });
 }
+exports.makeStringFromStream = makeStringFromStream;
 function getStreamAndSizeForFile(path) {
     return (0, q_1.Promise)((resolve, reject) => {
         fs.stat(path, (err, stats) => {
@@ -129,6 +128,7 @@ function getStreamAndSizeForFile(path) {
         });
     });
 }
+exports.getStreamAndSizeForFile = getStreamAndSizeForFile;
 function retrieveStringContentsFromUrl(url) {
     var protocol = null;
     if (url.indexOf("https://") === 0) {
@@ -155,3 +155,4 @@ function retrieveStringContentsFromUrl(url) {
         });
     });
 }
+exports.retrieveStringContentsFromUrl = retrieveStringContentsFromUrl;

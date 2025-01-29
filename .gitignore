@@ -30,8 +30,6 @@ node_modules
 # Build specific exclusions
 */bin/
 
-# Environment variables
-*.env
 
 # Test uploads and downloads
 /uploads

@@ -2,8 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ErrorSource = void 0;
-exports.codePushError = codePushError;
+exports.codePushError = exports.ErrorSource = void 0;
 var ErrorSource;
 (function (ErrorSource) {
     ErrorSource[ErrorSource["Storage"] = 0] = "Storage";
@@ -15,3 +14,4 @@ function codePushError(source, message) {
     error.source = source;
     return error;
 }
+exports.codePushError = codePushError;

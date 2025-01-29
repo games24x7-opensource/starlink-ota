@@ -2,12 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NameResolver = exports.Permissions = exports.ReleaseMethod = exports.ErrorCode = void 0;
-exports.clone = clone;
-exports.isOwnedByCurrentUser = isOwnedByCurrentUser;
-exports.getOwnerEmail = getOwnerEmail;
-exports.isPrototypePollutionKey = isPrototypePollutionKey;
-exports.storageError = storageError;
+exports.NameResolver = exports.storageError = exports.isPrototypePollutionKey = exports.getOwnerEmail = exports.isOwnedByCurrentUser = exports.clone = exports.Permissions = exports.ReleaseMethod = exports.ErrorCode = void 0;
 const error = require("../error");
 var ErrorCode;
 (function (ErrorCode) {
@@ -41,6 +36,7 @@ function clone(source) {
     }
     return JSON.parse(JSON.stringify(source));
 }
+exports.clone = clone;
 function isOwnedByCurrentUser(app) {
     for (const email in app.collaborators) {
         const collaborator = app.collaborators[email];
@@ -50,6 +46,7 @@ function isOwnedByCurrentUser(app) {
     }
     return false;
 }
+exports.isOwnedByCurrentUser = isOwnedByCurrentUser;
 function getOwnerEmail(app) {
     for (const email in app.collaborators) {
         if (app.collaborators[email].permission === Permissions.Owner) {
@@ -58,14 +55,17 @@ function getOwnerEmail(app) {
     }
     return null;
 }
+exports.getOwnerEmail = getOwnerEmail;
 function isPrototypePollutionKey(key) {
     return ['__proto__', 'constructor', 'prototype'].includes(key);
 }
+exports.isPrototypePollutionKey = isPrototypePollutionKey;
 function storageError(errorCode, message) {
     const storageError = error.codePushError(error.ErrorSource.Storage, message);
     storageError.code = errorCode;
     return storageError;
 }
+exports.storageError = storageError;
 // A convenience wrapper on top of any storage implementation to resolve names instead of ID's
 class NameResolver {
     _storage;

@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUpdatePackageInfo = getUpdatePackageInfo;
+exports.getUpdatePackageInfo = void 0;
 const semver = require("semver");
 const rollout_selector_1 = require("./rollout-selector");
 function getUpdatePackageInfo(packageHistory, request) {
@@ -21,6 +21,7 @@ function getUpdatePackageInfo(packageHistory, request) {
     }
     return cacheResponse;
 }
+exports.getUpdatePackageInfo = getUpdatePackageInfo;
 function getUpdatePackage(packageHistory, request, ignoreRolloutPackages) {
     const updateDetails = {
         downloadURL: "",
