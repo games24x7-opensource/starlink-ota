@@ -3,7 +3,6 @@
 
 import * as api from "./api";
 import { AwsStorage } from "./storage/aws-storage";
-import { AzureStorage } from "./storage/azure-storage";
 import { fileUploadMiddleware } from "./file-upload-manager";
 import { JsonStorage } from "./storage/json-storage";
 import { RedisManager } from "./redis-manager";
@@ -157,23 +156,6 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
 
       // Error handler needs to be the last middleware so that it can catch all unhandled exceptions
       app.use(appInsights.errorHandler);
-
-      if (isKeyVaultConfigured) {
-        // Refresh credentials from the vault regularly as the key is rotated
-        setInterval(() => {
-          keyvaultClient
-            .getSecret(`storage-${process.env.AZURE_STORAGE_ACCOUNT}`)
-            .then((secret: any) => {
-              return (<AzureStorage>storage).reinitialize(process.env.AZURE_STORAGE_ACCOUNT, secret);
-            })
-            .catch((error: Error) => {
-              console.error("Failed to reinitialize storage from Key Vault credentials");
-              appInsights.errorHandler(error);
-            })
-            .done();
-        }, Number(process.env.REFRESH_CREDENTIALS_INTERVAL) || 24 * 60 * 60 * 1000 /*daily*/);
-      }
-
       done(null, app, storage);
     })
     .done();

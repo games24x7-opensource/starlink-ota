@@ -2,7 +2,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createTempFileFromBuffer = exports.getFileWithField = exports.fileUploadMiddleware = void 0;
+exports.fileUploadMiddleware = fileUploadMiddleware;
+exports.getFileWithField = getFileWithField;
+exports.createTempFileFromBuffer = createTempFileFromBuffer;
 const multer = require("multer");
 const UPLOAD_SIZE_LIMIT_MB = parseInt(process.env.UPLOAD_SIZE_LIMIT_MB) || 200;
 function getAttachUploadFileFunction(maxFileSizeMb) {
@@ -30,7 +32,6 @@ function fileUploadMiddleware(req, res, next) {
         }
     });
 }
-exports.fileUploadMiddleware = fileUploadMiddleware;
 function getFileWithField(req, field) {
     for (const i in req.files) {
         if (req.files[i].fieldname === field) {
@@ -39,11 +40,10 @@ function getFileWithField(req, field) {
     }
     return null;
 }
-exports.getFileWithField = getFileWithField;
 function createTempFileFromBuffer(buffer) {
     const tmpPath = require("os").tmpdir();
     const tmpFilePath = require("path").join(tmpPath, "tempfile");
     require("fs").writeFileSync(tmpFilePath, buffer);
     return tmpFilePath;
 }
-exports.createTempFileFromBuffer = createTempFileFromBuffer;
+//# sourceMappingURL=file-upload-manager.js.map

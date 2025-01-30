@@ -196,8 +196,7 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
             throw redisError;
           }
         })
-        .catch((error: storageTypes.StorageError) => errorUtils.restErrorHandler(res, error, next))
-        .done();
+        .catch((error: storageTypes.StorageError) => errorUtils.restErrorHandler(res, error, next));
     };
   };
 

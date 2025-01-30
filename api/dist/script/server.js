@@ -106,3 +106,4 @@ const shutdown = (server) => {
         process.exit(1);
     }, 10000); // 10 seconds timeout
 };
+//# sourceMappingURL=server.js.map

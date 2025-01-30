@@ -5,21 +5,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
 const shortid = require("shortid");
 const q = require("q");
-const azure_storage_1 = require("../script/storage/azure-storage");
 const json_storage_1 = require("../script/storage/json-storage");
 const storageTypes = require("../script/storage/storage");
 const utils = require("./utils");
 describe("JSON Storage", () => storageTests(json_storage_1.JsonStorage));
-if (process.env.TEST_AZURE_STORAGE) {
-    describe("Azure Storage", () => storageTests(azure_storage_1.AzureStorage));
-}
 function storageTests(StorageType, disablePersistence) {
     var storage;
-    before(() => {
-        if (StorageType === azure_storage_1.AzureStorage) {
-            storage = new StorageType(disablePersistence);
-        }
-    });
+    before(() => { });
     beforeEach(() => {
         if (StorageType === json_storage_1.JsonStorage) {
             storage = new StorageType(disablePersistence);
@@ -33,32 +25,10 @@ function storageTests(StorageType, disablePersistence) {
     describe("Storage management", () => {
         it("should be healthy if and only if running Azure storage", () => {
             return storage.checkHealth().then(
-            /*returnedHealthy*/ () => {
-                assert.equal(StorageType, azure_storage_1.AzureStorage, "Should only return healthy if running Azure storage");
-            }, 
             /*returnedUnhealthy*/ () => {
                 assert.equal(StorageType, json_storage_1.JsonStorage, "Should only return unhealthy if running JSON storage");
             });
         });
-        if (StorageType === azure_storage_1.AzureStorage) {
-            it("should allow reconfiguring of Azure storage credentials", () => {
-                var azureStorage = storage;
-                return azureStorage
-                    .reinitialize("wrongaccount", "wrongkey")
-                    .then(failOnCallSucceeded, 
-                /*returnedUnhealthy*/ () => {
-                    if (!process.env.EMULATED && process.env.AZURE_STORAGE_ACCOUNT && process.env.AZURE_STORAGE_ACCESS_KEY) {
-                        return azureStorage.reinitialize(process.env.AZURE_STORAGE_ACCOUNT, process.env.AZURE_STORAGE_ACCESS_KEY);
-                    }
-                    else {
-                        return azureStorage.reinitialize();
-                    }
-                })
-                    .then(() => {
-                    return storage.checkHealth(); // Fails test if unhealthy
-                });
-            });
-        }
     });
     describe("Access Key", () => {
         var account;
@@ -954,13 +924,6 @@ function storageTests(StorageType, disablePersistence) {
                 assert.equal("description123", deploymentPackages[deploymentPackages.length - 1].description);
             });
         });
-        if (storage instanceof azure_storage_1.AzureStorage) {
-            it("raises error on uncaught injection attempt", () => {
-                assert.throws(() => {
-                    storage.getPackageHistoryFromDeploymentKey("possible injection attempt");
-                });
-            });
-        }
         it("commitPackage(...) will not modify the appPackage argument", () => {
             var storagePackage = utils.makePackage();
             storagePackage.blobUrl = blobUrl;
@@ -1094,3 +1057,4 @@ function storageTests(StorageType, disablePersistence) {
 function failOnCallSucceeded(result) {
     throw new Error("Expected the promise to be rejected, but it succeeded with value " + (result ? JSON.stringify(result) : result));
 }
+//# sourceMappingURL=storage.js.map

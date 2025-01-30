@@ -96,29 +96,60 @@ export class RedisManager {
   private _metricsClient: redis.RedisClient;
   private _promisifiedMetricsClient: PromisifiedRedisClient;
   private _setupMetricsClientPromise: Promise<void>;
+  private _isConnected: boolean = false;
 
   constructor() {
     if (process.env.REDIS_HOST && process.env.REDIS_PORT) {
       const redisConfig = {
         host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT,
-        auth_pass: process.env.REDIS_KEY,
-        tls: {
-          // Note: Node defaults CA's to those trusted by Mozilla
-          rejectUnauthorized: true,
-        },
+        port: Number(process.env.REDIS_PORT),
+        ...(process.env.REDIS_TLS === "true" && {
+          tls: {
+            rejectUnauthorized: true,
+          },
+        }),
+        enableOfflineQueue: true,
+        enableReadyCheck: true,
+        cluster: false,
       };
-      this._opsClient = redis.createClient(redisConfig);
-      this._metricsClient = redis.createClient(redisConfig);
-      this._opsClient.on("error", (err: Error) => {
-        console.error("Redis ops client error:", err);
+
+      console.log("Initializing Redis with config:", {
+        ...redisConfig,
+        host: redisConfig.host,
+        port: redisConfig.port,
+        tls: !!redisConfig.tls,
       });
 
-      this._metricsClient.on("error", (err: Error) => {
+      this._opsClient = redis.createClient(redisConfig);
+      this._metricsClient = redis.createClient(redisConfig);
+
+      // Add end event handlers
+      this._opsClient.on("connect", () => {
+        console.log(`Redis ops client connected successfully to ${redisConfig.host}:${redisConfig.port}`);
+        this._isConnected = true;
+      });
+
+      this._metricsClient.on("connect", () => {
+        console.log(`Redis metrics client connected successfully to ${redisConfig.host}:${redisConfig.port}`);
+      });
+
+      this._opsClient.on("error", (err) => {
+        console.error("Redis ops client error:", err);
+        this._isConnected = false;
+      });
+
+      this._metricsClient.on("error", (err) => {
         console.error("Redis metrics client error:", err);
       });
 
-      // Add end event handlers
+      this._opsClient.on("ready", () => {
+        console.log("Redis ops client ready for commands");
+      });
+
+      this._metricsClient.on("ready", () => {
+        console.log("Redis metrics client ready for commands");
+      });
+
       this._opsClient.on("end", () => {
         console.log("Redis ops client connection closed");
       });

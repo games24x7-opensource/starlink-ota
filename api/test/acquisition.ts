@@ -13,10 +13,10 @@ import * as storage from "../script/storage/storage";
 import * as redis from "../script/redis-manager";
 import * as utils from "./utils";
 
-import { AzureStorage } from "../script/storage/azure-storage";
 import { JsonStorage } from "../script/storage/json-storage";
 import { UpdateCheckRequest } from "../script/types/rest-definitions";
 import { SDK_VERSION_HEADER } from "../script/utils/rest-headers";
+import { AwsStorage } from "../script/storage/aws-storage";
 
 describe("Acquisition Rest API", () => {
   var account: storage.Account;
@@ -39,7 +39,7 @@ describe("Acquisition Rest API", () => {
         if (process.env.AZURE_ACQUISITION_URL) {
           serverUrl = process.env.AZURE_ACQUISITION_URL;
           isAzureServer = true;
-          storageInstance = useJsonStorage ? new JsonStorage() : new AzureStorage();
+          storageInstance = useJsonStorage ? new JsonStorage() : new AwsStorage();
         } else {
           var deferred: q.Deferred<void> = q.defer<void>();
 
@@ -133,7 +133,7 @@ describe("Acquisition Rest API", () => {
 
   describe("Get /health", () => {
     it("should be healthy if and only if correctly configured", (done) => {
-      var isProductionReady: boolean = storageInstance instanceof AzureStorage && redisManager && redisManager.isEnabled;
+      var isProductionReady: boolean = storageInstance instanceof AwsStorage && redisManager && redisManager.isEnabled;
       var expectedStatusCode: number = isProductionReady || isAzureServer ? 200 : 500;
       request(server || serverUrl)
         .get("/health")

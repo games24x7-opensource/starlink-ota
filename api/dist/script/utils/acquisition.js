@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUpdatePackageInfo = void 0;
+exports.getUpdatePackageInfo = getUpdatePackageInfo;
 const semver = require("semver");
 const rollout_selector_1 = require("./rollout-selector");
 function getUpdatePackageInfo(packageHistory, request) {
@@ -21,7 +21,6 @@ function getUpdatePackageInfo(packageHistory, request) {
     }
     return cacheResponse;
 }
-exports.getUpdatePackageInfo = getUpdatePackageInfo;
 function getUpdatePackage(packageHistory, request, ignoreRolloutPackages) {
     const updateDetails = {
         downloadURL: "",
@@ -120,3 +119,4 @@ function getUpdatePackage(packageHistory, request, ignoreRolloutPackages) {
     updateDetails.appVersion = request.appVersion;
     return { response: updateDetails, rollout: rollout };
 }
+//# sourceMappingURL=acquisition.js.map

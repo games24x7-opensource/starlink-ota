@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RequestTimeoutHandler = void 0;
+exports.RequestTimeoutHandler = RequestTimeoutHandler;
 const REQUEST_TIMEOUT_IN_MILLISECONDS = parseInt(process.env.REQUEST_TIMEOUT_IN_MILLISECONDS) || 120000;
 function RequestTimeoutHandler(req, res, next) {
     req.setTimeout(REQUEST_TIMEOUT_IN_MILLISECONDS, () => {
@@ -10,4 +10,4 @@ function RequestTimeoutHandler(req, res, next) {
     });
     next();
 }
-exports.RequestTimeoutHandler = RequestTimeoutHandler;
+//# sourceMappingURL=request-timeout.js.map

@@ -2,7 +2,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PackageManifest = exports.hashStream = exports.hashFile = exports.generatePackageManifestFromDirectory = exports.generatePackageManifestFromZip = exports.generatePackageHashFromDirectory = void 0;
+exports.PackageManifest = void 0;
+exports.generatePackageHashFromDirectory = generatePackageHashFromDirectory;
+exports.generatePackageManifestFromZip = generatePackageManifestFromZip;
+exports.generatePackageManifestFromDirectory = generatePackageManifestFromDirectory;
+exports.hashFile = hashFile;
+exports.hashStream = hashStream;
 /**
  * NOTE!!! This utility file is duplicated for use by the CodePush service (for server-driven hashing/
  * integrity checks) and CLI (for end-to-end code signing), please keep them in sync.
@@ -33,7 +38,6 @@ function generatePackageHashFromDirectory(directoryPath, basePath) {
         return manifest.computePackageHash();
     });
 }
-exports.generatePackageHashFromDirectory = generatePackageHashFromDirectory;
 function generatePackageManifestFromZip(filePath) {
     const deferred = q.defer();
     const reject = (error) => {
@@ -86,7 +90,6 @@ function generatePackageManifestFromZip(filePath) {
     });
     return deferred.promise.finally(() => zipFile && zipFile.close());
 }
-exports.generatePackageManifestFromZip = generatePackageManifestFromZip;
 function generatePackageManifestFromDirectory(directoryPath, basePath) {
     const deferred = q.defer();
     const fileHashesMap = new Map();
@@ -118,12 +121,10 @@ function generatePackageManifestFromDirectory(directoryPath, basePath) {
     });
     return deferred.promise;
 }
-exports.generatePackageManifestFromDirectory = generatePackageManifestFromDirectory;
 function hashFile(filePath) {
     const readStream = fs.createReadStream(filePath);
     return hashStream(readStream);
 }
-exports.hashFile = hashFile;
 function hashStream(readStream) {
     const hashStream = crypto.createHash(HASH_ALGORITHM);
     const deferred = q.defer();
@@ -145,7 +146,6 @@ function hashStream(readStream) {
     readStream.pipe(hashStream);
     return deferred.promise;
 }
-exports.hashStream = hashStream;
 class PackageManifest {
     _map;
     constructor(map) {
@@ -201,3 +201,4 @@ function startsWith(str, prefix) {
 function endsWith(str, suffix) {
     return str && str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
+//# sourceMappingURL=hash-utils.js.map

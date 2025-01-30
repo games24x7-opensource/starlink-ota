@@ -10,9 +10,9 @@ var Promise = q.Promise;
 const defaultServer = require("../script/default-server");
 const redis = require("../script/redis-manager");
 const utils = require("./utils");
-const azure_storage_1 = require("../script/storage/azure-storage");
 const json_storage_1 = require("../script/storage/json-storage");
 const rest_headers_1 = require("../script/utils/rest-headers");
+const aws_storage_1 = require("../script/storage/aws-storage");
 describe("Acquisition Rest API", () => {
     var account;
     var app;
@@ -32,7 +32,7 @@ describe("Acquisition Rest API", () => {
             if (process.env.AZURE_ACQUISITION_URL) {
                 serverUrl = process.env.AZURE_ACQUISITION_URL;
                 isAzureServer = true;
-                storageInstance = useJsonStorage ? new json_storage_1.JsonStorage() : new azure_storage_1.AzureStorage();
+                storageInstance = useJsonStorage ? new json_storage_1.JsonStorage() : new aws_storage_1.AwsStorage();
             }
             else {
                 var deferred = q.defer();
@@ -122,7 +122,7 @@ describe("Acquisition Rest API", () => {
     });
     describe("Get /health", () => {
         it("should be healthy if and only if correctly configured", (done) => {
-            var isProductionReady = storageInstance instanceof azure_storage_1.AzureStorage && redisManager && redisManager.isEnabled;
+            var isProductionReady = storageInstance instanceof aws_storage_1.AwsStorage && redisManager && redisManager.isEnabled;
             var expectedStatusCode = isProductionReady || isAzureServer ? 200 : 500;
             request(server || serverUrl)
                 .get("/health")
@@ -1363,3 +1363,4 @@ describe("Acquisition Rest API", () => {
         });
     });
 });
+//# sourceMappingURL=acquisition.js.map

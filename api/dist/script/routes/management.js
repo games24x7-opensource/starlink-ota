@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getManagementRouter = void 0;
+exports.getManagementRouter = getManagementRouter;
 const file_upload_manager_1 = require("../file-upload-manager");
 const rest_headers_1 = require("../utils/rest-headers");
 const rollout_selector_1 = require("../utils/rollout-selector");
@@ -665,7 +665,7 @@ function getManagementRouter(config) {
             .done();
     });
     const releaseRateLimiter = (0, express_rate_limit_1.default)({
-        windowMs: 15 * 60 * 1000,
+        windowMs: 15 * 60 * 1000, // 15 minutes
         max: 100, // limit each IP to 100 requests per windowMs
     });
     router.post("/apps/:appName/deployments/:deploymentName/release", releaseRateLimiter, (req, res, next) => {
@@ -1123,4 +1123,4 @@ function getManagementRouter(config) {
     }
     return router;
 }
-exports.getManagementRouter = getManagementRouter;
+//# sourceMappingURL=management.js.map

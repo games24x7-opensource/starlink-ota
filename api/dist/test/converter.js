@@ -199,3 +199,4 @@ describe("Converter", () => {
         assert.equal(storagePackage.uploadTime, restPackage.uploadTime);
     }
 });
+//# sourceMappingURL=converter.js.map

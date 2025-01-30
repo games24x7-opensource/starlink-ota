@@ -11,9 +11,9 @@ const defaultServer = require("../script/default-server");
 const redis = require("../script/redis-manager");
 const storage = require("../script/storage/storage");
 const testUtils = require("./utils");
-const azure_storage_1 = require("../script/storage/azure-storage");
 const json_storage_1 = require("../script/storage/json-storage");
 var Permissions = storage.Permissions;
+const aws_storage_1 = require("../script/storage/aws-storage");
 if (!process.env.AZURE_MANAGEMENT_URL) {
     // cannot use local JSON storage when running tests against an Azure server
     describe("Management Rest API with JSON Storage", () => managementTests(/*useJsonStorage=*/ true));
@@ -43,7 +43,7 @@ function managementTests(useJsonStorage) {
             .then(() => {
             if (process.env.AZURE_MANAGEMENT_URL) {
                 serverUrl = process.env.AZURE_MANAGEMENT_URL;
-                storage = useJsonStorage ? new json_storage_1.JsonStorage() : new azure_storage_1.AzureStorage();
+                storage = useJsonStorage ? new json_storage_1.JsonStorage() : new aws_storage_1.AwsStorage();
             }
             else {
                 // use the middleware defined in DefaultServer
@@ -1831,3 +1831,4 @@ function managementTests(useJsonStorage) {
         return path.join(__dirname, "resources", resourceName);
     }
 }
+//# sourceMappingURL=management.js.map

@@ -112,3 +112,4 @@ function redisTests() {
         });
     });
 }
+//# sourceMappingURL=redis-manager.js.map

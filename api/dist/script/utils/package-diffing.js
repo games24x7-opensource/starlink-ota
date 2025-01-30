@@ -314,3 +314,4 @@ class PackageDiffer {
     }
 }
 exports.PackageDiffer = PackageDiffer;
+//# sourceMappingURL=package-diffing.js.map

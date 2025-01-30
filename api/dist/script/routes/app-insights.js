@@ -355,3 +355,4 @@ class AppInsights {
     }
 }
 exports.AppInsights = AppInsights;
+//# sourceMappingURL=app-insights.js.map

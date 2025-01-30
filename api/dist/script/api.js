@@ -2,7 +2,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requestTimeoutHandler = exports.inputSanitizer = exports.appInsights = exports.auth = exports.management = exports.health = exports.acquisition = exports.headers = void 0;
+exports.headers = headers;
+exports.acquisition = acquisition;
+exports.health = health;
+exports.management = management;
+exports.auth = auth;
+exports.appInsights = appInsights;
+exports.inputSanitizer = inputSanitizer;
+exports.requestTimeoutHandler = requestTimeoutHandler;
 const headers_1 = require("./routes/headers");
 const acquisition_1 = require("./routes/acquisition");
 const management_1 = require("./routes/management");
@@ -13,19 +20,15 @@ const request_timeout_1 = require("./routes/request-timeout");
 function headers(config) {
     return (0, headers_1.getHeadersMiddleware)(config);
 }
-exports.headers = headers;
 function acquisition(config) {
     return (0, acquisition_1.getAcquisitionRouter)(config);
 }
-exports.acquisition = acquisition;
 function health(config) {
     return (0, acquisition_1.getHealthRouter)(config);
 }
-exports.health = health;
 function management(config) {
     return (0, management_1.getManagementRouter)(config);
 }
-exports.management = management;
 function auth(config) {
     const passportAuthentication = new passport_authentication_1.PassportAuthentication(config);
     return {
@@ -34,7 +37,6 @@ function auth(config) {
         authenticate: passportAuthentication.authenticate,
     };
 }
-exports.auth = auth;
 function appInsights() {
     const appInsights = new app_insights_1.AppInsights();
     return {
@@ -42,12 +44,10 @@ function appInsights() {
         errorHandler: appInsights.errorHandler.bind(appInsights),
     };
 }
-exports.appInsights = appInsights;
 function inputSanitizer() {
     return input_sanitizer_1.InputSanitizer;
 }
-exports.inputSanitizer = inputSanitizer;
 function requestTimeoutHandler() {
     return request_timeout_1.RequestTimeoutHandler;
 }
-exports.requestTimeoutHandler = requestTimeoutHandler;
+//# sourceMappingURL=api.js.map

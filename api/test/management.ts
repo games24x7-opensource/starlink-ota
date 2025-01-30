@@ -15,10 +15,9 @@ import * as restTypes from "../script/types/rest-definitions";
 import * as storage from "../script/storage/storage";
 import * as testUtils from "./utils";
 
-import { AzureStorage } from "../script/storage/azure-storage";
 import { JsonStorage } from "../script/storage/json-storage";
-
 import Permissions = storage.Permissions;
+import { AwsStorage } from "../script/storage/aws-storage";
 
 if (!process.env.AZURE_MANAGEMENT_URL) {
   // cannot use local JSON storage when running tests against an Azure server
@@ -54,7 +53,7 @@ function managementTests(useJsonStorage?: boolean): void {
       .then(() => {
         if (process.env.AZURE_MANAGEMENT_URL) {
           serverUrl = process.env.AZURE_MANAGEMENT_URL;
-          storage = useJsonStorage ? new JsonStorage() : new AzureStorage();
+          storage = useJsonStorage ? new JsonStorage() : new AwsStorage();
         } else {
           // use the middleware defined in DefaultServer
           var deferred: q.Deferred<void> = q.defer<void>();

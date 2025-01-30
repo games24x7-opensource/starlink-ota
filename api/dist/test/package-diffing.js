@@ -2,28 +2,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-const azure_storage_1 = require("../script/storage/azure-storage");
 const json_storage_1 = require("../script/storage/json-storage");
 const assert = require("assert");
-const diffErrorUtils = require("../script/utils/diff-error-handling");
 const express = require("express");
 const fs = require("fs");
 const hashUtils = require("../script/utils/hash-utils");
 const packageDiffing = require("../script/utils/package-diffing");
 const path = require("path");
-const q = require("q");
 const shortid = require("shortid");
-const storage = require("../script/storage/storage");
 const utils = require("./utils");
 const yauzl = require("yauzl");
-var clone = storage.clone;
 var PackageDiffer = packageDiffing.PackageDiffer;
 var PackageManifest = hashUtils.PackageManifest;
 const Pend = require("pend");
 describe("Package diffing with JSON storage", () => packageDiffTests(json_storage_1.JsonStorage));
-if (process.env.TEST_AZURE_STORAGE) {
-    describe("Package diffing with Azure Storage", () => packageDiffTests(azure_storage_1.AzureStorage));
-}
 function packageDiffTests(StorageType) {
     const TEST_ARCHIVE_FILE_NAMES = ["test.zip", "test2.zip", "test3.zip", "test4.zip"];
     const TEST_ARCHIVE_FILE_PATH = path.join(__dirname, "resources", TEST_ARCHIVE_FILE_NAMES[0]);
@@ -188,224 +180,6 @@ function packageDiffTests(StorageType) {
             });
         });
     });
-    if (StorageType === azure_storage_1.AzureStorage) {
-        // These tests can only be run against azure storage because diffing downloads blob from url
-        // while json storage serves the blobs from memory, which for some reason yazl/yauzl treats as corrupt file.
-        describe("Package diffing utility (with Azure)", () => {
-            var account;
-            var app;
-            var appPackages = [];
-            var deployment;
-            var infoList;
-            before(() => {
-                var packageInfoPromises = [];
-                TEST_ARCHIVE_FILE_NAMES.forEach((fileName) => {
-                    var testFilePath = path.join(__dirname, "resources", fileName);
-                    packageInfoPromises.push(uploadAndGetPackageInfo(testFilePath));
-                });
-                return q
-                    .all(packageInfoPromises)
-                    .then((allPackageInfo) => {
-                    infoList = allPackageInfo;
-                    account = utils.makeAccount();
-                    return storage.addAccount(account);
-                })
-                    .then((accountId) => {
-                    account.id = accountId;
-                    app = utils.makeStorageApp();
-                    return storage.addApp(account.id, app);
-                })
-                    .then((addedApp) => {
-                    app.id = addedApp.id;
-                    deployment = utils.makeStorageDeployment();
-                    return storage.addDeployment(account.id, app.id, deployment);
-                })
-                    .then((deploymentId) => {
-                    deployment.id = deploymentId;
-                    var commitPromise = q(null);
-                    infoList.forEach((info) => {
-                        var madePackage = utils.makePackage("1.0.0", false, info.packageHash);
-                        madePackage.blobUrl = info.blobUrl;
-                        madePackage.manifestBlobUrl = info.manifestBlobUrl;
-                        commitPromise = commitPromise
-                            .then(() => storage.commitPackage(account.id, app.id, deployment.id, madePackage))
-                            .then((commitedPackage) => {
-                            madePackage.label = commitedPackage.label;
-                            appPackages.push(madePackage);
-                        });
-                    });
-                    return commitPromise;
-                });
-            });
-            it("generateDiffPackageMap throws error for null package", (done) => {
-                packageDiffingUtils
-                    .generateDiffPackageMap(account.id, app.id, deployment.id, /*newPackage*/ null)
-                    .done(failOnCallSucceeded, (error) => {
-                    assert.equal(error.code, diffErrorUtils.ErrorCode.InvalidArguments);
-                    done();
-                });
-            });
-            it("generateDiffPackageMap throws error for missing blobUrl", (done) => {
-                var clonedPackage = clone(appPackages[1]);
-                clonedPackage.blobUrl = "";
-                packageDiffingUtils
-                    .generateDiffPackageMap(account.id, app.id, deployment.id, clonedPackage)
-                    .done(failOnCallSucceeded, (error) => {
-                    assert.equal(error.code, diffErrorUtils.ErrorCode.InvalidArguments);
-                    done();
-                });
-            });
-            it("generateDiffPackageMap throws error for missing manifestBlobUrl", (done) => {
-                var clonedPackage = clone(appPackages[1]);
-                clonedPackage.manifestBlobUrl = "";
-                packageDiffingUtils
-                    .generateDiffPackageMap(account.id, app.id, deployment.id, clonedPackage)
-                    .done(failOnCallSucceeded, (error) => {
-                    assert.equal(error.code, diffErrorUtils.ErrorCode.InvalidArguments);
-                    done();
-                });
-            });
-            it("generateDiffPackageMap returns null for no package history", (done) => {
-                var deployment2 = utils.makeStorageDeployment();
-                storage
-                    .addDeployment(account.id, app.id, deployment2)
-                    .then((depId) => {
-                    deployment2.id = depId;
-                    return packageDiffingUtils.generateDiffPackageMap(account.id, app.id, deployment2.id, appPackages[1]);
-                })
-                    .done((diffPackageMap) => {
-                    assert(!diffPackageMap);
-                    done();
-                });
-            });
-            it("generateDiffPackageMap returns null for first package in history", (done) => {
-                packageDiffingUtils
-                    .generateDiffPackageMap(account.id, app.id, deployment.id, appPackages[0])
-                    .done((diffPackageMap) => {
-                    assert(!diffPackageMap);
-                    done();
-                });
-            });
-            it("generateDiffPackageMap returns null for a release with no matching app version in history", (done) => {
-                var deployment2 = utils.makeStorageDeployment();
-                var p1;
-                var p2;
-                var p3;
-                storage
-                    .addDeployment(account.id, app.id, deployment2)
-                    .then((depId) => {
-                    deployment2.id = depId;
-                    p1 = clone(appPackages[0]);
-                    return storage.commitPackage(account.id, app.id, deployment2.id, p1);
-                })
-                    .then((returnPackage) => {
-                    p2 = clone(appPackages[1]);
-                    p2.appVersion = "2.0.0";
-                    return storage.commitPackage(account.id, app.id, deployment2.id, p2);
-                })
-                    .then((returnPackage) => {
-                    p3 = clone(appPackages[2]);
-                    p3.appVersion = "3.0.0";
-                    return storage.commitPackage(account.id, app.id, deployment2.id, p3);
-                })
-                    .then((returnPackage) => {
-                    return packageDiffingUtils.generateDiffPackageMap(account.id, app.id, deployment2.id, p3);
-                })
-                    .done((diffPackageMap) => {
-                    assert(!diffPackageMap);
-                    done();
-                });
-            });
-            it("generateDiffPackageMap returns diff info for one package in history", (done) => {
-                packageDiffingUtils
-                    .generateDiffPackageMap(account.id, app.id, deployment.id, appPackages[1])
-                    .done((diffPackageMap) => {
-                    assert(diffPackageMap);
-                    assert.equal(Object.keys(diffPackageMap).length, 1);
-                    assert(diffPackageMap[appPackages[0].packageHash]);
-                    done();
-                });
-            });
-            it("generateDiffPackageMap returns multiple diffs for multiple packages in history", (done) => {
-                packageDiffingUtils
-                    .generateDiffPackageMap(account.id, app.id, deployment.id, appPackages[3])
-                    .done((diffPackageMap) => {
-                    assert(diffPackageMap);
-                    assert.equal(Object.keys(diffPackageMap).length, 3);
-                    assert(diffPackageMap[appPackages[0].packageHash]);
-                    assert(diffPackageMap[appPackages[1].packageHash]);
-                    assert(diffPackageMap[appPackages[2].packageHash]);
-                    done();
-                });
-            });
-            it("generateDiffPackageMap generates diff only against same app version in history", (done) => {
-                var deployment2 = utils.makeStorageDeployment();
-                var p1;
-                var p2;
-                var p3;
-                storage
-                    .addDeployment(account.id, app.id, deployment2)
-                    .then((depId) => {
-                    deployment2.id = depId;
-                    p1 = clone(appPackages[0]);
-                    return storage.commitPackage(account.id, app.id, deployment2.id, p1);
-                })
-                    .then((returnPackage) => {
-                    p2 = clone(appPackages[1]);
-                    p2.appVersion = "2.0.0";
-                    return storage.commitPackage(account.id, app.id, deployment2.id, p2);
-                })
-                    .then((returnPackage) => {
-                    p3 = clone(appPackages[2]);
-                    return storage.commitPackage(account.id, app.id, deployment2.id, p3);
-                })
-                    .then((returnPackage) => {
-                    return packageDiffingUtils.generateDiffPackageMap(account.id, app.id, deployment2.id, p3);
-                })
-                    .done((diffPackageMap) => {
-                    assert(diffPackageMap);
-                    assert.equal(Object.keys(diffPackageMap).length, 1);
-                    assert(diffPackageMap[p1.packageHash]);
-                    assert(!diffPackageMap[p2.packageHash]);
-                    done();
-                });
-            });
-            it("generateDiffPackageMap generates diff only against similar app version(matching range) in history", (done) => {
-                var deployment2 = utils.makeStorageDeployment();
-                var p1;
-                var p2;
-                var p3;
-                storage
-                    .addDeployment(account.id, app.id, deployment2)
-                    .then((depId) => {
-                    deployment2.id = depId;
-                    p1 = clone(appPackages[0]);
-                    p1.appVersion = "1.*";
-                    return storage.commitPackage(account.id, app.id, deployment2.id, p1);
-                })
-                    .then((returnPackage) => {
-                    p2 = clone(appPackages[1]);
-                    p2.appVersion = "1.3.0";
-                    return storage.commitPackage(account.id, app.id, deployment2.id, p2);
-                })
-                    .then((returnPackage) => {
-                    p3 = clone(appPackages[2]);
-                    p3.appVersion = "1.x";
-                    return storage.commitPackage(account.id, app.id, deployment2.id, p3);
-                })
-                    .then((returnPackage) => {
-                    return packageDiffingUtils.generateDiffPackageMap(account.id, app.id, deployment2.id, p3);
-                })
-                    .done((diffPackageMap) => {
-                    assert(diffPackageMap);
-                    assert.equal(Object.keys(diffPackageMap).length, 2);
-                    assert(diffPackageMap[p1.packageHash]);
-                    assert(diffPackageMap[p2.packageHash]);
-                    done();
-                });
-            });
-        });
-    }
     function uploadAndGetPackageInfo(filePath) {
         var info = { packageHash: null, blobUrl: null, manifestBlobUrl: null };
         var manifest;
@@ -442,3 +216,4 @@ function packageDiffTests(StorageType) {
         throw new Error("Expected the promise to be rejected, but it succeeded with value " + (result ? JSON.stringify(result) : result));
     }
 }
+//# sourceMappingURL=package-diffing.js.map

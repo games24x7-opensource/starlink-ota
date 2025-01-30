@@ -2,11 +2,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.start = void 0;
+exports.start = start;
 const api = require("./api");
 const aws_storage_1 = require("./storage/aws-storage");
 const file_upload_manager_1 = require("./file-upload-manager");
-const json_storage_1 = require("@/storage/json-storage");
+const json_storage_1 = require("./storage/json-storage");
 const redis_manager_1 = require("./redis-manager");
 const bodyParser = require("body-parser");
 const domain = require("express-domain-middleware");
@@ -130,23 +130,8 @@ function start(done, useJsonStorage) {
         }
         // Error handler needs to be the last middleware so that it can catch all unhandled exceptions
         app.use(appInsights.errorHandler);
-        if (isKeyVaultConfigured) {
-            // Refresh credentials from the vault regularly as the key is rotated
-            setInterval(() => {
-                keyvaultClient
-                    .getSecret(`storage-${process.env.AZURE_STORAGE_ACCOUNT}`)
-                    .then((secret) => {
-                    return storage.reinitialize(process.env.AZURE_STORAGE_ACCOUNT, secret);
-                })
-                    .catch((error) => {
-                    console.error("Failed to reinitialize storage from Key Vault credentials");
-                    appInsights.errorHandler(error);
-                })
-                    .done();
-            }, Number(process.env.REFRESH_CREDENTIALS_INTERVAL) || 24 * 60 * 60 * 1000 /*daily*/);
-        }
         done(null, app, storage);
     })
         .done();
 }
-exports.start = start;
+//# sourceMappingURL=default-server.js.map

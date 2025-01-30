@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHeadersMiddleware = void 0;
+exports.getHeadersMiddleware = getHeadersMiddleware;
 function getHeadersMiddleware(config) {
     return (req, res, next) => {
         const allowedOrigins = config.origin.split(",");
@@ -26,4 +26,4 @@ function getHeadersMiddleware(config) {
         next();
     };
 }
-exports.getHeadersMiddleware = getHeadersMiddleware;
+//# sourceMappingURL=headers.js.map

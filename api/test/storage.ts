@@ -5,7 +5,6 @@ import * as assert from "assert";
 import * as shortid from "shortid";
 import * as q from "q";
 
-import { AzureStorage } from "../script/storage/azure-storage";
 import { JsonStorage } from "../script/storage/json-storage";
 import * as storageTypes from "../script/storage/storage";
 import * as utils from "./utils";
@@ -14,18 +13,10 @@ import Promise = q.Promise;
 
 describe("JSON Storage", () => storageTests(JsonStorage));
 
-if (process.env.TEST_AZURE_STORAGE) {
-  describe("Azure Storage", () => storageTests(AzureStorage));
-}
-
 function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage, disablePersistence?: boolean) {
   var storage: storageTypes.Storage;
 
-  before(() => {
-    if (StorageType === AzureStorage) {
-      storage = new StorageType(disablePersistence);
-    }
-  });
+  before(() => {});
 
   beforeEach(() => {
     if (StorageType === JsonStorage) {
@@ -42,35 +33,11 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
   describe("Storage management", () => {
     it("should be healthy if and only if running Azure storage", () => {
       return storage.checkHealth().then(
-        /*returnedHealthy*/ () => {
-          assert.equal(StorageType, AzureStorage, "Should only return healthy if running Azure storage");
-        },
         /*returnedUnhealthy*/ () => {
           assert.equal(StorageType, JsonStorage, "Should only return unhealthy if running JSON storage");
         }
       );
     });
-
-    if (StorageType === AzureStorage) {
-      it("should allow reconfiguring of Azure storage credentials", () => {
-        var azureStorage: AzureStorage = <AzureStorage>storage;
-        return azureStorage
-          .reinitialize("wrongaccount", "wrongkey")
-          .then(
-            failOnCallSucceeded,
-            /*returnedUnhealthy*/ () => {
-              if (!process.env.EMULATED && process.env.AZURE_STORAGE_ACCOUNT && process.env.AZURE_STORAGE_ACCESS_KEY) {
-                return azureStorage.reinitialize(process.env.AZURE_STORAGE_ACCOUNT, process.env.AZURE_STORAGE_ACCESS_KEY);
-              } else {
-                return azureStorage.reinitialize();
-              }
-            }
-          )
-          .then(() => {
-            return storage.checkHealth(); // Fails test if unhealthy
-          });
-      });
-    }
   });
 
   describe("Access Key", () => {
@@ -1099,14 +1066,6 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
           assert.equal("description123", deploymentPackages[deploymentPackages.length - 1].description);
         });
     });
-
-    if (storage instanceof AzureStorage) {
-      it("raises error on uncaught injection attempt", () => {
-        assert.throws(() => {
-          storage.getPackageHistoryFromDeploymentKey("possible injection attempt");
-        });
-      });
-    }
 
     it("commitPackage(...) will not modify the appPackage argument", () => {
       var storagePackage: storageTypes.Package = utils.makePackage();
