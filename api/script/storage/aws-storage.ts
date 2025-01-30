@@ -169,7 +169,7 @@ export class AwsStorage implements storage.Storage {
   private _s3Client: S3;
 
   public constructor(accountName?: string, accountKey?: string) {
-    shortid.characters("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-");
+    shortid.characters("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
     this._setupPromise = this.setup();
   }
