@@ -5,7 +5,6 @@ import * as express from "express";
 import * as defaultServer from "./default-server";
 import { AggregatorRegistry, Registry, Counter } from "prom-client";
 const cluster = require("cluster");
-import * as os from "os";
 
 const https = require("https");
 const fs = require("fs");

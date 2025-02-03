@@ -1,18 +1,51 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.start = start;
-const api = require("./api");
+const api = __importStar(require("./api"));
 const aws_storage_1 = require("./storage/aws-storage");
 const file_upload_manager_1 = require("./file-upload-manager");
 const json_storage_1 = require("./storage/json-storage");
 const redis_manager_1 = require("./redis-manager");
-const promClient = require("prom-client");
-const bodyParser = require("body-parser");
+const promClient = __importStar(require("prom-client"));
+const bodyParser = __importStar(require("body-parser"));
 const domain = require("express-domain-middleware");
-const express = require("express");
-const q = require("q");
+const express = __importStar(require("express"));
+const q = __importStar(require("q"));
 function bodyParserErrorHandler(err, req, res, next) {
     if (err) {
         if (err.message === "invalid json" || (err.name === "SyntaxError" && ~err.stack.indexOf("body-parser"))) {

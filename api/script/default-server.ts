@@ -8,6 +8,7 @@ import { JsonStorage } from "./storage/json-storage";
 import { RedisManager } from "./redis-manager";
 import { Storage } from "./storage/storage";
 import { Response } from "express";
+import * as promClient from "prom-client";
 
 import * as bodyParser from "body-parser";
 const domain = require("express-domain-middleware");
@@ -117,6 +118,22 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
 
       app.get("/alb/healthCheck", (req: express.Request, res: express.Response, next: (err?: Error) => void): any => {
         res.status(200).send({ status: true });
+      });
+
+      /**
+       * Prometheus metrics
+       */
+      const defaultLabels = { application: "starlink-ota" };
+      promClient.register.setDefaultLabels(defaultLabels);
+      //record default internal metrics
+      promClient.collectDefaultMetrics();
+      app.get("/metrics", async (req: express.Request, res: express.Response, next: (err?: Error) => void): Promise<any> => {
+        try {
+          res.setHeader("Content-Type", promClient.register.contentType);
+          res.send(await promClient.register.metrics());
+        } catch (ex) {
+          res.status(500).send((ex as Error).toString());
+        }
       });
 
       app.set("etag", false);
