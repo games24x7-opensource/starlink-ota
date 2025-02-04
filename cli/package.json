@@ -1,6 +1,6 @@
 {
   "name": "@games24x7/starlink-cli",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Management CLI for the CodePush service",
   "main": "./bin/script/cli.js",
   "scripts": {
@@ -43,7 +43,6 @@
     "properties": "^1.2.1",
     "q": "~1.5.1",
     "recursive-fs": "2.1.0",
-    "release-it": "^18.1.2",
     "rimraf": "^2.5.1",
     "semver": "^7.5.3",
     "simctl": "^2.0.3",
