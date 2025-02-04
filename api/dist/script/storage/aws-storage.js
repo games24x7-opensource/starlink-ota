@@ -125,13 +125,13 @@ var Keys;
 })(Keys || (Keys = {}));
 class AwsStorage {
     static NO_ID_ERROR = "No id set";
-    static PACKAGE_HISTORY_S3_BUCKET_NAME = "my11circle-logs";
-    static PACKAGE_HISTORY_S3_PREFIX = "ota-history/package-history";
-    static PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME = "g24x7.stage-reverie-website";
-    static PACKAGE_DOWNLOAD_CDN_S3_PREFIX = "ota-releases/package-downloads";
-    static PACKAGE_DOWNLOAD_CDN_URL = "https://stage-cdn.my11circle.com";
+    static PACKAGE_HISTORY_S3_BUCKET_NAME = process.env.PACKAGE_HISTORY_S3_BUCKET_NAME || "g24x7-stage-ota-pvt-package-history";
+    static PACKAGE_HISTORY_S3_PREFIX = process.env.PACKAGE_HISTORY_S3_PREFIX || "ota-history/package-history";
+    static PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME = process.env.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME || "g24x7-stage-ota-pub-package-download";
+    static PACKAGE_DOWNLOAD_CDN_S3_PREFIX = process.env.PACKAGE_DOWNLOAD_CDN_S3_PREFIX || "ota-releases/package-downloads";
+    static PACKAGE_DOWNLOAD_CDN_URL = process.env.PACKAGE_DOWNLOAD_CDN_URL || "https://stage-cdn.my11circle.com";
     static MAX_PACKAGE_HISTORY_LENGTH = 50;
-    static TABLE_NAME = "code-push-server-stage-v1";
+    static TABLE_NAME = process.env.TABLE_NAME || "ota-registery";
     _setupPromise;
     _dynamoDBClient;
     _s3Client;
@@ -1020,22 +1020,58 @@ class AwsStorage {
         return q(null);
     }
     setup() {
-        const deferred = q.defer();
-        try {
-            const awsConfig = {
-                region: process.env.AWS_REGION || "ap-south-1",
-                credentials: new AWS.SharedIniFileCredentials({ profile: "272110293415_Dev-L3-Poker-Stage" }),
-            };
-            const dynamoDBClient = new aws_sdk_1.DynamoDB.DocumentClient(awsConfig);
-            const s3Client = new aws_sdk_1.S3(awsConfig);
-            this._dynamoDBClient = dynamoDBClient;
-            this._s3Client = s3Client;
-            deferred.resolve();
-        }
-        catch (error) {
-            deferred.reject(error);
-        }
-        return deferred.promise;
+        console.log("\n=== AWS Configuration ===");
+        console.log("DynamoDB Table:", AwsStorage.TABLE_NAME);
+        console.log("Package History Bucket:", AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME);
+        console.log("Package Download Bucket:", AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME);
+        console.log("CDN URL:", AwsStorage.PACKAGE_DOWNLOAD_CDN_URL);
+        console.log("AWS Region:", process.env.AWS_REGION);
+        console.log("Environment:", process.env.NODE_ENV);
+        console.log("=====================\n");
+        return q.Promise((resolve, reject) => {
+            try {
+                // Initialize AWS clients
+                const awsConfig = {
+                    region: process.env.AWS_REGION,
+                };
+                // Only add credentials in local development
+                if (process.env.NODE_ENV === "development") {
+                    console.log("🔑 Using local AWS credentials");
+                    awsConfig.credentials = new AWS.SharedIniFileCredentials({
+                        profile: "272110293415_Dev-L3-Poker-Stage",
+                    });
+                }
+                else {
+                    console.log("🔒 Using IAM role credentials");
+                }
+                AWS.config.update(awsConfig);
+                this._dynamoDBClient = new aws_sdk_1.DynamoDB.DocumentClient();
+                this._s3Client = new aws_sdk_1.S3();
+                // Test DynamoDB connection
+                const params = {
+                    TableName: AwsStorage.TABLE_NAME,
+                    Key: {
+                        partitionKey: "health",
+                        rowKey: "health",
+                    },
+                };
+                this._dynamoDBClient
+                    .get(params)
+                    .promise()
+                    .then(() => {
+                    console.log("✅ Successfully connected to DynamoDB");
+                    resolve();
+                })
+                    .catch((error) => {
+                    console.error("❌ Failed to connect to DynamoDB:", error.message);
+                    reject(error);
+                });
+            }
+            catch (error) {
+                console.error("❌ Failed to initialize AWS clients:", error.message);
+                reject(error);
+            }
+        });
     }
     blobHealthCheck(blobId) {
         return q.Promise((resolve, reject) => {

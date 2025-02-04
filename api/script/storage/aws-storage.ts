@@ -152,16 +152,17 @@ interface AccessKeyPointer {
 export class AwsStorage implements storage.Storage {
   public static NO_ID_ERROR = "No id set";
 
-  static PACKAGE_HISTORY_S3_BUCKET_NAME = "my11circle-logs";
-  static PACKAGE_HISTORY_S3_PREFIX = "ota-history/package-history";
+  static PACKAGE_HISTORY_S3_BUCKET_NAME = process.env.PACKAGE_HISTORY_S3_BUCKET_NAME || "g24x7-stage-ota-pvt-package-history";
+  static PACKAGE_HISTORY_S3_PREFIX = process.env.PACKAGE_HISTORY_S3_PREFIX || "ota-history/package-history";
 
-  static PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME = "g24x7.stage-reverie-website";
-  static PACKAGE_DOWNLOAD_CDN_S3_PREFIX = "ota-releases/package-downloads";
+  static PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME =
+    process.env.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME || "g24x7-stage-ota-pub-package-download";
+  static PACKAGE_DOWNLOAD_CDN_S3_PREFIX = process.env.PACKAGE_DOWNLOAD_CDN_S3_PREFIX || "ota-releases/package-downloads";
 
-  static PACKAGE_DOWNLOAD_CDN_URL = "https://stage-cdn.my11circle.com";
+  static PACKAGE_DOWNLOAD_CDN_URL = process.env.PACKAGE_DOWNLOAD_CDN_URL || "https://stage-cdn.my11circle.com";
 
   private static MAX_PACKAGE_HISTORY_LENGTH = 50;
-  private static TABLE_NAME = "code-push-server-stage-v1";
+  private static TABLE_NAME = process.env.TABLE_NAME || "ota-registery";
 
   private _setupPromise: q.Promise<void>;
 
@@ -1193,26 +1194,62 @@ export class AwsStorage implements storage.Storage {
   }
 
   private setup(): q.Promise<void> {
-    const deferred = q.defer<void>();
+    console.log("\n=== AWS Configuration ===");
+    console.log("DynamoDB Table:", AwsStorage.TABLE_NAME);
+    console.log("Package History Bucket:", AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME);
+    console.log("Package Download Bucket:", AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME);
+    console.log("CDN URL:", AwsStorage.PACKAGE_DOWNLOAD_CDN_URL);
+    console.log("AWS Region:", process.env.AWS_REGION);
+    console.log("Environment:", process.env.NODE_ENV);
+    console.log("=====================\n");
 
-    try {
-      const awsConfig = {
-        region: process.env.AWS_REGION || "ap-south-1",
-        credentials: new AWS.SharedIniFileCredentials({ profile: "272110293415_Dev-L3-Poker-Stage" }),
-      };
+    return q.Promise<void>((resolve, reject) => {
+      try {
+        // Initialize AWS clients
+        const awsConfig: AWS.ConfigurationOptions = {
+          region: process.env.AWS_REGION,
+        };
 
-      const dynamoDBClient = new DynamoDB.DocumentClient(awsConfig);
-      const s3Client = new S3(awsConfig);
+        //TODO:  Only add credentials in local development or remove this
+        // code and add in readme file for folks to run this locally
+        if (process.env.NODE_ENV === "development") {
+          console.log("🔑 Using local AWS credentials");
+          awsConfig.credentials = new AWS.SharedIniFileCredentials({
+            profile: "272110293415_Dev-L3-Poker-Stage",
+          });
+        } else {
+          console.log("🔒 Using IAM role credentials");
+        }
 
-      this._dynamoDBClient = dynamoDBClient;
-      this._s3Client = s3Client;
+        AWS.config.update(awsConfig);
+        this._dynamoDBClient = new DynamoDB.DocumentClient();
+        this._s3Client = new S3();
 
-      deferred.resolve();
-    } catch (error) {
-      deferred.reject(error);
-    }
+        // Test DynamoDB connection
+        const params = {
+          TableName: AwsStorage.TABLE_NAME,
+          Key: {
+            partitionKey: "health",
+            rowKey: "health",
+          },
+        };
 
-    return deferred.promise;
+        this._dynamoDBClient
+          .get(params)
+          .promise()
+          .then(() => {
+            console.log("✅ Successfully connected to DynamoDB");
+            resolve();
+          })
+          .catch((error) => {
+            console.error("❌ Failed to connect to DynamoDB:", error.message);
+            reject(error);
+          });
+      } catch (error) {
+        console.error("❌ Failed to initialize AWS clients:", error.message);
+        reject(error);
+      }
+    });
   }
 
   private blobHealthCheck(blobId: string): q.Promise<void> {
