@@ -108,11 +108,11 @@ class RedisManager {
             this._metricsClient = redis.createClient(redisConfig);
             // Add end event handlers
             this._opsClient.on("connect", () => {
-                console.log(`Redis ops client connected successfully to ${redisConfig.host}:${redisConfig.port}`);
+                console.log(`✅ Redis ops client connected successfully to ${redisConfig.host}:${redisConfig.port}`);
                 this._isConnected = true;
             });
             this._metricsClient.on("connect", () => {
-                console.log(`Redis metrics client connected successfully to ${redisConfig.host}:${redisConfig.port}`);
+                console.log(`✅Redis metrics client connected successfully to ${redisConfig.host}:${redisConfig.port}`);
             });
             this._opsClient.on("error", (err) => {
                 console.error("Redis ops client error:", err);
@@ -122,10 +122,10 @@ class RedisManager {
                 console.error("Redis metrics client error:", err);
             });
             this._opsClient.on("ready", () => {
-                console.log("Redis ops client ready for commands");
+                console.log("✅ Redis ops client ready for commands");
             });
             this._metricsClient.on("ready", () => {
-                console.log("Redis metrics client ready for commands");
+                console.log("✅ Redis metrics client ready for commands");
             });
             this._opsClient.on("end", () => {
                 console.log("Redis ops client connection closed");

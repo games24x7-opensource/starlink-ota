@@ -7,7 +7,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug with Nodemon",
+      "name": "OTA Server (Dev)",
       "runtimeExecutable": "yarn",
       "runtimeArgs": ["dev"],
       "restart": true,
@@ -17,19 +17,22 @@
       "cwd": "${workspaceFolder}/api",
       "sourceMaps": true,
       "outFiles": ["${workspaceFolder}/api/dist/**/*.js"],
-      "env": {
-        "API_PORT": "3000",
-        "ZK_URL": "zk.du2jrq.private.xyz:2181",
-        "ZK_ROOT": "FE",
-        "NODE_ENV": "development",
-        "LOGGING": "true",
-        "DEBUG_DISABLE_AUTH": "true",
-        "DEBUG_USER_ID": "123",
-        "REDIS_HOST": "ota-stage-standalone-redis-v2-001.jw9vpg.0001.aps1.cache.amazonaws.com",
-        "REDIS_PORT": "6379",
-        "REDIS_TLS": "false",
-        "CORS_ORIGIN": "http://localhost:3002"
-      }
+      "envFile": "${workspaceFolder}/api/.dev.env"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Admin Server (Stage)",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["dev:admin"],
+      "restart": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "cwd": "${workspaceFolder}/api",
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/api/dist/**/*.js"],
+      "envFile": "${workspaceFolder}/api/.admin-stage.env"
     },
     {
       "type": "node",

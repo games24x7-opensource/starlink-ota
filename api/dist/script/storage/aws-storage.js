@@ -1034,7 +1034,8 @@ class AwsStorage {
                 const awsConfig = {
                     region: process.env.AWS_REGION,
                 };
-                // Only add credentials in local development
+                //TODO:  Only add credentials in local development or remove this
+                // code and add in readme file for folks to run this locally
                 if (process.env.NODE_ENV === "development") {
                     console.log("🔑 Using local AWS credentials");
                     awsConfig.credentials = new AWS.SharedIniFileCredentials({
