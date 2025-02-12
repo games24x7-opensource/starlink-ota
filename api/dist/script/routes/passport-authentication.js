@@ -1,38 +1,68 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PassportAuthentication = void 0;
-const cookieSession = require("cookie-session");
+const cookie_session_1 = __importDefault(require("cookie-session"));
 const express_1 = require("express");
-const passport = require("passport");
+const passport_1 = __importDefault(require("passport"));
 const passportActiveDirectory = require("passport-azure-ad");
-const passportBearer = require("passport-http-bearer");
-const passportGitHub = require("passport-github2");
-const passportWindowsLive = require("passport-windowslive");
-const express_rate_limit_1 = require("express-rate-limit");
-const restErrorUtils = require("../utils/rest-error-handling");
-const restHeaders = require("../utils/rest-headers");
-const security = require("../utils/security");
-const storage = require("../storage/storage");
-const validationUtils = require("../utils/validation");
+const passport_http_bearer_1 = __importDefault(require("passport-http-bearer"));
+const passport_github2_1 = __importDefault(require("passport-github2"));
+const passport_windowslive_1 = __importDefault(require("passport-windowslive"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const restErrorUtils = __importStar(require("../utils/rest-error-handling"));
+const restHeaders = __importStar(require("../utils/rest-headers"));
+const security = __importStar(require("../utils/security"));
+const storage = __importStar(require("../storage/storage"));
+const validationUtils = __importStar(require("../utils/validation"));
 const DEFAULT_SESSION_EXPIRY = 1000 * 60 * 60 * 24 * 60; // 60 days
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // limit each IP to 100 requests per windowMs
 });
 class PassportAuthentication {
-    static AZURE_AD_PROVIDER_NAME = "azure-ad";
-    static GITHUB_PROVIDER_NAME = "github";
-    static MICROSOFT_PROVIDER_NAME = "microsoft";
-    _cookieSessionMiddleware;
-    _serverUrl;
-    _storageInstance;
     constructor(config) {
         this._serverUrl = process.env["SERVER_URL"];
         // This session is neither encrypted nor signed beyond what is provided by SSL
         // By default, the 'secure' flag will be set if the node process is using SSL
-        this._cookieSessionMiddleware = cookieSession({
+        this._cookieSessionMiddleware = (0, cookie_session_1.default)({
             httpOnly: true,
             ttl: 3600000, // One hour in milliseconds
             name: "oauth.session",
@@ -41,7 +71,7 @@ class PassportAuthentication {
             overwrite: true,
         });
         this._storageInstance = config.storage;
-        passport.use(new passportBearer.Strategy((accessKey, done) => {
+        passport_1.default.use(new passport_http_bearer_1.default.Strategy((accessKey, done) => {
             if (!validationUtils.isValidKeyField(accessKey)) {
                 done(/*err*/ null, /*user*/ false);
                 return;
@@ -56,7 +86,7 @@ class PassportAuthentication {
         }));
     }
     authenticate(req, res, next) {
-        passport.authenticate("bearer", { session: false }, (err, user) => {
+        passport_1.default.authenticate("bearer", { session: false }, (err, user) => {
             if (err || !user) {
                 if (!err || err.code === storage.ErrorCode.NotFound) {
                     res
@@ -101,7 +131,7 @@ class PassportAuthentication {
     }
     getRouter() {
         const router = (0, express_1.Router)();
-        router.use(passport.initialize());
+        router.use(passport_1.default.initialize());
         router.get("/authenticated", limiter, this.authenticate, (req, res) => {
             res.send({ authenticated: true });
         });
@@ -139,9 +169,10 @@ class PassportAuthentication {
         return router;
     }
     static getEmailAddress(user) {
+        var _a, _b;
         const emailAccounts = user.emails;
         if (!emailAccounts || emailAccounts.length === 0) {
-            return user?._json?.email || user?._json?.preferred_username || user.oid; // This is the format used by passport-azure-ad
+            return ((_a = user === null || user === void 0 ? void 0 : user._json) === null || _a === void 0 ? void 0 : _a.email) || ((_b = user === null || user === void 0 ? void 0 : user._json) === null || _b === void 0 ? void 0 : _b.preferred_username) || user.oid; // This is the format used by passport-azure-ad
         }
         let emailAddress;
         for (let i = 0; i < emailAccounts.length; ++i) {
@@ -195,7 +226,7 @@ class PassportAuthentication {
     setupCommonRoutes(router, providerName, strategyName) {
         router.get("/auth/login/" + providerName, limiter, this._cookieSessionMiddleware, (req, res, next) => {
             req.session["action"] = "login";
-            passport.authenticate(strategyName, { session: false })(req, res, next);
+            passport_1.default.authenticate(strategyName, { session: false })(req, res, next);
         });
         router.get("/auth/register/" + providerName, limiter, this._cookieSessionMiddleware, (req, res, next) => {
             if (!PassportAuthentication.isAccountRegistrationEnabled()) {
@@ -203,13 +234,13 @@ class PassportAuthentication {
                 return;
             }
             req.session["action"] = "register";
-            passport.authenticate(strategyName, { session: false })(req, res, next);
+            passport_1.default.authenticate(strategyName, { session: false })(req, res, next);
         });
         router.get("/auth/link/" + providerName, limiter, this._cookieSessionMiddleware, (req, res, next) => {
             req.session["action"] = "link";
-            passport.authenticate(strategyName, { session: false })(req, res, next);
+            passport_1.default.authenticate(strategyName, { session: false })(req, res, next);
         });
-        router.get("/auth/callback/" + providerName, limiter, this._cookieSessionMiddleware, passport.authenticate(strategyName, { failureRedirect: "/auth/login/" + providerName, session: false }), (req, res, next) => {
+        router.get("/auth/callback/" + providerName, limiter, this._cookieSessionMiddleware, passport_1.default.authenticate(strategyName, { failureRedirect: "/auth/login/" + providerName, session: false }), (req, res, next) => {
             const action = req.session["action"];
             const hostname = req.session["hostname"];
             const user = req.user;
@@ -337,7 +368,7 @@ class PassportAuthentication {
             scope: ["user:email"],
             state: true,
         };
-        passport.use(new passportGitHub.Strategy(options, (accessToken, refreshToken, profile, done) => {
+        passport_1.default.use(new passport_github2_1.default.Strategy(options, (accessToken, refreshToken, profile, done) => {
             done(/*err*/ null, profile);
         }));
         this.setupCommonRoutes(router, providerName, strategyName);
@@ -352,7 +383,7 @@ class PassportAuthentication {
             scope: ["wl.signin", "wl.emails"],
             state: true,
         };
-        passport.use(new passportWindowsLive.Strategy(options, (accessToken, refreshToken, profile, done) => {
+        passport_1.default.use(new passport_windowslive_1.default.Strategy(options, (accessToken, refreshToken, profile, done) => {
             done(/*err*/ null, profile);
         }));
         this.setupCommonRoutes(router, providerName, strategyName);
@@ -372,11 +403,14 @@ class PassportAuthentication {
             validateIssuer: false, // We allow AD authentication across multiple tenants
             allowHttpForRedirectUrl: true,
         };
-        passport.use(new passportActiveDirectory.OIDCStrategy(options, (iss, sub, profile, accessToken, refreshToken, done) => {
+        passport_1.default.use(new passportActiveDirectory.OIDCStrategy(options, (iss, sub, profile, accessToken, refreshToken, done) => {
             done(/*err*/ null, profile);
         }));
         this.setupCommonRoutes(router, providerName, strategyName);
     }
 }
 exports.PassportAuthentication = PassportAuthentication;
+PassportAuthentication.AZURE_AD_PROVIDER_NAME = "azure-ad";
+PassportAuthentication.GITHUB_PROVIDER_NAME = "github";
+PassportAuthentication.MICROSOFT_PROVIDER_NAME = "microsoft";
 //# sourceMappingURL=passport-authentication.js.map

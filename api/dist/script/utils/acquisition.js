@@ -1,9 +1,12 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUpdatePackageInfo = getUpdatePackageInfo;
-const semver = require("semver");
+const semver_1 = __importDefault(require("semver"));
 const rollout_selector_1 = require("./rollout-selector");
 function getUpdatePackageInfo(packageHistory, request) {
     const updatePackage = getUpdatePackage(packageHistory, request, /*ignoreRolloutPackages*/ false);
@@ -59,7 +62,7 @@ function getUpdatePackage(packageHistory, request, ignoreRolloutPackages) {
             continue;
         }
         latestEnabledPackage = latestEnabledPackage || packageEntry;
-        if (!request.isCompanion && !semver.satisfies(request.appVersion, packageEntry.appVersion)) {
+        if (!request.isCompanion && !semver_1.default.satisfies(request.appVersion, packageEntry.appVersion)) {
             continue;
         }
         latestSatisfyingEnabledPackage = latestSatisfyingEnabledPackage || packageEntry;
@@ -89,10 +92,10 @@ function getUpdatePackage(packageHistory, request, ignoreRolloutPackages) {
         // version, or the client already has the latest relevant update, so return no
         // update, but also tell the client what appVersion the latest release is on and
         // whether they should trigger a store update.
-        if (semver.gtr(request.appVersion, latestEnabledPackage.appVersion)) {
+        if (semver_1.default.gtr(request.appVersion, latestEnabledPackage.appVersion)) {
             updateDetails.appVersion = latestEnabledPackage.appVersion;
         }
-        else if (!semver.satisfies(request.appVersion, latestEnabledPackage.appVersion)) {
+        else if (!semver_1.default.satisfies(request.appVersion, latestEnabledPackage.appVersion)) {
             updateDetails.updateAppVersion = true;
             updateDetails.appVersion = latestEnabledPackage.appVersion;
         }

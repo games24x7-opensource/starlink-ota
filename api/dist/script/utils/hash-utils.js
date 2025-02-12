@@ -1,6 +1,9 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PackageManifest = void 0;
 exports.generatePackageHashFromDirectory = generatePackageHashFromDirectory;
@@ -12,10 +15,10 @@ exports.hashStream = hashStream;
  * NOTE!!! This utility file is duplicated for use by the CodePush service (for server-driven hashing/
  * integrity checks) and CLI (for end-to-end code signing), please keep them in sync.
  */
-const crypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
-const q = require("q");
+const crypto_1 = __importDefault(require("crypto"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const q_1 = __importDefault(require("q"));
 // Do not throw an exception if either of these modules are missing, as they may not be needed by the
 // consumer of this file.
 // - recursiveFs: Only required for hashing of directories
@@ -31,7 +34,7 @@ try {
 catch (e) { }
 const HASH_ALGORITHM = "sha256";
 function generatePackageHashFromDirectory(directoryPath, basePath) {
-    if (!fs.lstatSync(directoryPath).isDirectory()) {
+    if (!fs_1.default.lstatSync(directoryPath).isDirectory()) {
         throw new Error("Not a directory. Please either create a directory, or use hashFile().");
     }
     return generatePackageManifestFromDirectory(directoryPath, basePath).then((manifest) => {
@@ -39,7 +42,7 @@ function generatePackageHashFromDirectory(directoryPath, basePath) {
     });
 }
 function generatePackageManifestFromZip(filePath) {
-    const deferred = q.defer();
+    const deferred = q_1.default.defer();
     const reject = (error) => {
         if (deferred.promise.isPending()) {
             deferred.reject(error);
@@ -85,13 +88,13 @@ function generatePackageManifestFromZip(filePath) {
             });
         })
             .on("end", () => {
-            q.all(hashFilePromises).then(() => resolve(new PackageManifest(fileHashesMap)), reject);
+            q_1.default.all(hashFilePromises).then(() => resolve(new PackageManifest(fileHashesMap)), reject);
         });
     });
     return deferred.promise.finally(() => zipFile && zipFile.close());
 }
 function generatePackageManifestFromDirectory(directoryPath, basePath) {
-    const deferred = q.defer();
+    const deferred = q_1.default.defer();
     const fileHashesMap = new Map();
     recursiveFs.readdirr(directoryPath, (error, directories, files) => {
         if (error) {
@@ -105,14 +108,14 @@ function generatePackageManifestFromDirectory(directoryPath, basePath) {
         // Hash the files sequentially, because streaming them in parallel is not necessarily faster
         const generateManifestPromise = files.reduce((soFar, filePath) => {
             return soFar.then(() => {
-                const relativePath = PackageManifest.normalizePath(path.relative(basePath, filePath));
+                const relativePath = PackageManifest.normalizePath(path_1.default.relative(basePath, filePath));
                 if (!PackageManifest.isIgnored(relativePath)) {
                     return hashFile(filePath).then((hash) => {
                         fileHashesMap.set(relativePath, hash);
                     });
                 }
             });
-        }, q(null));
+        }, (0, q_1.default)(null));
         generateManifestPromise
             .then(() => {
             deferred.resolve(new PackageManifest(fileHashesMap));
@@ -122,12 +125,12 @@ function generatePackageManifestFromDirectory(directoryPath, basePath) {
     return deferred.promise;
 }
 function hashFile(filePath) {
-    const readStream = fs.createReadStream(filePath);
+    const readStream = fs_1.default.createReadStream(filePath);
     return hashStream(readStream);
 }
 function hashStream(readStream) {
-    const hashStream = crypto.createHash(HASH_ALGORITHM);
-    const deferred = q.defer();
+    const hashStream = crypto_1.default.createHash(HASH_ALGORITHM);
+    const deferred = q_1.default.defer();
     readStream
         .on("error", (error) => {
         if (deferred.promise.isPending()) {
@@ -147,7 +150,6 @@ function hashStream(readStream) {
     return deferred.promise;
 }
 class PackageManifest {
-    _map;
     constructor(map) {
         if (!map) {
             map = new Map();
@@ -165,7 +167,7 @@ class PackageManifest {
         // Make sure this list is alphabetically ordered so that other clients
         // can also compute this hash easily given the update contents.
         entries = entries.sort();
-        return q(crypto.createHash(HASH_ALGORITHM).update(JSON.stringify(entries)).digest("hex"));
+        return (0, q_1.default)(crypto_1.default.createHash(HASH_ALGORITHM).update(JSON.stringify(entries)).digest("hex"));
     }
     serialize() {
         const obj = {};

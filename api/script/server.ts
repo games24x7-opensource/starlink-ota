@@ -1,19 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as express from "express";
-import * as defaultServer from "./default-server";
-import { AggregatorRegistry, Registry, Counter } from "prom-client";
-const cluster = require("cluster");
-
+import express from "express";
 const https = require("https");
+const cluster = require("cluster");
 const fs = require("fs");
+import { AggregatorRegistry, Registry, Counter } from "prom-client";
 
+import * as defaultServer from "./default-server";
 const aggregatorRegistry = new AggregatorRegistry();
 const masterRegistry = new Registry();
 
 const productType = process.env.PRODUCT_TYPE || "all";
-const defaultLabels = { application: "code-push-client", productType };
+const defaultLabels = { application: "starlink-ota", productType };
 masterRegistry.setDefaultLabels(defaultLabels);
 
 const processCrashCounter = new Counter({

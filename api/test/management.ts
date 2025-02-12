@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as assert from "assert";
-import * as express from "express";
-import * as fs from "fs";
-import * as path from "path";
-import * as q from "q";
-import * as request from "supertest";
+import assert from "assert";
+import express from "express";
+import fs from "fs";
+import path from "path";
+import q from "q";
+import request from "supertest";
 import superagent = require("superagent");
 
 import * as defaultServer from "../script/default-server";

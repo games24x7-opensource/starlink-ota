@@ -1,30 +1,67 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getManagementRouter = getManagementRouter;
+const express_1 = require("express");
+const fs_1 = __importDefault(require("fs"));
+const q_1 = __importDefault(require("q"));
+const semver_1 = __importDefault(require("semver"));
+const streamifier_1 = __importDefault(require("streamifier"));
+const tryJSON = require("try-json");
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const file_upload_manager_1 = require("../file-upload-manager");
 const rest_headers_1 = require("../utils/rest-headers");
 const rollout_selector_1 = require("../utils/rollout-selector");
-const packageDiffing = require("../utils/package-diffing");
-const converterUtils = require("../utils/converter");
-const diffErrorUtils = require("../utils/diff-error-handling");
-const errorUtils = require("../utils/rest-error-handling");
-const express_1 = require("express");
-const fs = require("fs");
-const hashUtils = require("../utils/hash-utils");
-const q = require("q");
-const redis = require("../redis-manager");
-const security = require("../utils/security");
-const semver = require("semver");
-const streamifier = require("streamifier");
-const storageTypes = require("../storage/storage");
-const validationUtils = require("../utils/validation");
+const hashUtils = __importStar(require("../utils/hash-utils"));
+const redis = __importStar(require("../redis-manager"));
+const security = __importStar(require("../utils/security"));
+const storageTypes = __importStar(require("../storage/storage"));
+const validationUtils = __importStar(require("../utils/validation"));
+const packageDiffing = __importStar(require("../utils/package-diffing"));
+const converterUtils = __importStar(require("../utils/converter"));
+const diffErrorUtils = __importStar(require("../utils/diff-error-handling"));
+const errorUtils = __importStar(require("../utils/rest-error-handling"));
+const storage_1 = require("../storage/storage");
+const Logger = require("../logger");
 var PackageDiffer = packageDiffing.PackageDiffer;
 var NameResolver = storageTypes.NameResolver;
-const tryJSON = require("try-json");
-const express_rate_limit_1 = require("express-rate-limit");
-const storage_1 = require("../storage/storage");
 const DEFAULT_ACCESS_KEY_EXPIRY = 1000 * 60 * 60 * 24 * 60; // 60 days
 const ACCESS_KEY_MASKING_STRING = "(hidden)";
 // A template string tag function that URL encodes the substituted values
@@ -203,7 +240,7 @@ function getManagementRouter(config) {
                 }
             });
             if (accessKeyDeletionPromises.length) {
-                return q.all(accessKeyDeletionPromises);
+                return q_1.default.all(accessKeyDeletionPromises);
             }
             else {
                 throw errorUtils.restError(errorUtils.ErrorCode.NotFound, `There are no sessions associated with "${createdBy}."`);
@@ -226,9 +263,10 @@ function getManagementRouter(config) {
                     return converterUtils.toRestApp(app, app.name, deploymentNames);
                 });
             });
-            return q.all(restAppPromises);
+            return q_1.default.all(restAppPromises);
         })
             .then((restApps) => {
+            Logger.instance("[Starlink::Admin::").setExpressReq(req).setUpstreamResponse({ body: restApps }).log();
             res.send({ apps: converterUtils.sortAndUpdateDisplayNameOfRestAppsList(restApps) });
         })
             .catch((error) => errorUtils.restErrorHandler(res, error, next))
@@ -266,15 +304,24 @@ function getManagementRouter(config) {
                                 return deployment.name;
                             });
                         });
-                        return q.all(deploymentPromises);
+                        return q_1.default.all(deploymentPromises);
                     }
                 })
                     .then((deploymentNames) => {
                     res.setHeader("Location", urlEncode([`/apps/${storageApp.name}`]));
-                    res.status(201).send({ app: converterUtils.toRestApp(storageApp, /*displayName=*/ storageApp.name, deploymentNames) });
+                    let respData = converterUtils.toRestApp(storageApp, /*displayName=*/ storageApp.name, deploymentNames);
+                    Logger.instance("[Starlink::Admin::")
+                        .setExpressReq(req)
+                        .setUpstreamRequestParams(appRequest)
+                        .setUpstreamResponse({ body: respData })
+                        .log();
+                    res.status(201).send({ app: respData });
                 });
             })
-                .catch((error) => errorUtils.restErrorHandler(res, error, next))
+                .catch((error) => {
+                Logger.instance("[Starlink::Admin::").setExpressReq(req).setError(error).log();
+                errorUtils.restErrorHandler(res, error, next);
+            })
                 .done();
         }
     });
@@ -292,7 +339,10 @@ function getManagementRouter(config) {
             const deploymentNames = deployments.map((deployment) => deployment.name);
             res.send({ app: converterUtils.toRestApp(storageApp, /*displayName=*/ appName, deploymentNames) });
         })
-            .catch((error) => errorUtils.restErrorHandler(res, error, next))
+            .catch((error) => {
+            Logger.instance("[Starlink::Admin::").setExpressReq(req).setError(error).log();
+            errorUtils.restErrorHandler(res, error, next);
+        })
             .done();
     });
     router.delete("/apps/:appName", (req, res, next) => {
@@ -311,7 +361,7 @@ function getManagementRouter(config) {
             const invalidationPromises = deployments.map((deployment) => {
                 return invalidateCachedPackage(deployment.key);
             });
-            return q.all(invalidationPromises).catch((error) => {
+            return q_1.default.all(invalidationPromises).catch((error) => {
                 invalidationError = error; // Do not block app deletion on cache invalidation
             });
         })
@@ -323,7 +373,10 @@ function getManagementRouter(config) {
             if (invalidationError)
                 throw invalidationError;
         })
-            .catch((error) => errorUtils.restErrorHandler(res, error, next))
+            .catch((error) => {
+            Logger.instance("[Starlink::Admin::").setExpressReq(req).setError(error).log();
+            errorUtils.restErrorHandler(res, error, next);
+        })
             .done();
     });
     router.patch("/apps/:appName", (req, res, next) => {
@@ -653,11 +706,20 @@ function getManagementRouter(config) {
             }
             if (updateRelease) {
                 return storage.updatePackageHistory(accountId, appId, storageDeployment.id, packageHistory).then(() => {
+                    Logger.instance("[Starlink::Admin::UpdateRelease::success")
+                        .setExpressReq(req)
+                        .setUpstreamRequestParams({ appName, deploymentName, accountId, info })
+                        .setUpstreamResponse({ body: converterUtils.toRestPackage(packageToUpdate) })
+                        .log();
                     res.send({ package: converterUtils.toRestPackage(packageToUpdate) });
                     return invalidateCachedPackage(storageDeployment.key);
                 });
             }
             else {
+                Logger.instance("[Starlink::Admin::UpdateRelease::no-update")
+                    .setExpressReq(req)
+                    .setUpstreamRequestParams({ appName, deploymentName, accountId, info })
+                    .log();
                 res.sendStatus(204);
             }
         })
@@ -685,7 +747,7 @@ function getManagementRouter(config) {
             errorUtils.sendMalformedRequestError(res, JSON.stringify(validationErrors));
             return;
         }
-        fs.stat(filePath, (err, stats) => {
+        fs_1.default.stat(filePath, (err, stats) => {
             if (err) {
                 errorUtils.sendUnknownError(res, err, next);
                 return;
@@ -733,7 +795,7 @@ function getManagementRouter(config) {
                 if (restPackage.packageHash === lastPackageHashWithSameAppVersion) {
                     throw errorUtils.restError(errorUtils.ErrorCode.Conflict, "The uploaded package was not released because it is identical to the contents of the specified deployment's current release.");
                 }
-                return storage.addBlob(security.generateSecureKey(accountId), fs.createReadStream(filePath), stats.size);
+                return storage.addBlob(security.generateSecureKey(accountId), fs_1.default.createReadStream(filePath), stats.size);
             })
                 .then((blobId) => storage.getBlobUrl(blobId))
                 .then((blobUrl) => {
@@ -742,16 +804,16 @@ function getManagementRouter(config) {
                 // If newManifest is null/undefined, then the package is not a valid ZIP file.
                 if (newManifest) {
                     const json = newManifest.serialize();
-                    const readStream = streamifier.createReadStream(json);
+                    const readStream = streamifier_1.default.createReadStream(json);
                     return storage.addBlob(security.generateSecureKey(accountId), readStream, json.length);
                 }
-                return q(null);
+                return (0, q_1.default)(null);
             })
                 .then((blobId) => {
                 if (blobId) {
                     return storage.getBlobUrl(blobId);
                 }
-                return q(null);
+                return (0, q_1.default)(null);
             })
                 .then((manifestBlobUrl) => {
                 storagePackage = converterUtils.toStoragePackage(restPackage);
@@ -772,7 +834,7 @@ function getManagementRouter(config) {
                 .then(() => processDiff(accountId, appId, deploymentToReleaseTo.id, storagePackage))
                 .finally(() => {
                 // Cleanup; any errors before this point will still pass to the catch() block
-                fs.unlink(filePath, (err) => {
+                fs_1.default.unlink(filePath, (err) => {
                     if (err) {
                         errorUtils.sendUnknownError(res, err, next);
                     }
@@ -804,7 +866,7 @@ function getManagementRouter(config) {
                 return redisManager.clearMetricsForDeploymentKey(deploymentToGetHistoryOf.key);
             }
             else {
-                return q(null);
+                return (0, q_1.default)(null);
             }
         })
             .then(() => {
@@ -830,6 +892,11 @@ function getManagementRouter(config) {
             return storage.getPackageHistory(accountId, appId, deployment.id);
         })
             .then((packageHistory) => {
+            Logger.instance("[Starlink::Admin::GetPackageHistory")
+                .setExpressReq(req)
+                .setUpstreamRequestParams({ appName, deploymentName, accountId })
+                .setUpstreamResponse({ body: packageHistory })
+                .log();
             res.send({ history: packageHistory });
         })
             .catch((error) => errorUtils.restErrorHandler(res, error, next))
@@ -859,6 +926,11 @@ function getManagementRouter(config) {
             })
                 .then((metrics) => {
                 const deploymentMetrics = converterUtils.toRestDeploymentMetrics(metrics);
+                Logger.instance("[Starlink::Admin::GetDeploymentMetrics")
+                    .setExpressReq(req)
+                    .setUpstreamRequestParams({ appName, deploymentName, accountId })
+                    .setUpstreamResponse({ body: deploymentMetrics })
+                    .log();
                 res.send({ metrics: deploymentMetrics });
             })
                 .catch((error) => errorUtils.restErrorHandler(res, error, next))
@@ -885,7 +957,7 @@ function getManagementRouter(config) {
             appId = app.id;
             throwIfInvalidPermissions(app, storageTypes.Permissions.Collaborator);
             // Get source and dest manifests in parallel.
-            return q.all([
+            return q_1.default.all([
                 nameResolver.resolveDeployment(accountId, appId, sourceDeploymentName),
                 nameResolver.resolveDeployment(accountId, appId, destDeploymentName),
             ]);
@@ -1058,17 +1130,17 @@ function getManagementRouter(config) {
             return null;
         }
         const lastPackageIndex = history.length - 1;
-        if (!semver.valid(appVersion)) {
+        if (!semver_1.default.valid(appVersion)) {
             // appVersion is a range
             const oldAppVersion = history[lastPackageIndex].appVersion;
-            const oldRange = semver.validRange(oldAppVersion);
-            const newRange = semver.validRange(appVersion);
+            const oldRange = semver_1.default.validRange(oldAppVersion);
+            const newRange = semver_1.default.validRange(appVersion);
             return oldRange === newRange ? history[lastPackageIndex].packageHash : null;
         }
         else {
             // appVersion is not a range
             for (let i = lastPackageIndex; i >= 0; i--) {
-                if (semver.satisfies(appVersion, history[i].appVersion)) {
+                if (semver_1.default.satisfies(appVersion, history[i].appVersion)) {
                     return history[i].packageHash;
                 }
             }
@@ -1111,7 +1183,7 @@ function getManagementRouter(config) {
             // No need to process diff because either:
             //   1. The release just contains a single file.
             //   2. Diffing disabled.
-            return q(null);
+            return (0, q_1.default)(null);
         }
         console.log(`Processing package: ${appPackage.label}`);
         return packageDiffing

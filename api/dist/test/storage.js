@@ -1,13 +1,49 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const assert = require("assert");
-const shortid = require("shortid");
-const q = require("q");
+const assert_1 = __importDefault(require("assert"));
+const shortid_1 = __importDefault(require("shortid"));
+const q_1 = __importDefault(require("q"));
 const json_storage_1 = require("../script/storage/json-storage");
-const storageTypes = require("../script/storage/storage");
-const utils = require("./utils");
+const storageTypes = __importStar(require("../script/storage/storage"));
+const utils = __importStar(require("./utils"));
 describe("JSON Storage", () => storageTests(json_storage_1.JsonStorage));
 function storageTests(StorageType, disablePersistence) {
     var storage;
@@ -26,7 +62,7 @@ function storageTests(StorageType, disablePersistence) {
         it("should be healthy if and only if running Azure storage", () => {
             return storage.checkHealth().then(
             /*returnedUnhealthy*/ () => {
-                assert.equal(StorageType, json_storage_1.JsonStorage, "Should only return unhealthy if running JSON storage");
+                assert_1.default.equal(StorageType, json_storage_1.JsonStorage, "Should only return unhealthy if running JSON storage");
             });
         });
     });
@@ -41,7 +77,7 @@ function storageTests(StorageType, disablePersistence) {
         it("can generate an id for an access key", () => {
             var accessKey = utils.makeStorageAccessKey();
             return storage.addAccessKey(account.id, accessKey).then((accessKeyId) => {
-                assert(accessKeyId);
+                (0, assert_1.default)(accessKeyId);
             });
         });
         it("can retrieve an access key by id", () => {
@@ -52,8 +88,8 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getAccessKey(account.id, accessKeyId);
             })
                 .then((retrievedAccessKey) => {
-                assert.equal(retrievedAccessKey.name, accessKey.name);
-                assert.equal(retrievedAccessKey.friendlyName, accessKey.friendlyName);
+                assert_1.default.equal(retrievedAccessKey.name, accessKey.name);
+                assert_1.default.equal(retrievedAccessKey.friendlyName, accessKey.friendlyName);
             });
         });
         it("can retrieve the account id by the access key name", () => {
@@ -64,7 +100,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getAccountIdFromAccessKey(accessKey.name);
             })
                 .then((retrievedAccountId) => {
-                assert.equal(retrievedAccountId, account.id);
+                assert_1.default.equal(retrievedAccountId, account.id);
             });
         });
         it("rejects promise for an invalid id", () => {
@@ -75,7 +111,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getAccessKey(account.id, "invalid");
             })
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("can retrieve access keys for account", () => {
@@ -86,9 +122,9 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getAccessKeys(account.id);
             })
                 .then((accessKeys) => {
-                assert.equal(1, accessKeys.length);
-                assert.equal(accessKeys[0].name, accessKey.name);
-                assert.equal(accessKeys[0].friendlyName, accessKey.friendlyName);
+                assert_1.default.equal(1, accessKeys.length);
+                assert_1.default.equal(accessKeys[0].name, accessKey.name);
+                assert_1.default.equal(accessKeys[0].friendlyName, accessKey.friendlyName);
             });
         });
         it("can remove an access key", () => {
@@ -102,7 +138,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getAccessKey(account.id, accessKey.id);
             })
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("can update an access key", () => {
@@ -118,7 +154,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getAccessKey(account.id, accessKey.id);
             })
                 .then((retrievedAccessKey) => {
-                assert.equal(retrievedAccessKey.friendlyName, "updated description");
+                assert_1.default.equal(retrievedAccessKey.friendlyName, "updated description");
             });
         });
         it("addAccessKey(...) will not modify the accessKey argument", () => {
@@ -126,7 +162,7 @@ function storageTests(StorageType, disablePersistence) {
             var expectedResult = JSON.stringify(accessKey);
             return storage.addAccessKey(account.id, accessKey).then((accessKeyId) => {
                 var actualResult = JSON.stringify(accessKey);
-                assert.strictEqual(actualResult, expectedResult);
+                assert_1.default.strictEqual(actualResult, expectedResult);
             });
         });
         it("updateAccessKey(...) will not modify the accessKey argument", () => {
@@ -142,20 +178,20 @@ function storageTests(StorageType, disablePersistence) {
             })
                 .then(() => {
                 var actualResult = JSON.stringify(accessKey);
-                assert.equal(actualResult, expectedResult);
+                assert_1.default.equal(actualResult, expectedResult);
             });
         });
     });
     describe("Account", () => {
         it("will reject promise for a non-existent account by accountId", () => {
             return storage.getAccount("IdThatDoesNotExist").then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("can generate an id for a new account", () => {
             var account = utils.makeAccount();
             return storage.addAccount(account).then((accountId) => {
-                assert(accountId);
+                (0, assert_1.default)(accountId);
             });
         });
         it("can get an account by accountId", () => {
@@ -167,7 +203,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getAccount(accountId);
             })
                 .then((accountFromApi) => {
-                assert.equal(accountFromApi.name, "test 456");
+                assert_1.default.equal(accountFromApi.name, "test 456");
             });
         });
         it("can get an account by email", () => {
@@ -179,7 +215,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getAccountByEmail(account.email);
             })
                 .then((accountFromApi) => {
-                assert.equal(accountFromApi.name, account.name);
+                assert_1.default.equal(accountFromApi.name, account.name);
             });
         });
         it("can update an account's provider details", () => {
@@ -195,16 +231,16 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getAccount(account.id);
             })
                 .then((updatedAccount) => {
-                assert.equal(updatedAccount.name, account.name);
-                assert.equal(updatedAccount.email, account.email);
-                assert.equal(updatedAccount.gitHubId, "2");
-                assert(typeof updatedAccount.azureAdId === "undefined");
-                assert(typeof updatedAccount.microsoftId === "undefined");
+                assert_1.default.equal(updatedAccount.name, account.name);
+                assert_1.default.equal(updatedAccount.email, account.email);
+                assert_1.default.equal(updatedAccount.gitHubId, "2");
+                (0, assert_1.default)(typeof updatedAccount.azureAdId === "undefined");
+                (0, assert_1.default)(typeof updatedAccount.microsoftId === "undefined");
             });
         });
         it("will reject promise for a non-existent email", () => {
             return storage.getAccountByEmail("non-existent-emaiL@test.com").then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("addAccount(...) will not modify the account argument", () => {
@@ -212,7 +248,7 @@ function storageTests(StorageType, disablePersistence) {
             var expectedResult = JSON.stringify(account);
             return storage.addAccount(account).then((accountId) => {
                 var actualResult = JSON.stringify(account);
-                assert.strictEqual(actualResult, expectedResult);
+                assert_1.default.strictEqual(actualResult, expectedResult);
             });
         });
         it("addAccount(...) will not accept duplicate emails even if cased differently", () => {
@@ -226,7 +262,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.addAccount(newAccount);
             })
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.AlreadyExists);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.AlreadyExists);
             });
         });
     });
@@ -242,13 +278,13 @@ function storageTests(StorageType, disablePersistence) {
         it("can generate an id for an app", () => {
             var app = utils.makeStorageApp();
             return storage.addApp(account.id, app).then((addedApp) => {
-                assert(addedApp.id);
+                (0, assert_1.default)(addedApp.id);
             });
         });
         it("rejects promise when adding to a non-existent account", () => {
             var app = utils.makeStorageApp();
             return storage.addApp("non-existent", app).then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("can retrieve an app by id", () => {
@@ -260,7 +296,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getApp(account.id, addedApp.id);
             })
                 .then((retrievedApp) => {
-                assert.equal(retrievedApp.name, "my app");
+                assert_1.default.equal(retrievedApp.name, "my app");
             });
         });
         it("rejects promise for an invalid id", () => {
@@ -272,7 +308,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getApp(addedApp.id, "invalid");
             })
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("can retrieve apps for account", () => {
@@ -284,18 +320,18 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getApps(account.id);
             })
                 .then((apps) => {
-                assert.equal(1, apps.length);
-                assert.equal(apps[0].name, "my app");
+                assert_1.default.equal(1, apps.length);
+                assert_1.default.equal(apps[0].name, "my app");
             });
         });
         it("can retrieve empty app list for account", () => {
             return storage.getApps(account.id).then((apps) => {
-                assert.equal(0, apps.length);
+                assert_1.default.equal(0, apps.length);
             });
         });
         it("rejects promise when retrieving by invalid account", () => {
             return storage.getApps("invalid").then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("can remove an app", () => {
@@ -315,20 +351,20 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getApp(account.id, app.id);
             })
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
                 return storage.getDeployment(account.id, app.id, deployment.id);
             })
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
                 return storage.getPackageHistoryFromDeploymentKey(deployment.key);
             })
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("rejects promise when removing a non-existent app", () => {
             return storage.removeApp(account.id, "invalid").then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("can update an app", () => {
@@ -347,14 +383,14 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getApp(account.id, appId);
             })
                 .then((retrievedApp) => {
-                assert.equal(retrievedApp.name, "updated name");
+                assert_1.default.equal(retrievedApp.name, "updated name");
             });
         });
         it("will reject promise when updating non-existent entry", () => {
             var app = utils.makeStorageApp();
             app.id = "non-existent";
             return storage.updateApp(account.id, app).then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("addApp(...) will not modify the app argument", () => {
@@ -362,7 +398,7 @@ function storageTests(StorageType, disablePersistence) {
             var expectedResult = JSON.stringify(app);
             return storage.addApp(account.id, app).then((addedApp) => {
                 var actualResult = JSON.stringify(app);
-                assert.strictEqual(actualResult, expectedResult);
+                assert_1.default.strictEqual(actualResult, expectedResult);
             });
         });
         it("updateApp(...) will not modify the app argument", () => {
@@ -382,7 +418,7 @@ function storageTests(StorageType, disablePersistence) {
             })
                 .then(() => {
                 var actualResult = JSON.stringify(updatedApp);
-                assert.strictEqual(actualResult, expectedResult);
+                assert_1.default.strictEqual(actualResult, expectedResult);
             });
         });
         describe("Transfer App", () => {
@@ -415,69 +451,69 @@ function storageTests(StorageType, disablePersistence) {
                 return storage
                     .transferApp(account2.id, appToTransfer.id, "nonexistent@email.com")
                     .then(failOnCallSucceeded, (error) => {
-                    assert.equal(error.code, storageTypes.ErrorCode.NotFound);
-                    assert.equal(error.message, collaboratorNotFoundMessage);
+                    assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
+                    assert_1.default.equal(error.message, collaboratorNotFoundMessage);
                 });
             });
             it("will reject promise when transferring to own account", () => {
                 return storage
                     .transferApp(account2.id, appToTransfer.id, account2.email)
                     .then(failOnCallSucceeded, (error) => {
-                    assert.equal(error.code, storageTypes.ErrorCode.AlreadyExists);
+                    assert_1.default.equal(error.code, storageTypes.ErrorCode.AlreadyExists);
                 });
             });
             it("will successfully transfer app to new account", () => {
                 return storage
                     .getApps(account3.id)
                     .then((apps) => {
-                    assert.equal(0, apps.length);
+                    assert_1.default.equal(0, apps.length);
                     return storage.transferApp(account2.id, appToTransfer.id, account3.email);
                 })
                     .then(() => {
                     return storage.getApps(account2.id);
                 })
                     .then((apps) => {
-                    assert.equal(1, apps.length);
+                    assert_1.default.equal(1, apps.length);
                     return storage.getApps(account3.id);
                 })
                     .then((apps) => {
-                    assert.equal(1, apps.length);
+                    assert_1.default.equal(1, apps.length);
                 });
             });
             it("will successfully transfer app to existing collaborator", () => {
                 return storage
                     .getApps(account3.id)
                     .then((apps) => {
-                    assert.equal(0, apps.length);
+                    assert_1.default.equal(0, apps.length);
                     return storage.addCollaborator(account2.id, appToTransfer.id, account3.email);
                 })
                     .then(() => {
                     return storage.getApps(account3.id);
                 })
                     .then((apps) => {
-                    assert.equal("Owner", apps[0].collaborators[account2.email].permission);
-                    assert.equal("Collaborator", apps[0].collaborators[account3.email].permission);
-                    assert.equal(1, apps.length);
+                    assert_1.default.equal("Owner", apps[0].collaborators[account2.email].permission);
+                    assert_1.default.equal("Collaborator", apps[0].collaborators[account3.email].permission);
+                    assert_1.default.equal(1, apps.length);
                     return storage.transferApp(account2.id, appToTransfer.id, account3.email);
                 })
                     .then(() => {
                     return storage.getApps(account3.id);
                 })
                     .then((apps) => {
-                    assert.equal(1, apps.length);
-                    assert.equal("Owner", apps[0].collaborators[account3.email].permission);
+                    assert_1.default.equal(1, apps.length);
+                    assert_1.default.equal("Owner", apps[0].collaborators[account3.email].permission);
                     return storage.getApps(account2.id);
                 })
                     .then((apps) => {
-                    assert.equal(1, apps.length);
-                    assert.equal("Collaborator", apps[0].collaborators[account2.email].permission);
+                    assert_1.default.equal(1, apps.length);
+                    assert_1.default.equal("Collaborator", apps[0].collaborators[account2.email].permission);
                 });
             });
             it("will successfully transfer app and not remove any collaborators for app", () => {
                 return storage
                     .getApps(account3.id)
                     .then((apps) => {
-                    assert.equal(0, apps.length);
+                    assert_1.default.equal(0, apps.length);
                     return storage.addCollaborator(account2.id, appToTransfer.id, account3.email);
                 })
                     .then(() => {
@@ -487,22 +523,22 @@ function storageTests(StorageType, disablePersistence) {
                     return storage.getApps(account3.id);
                 })
                     .then((apps) => {
-                    assert.equal(1, apps.length);
-                    assert.equal(3, Object.keys(apps[0].collaborators).length);
-                    assert.equal("Owner", apps[0].collaborators[account2.email].permission);
-                    assert.equal("Collaborator", apps[0].collaborators[account3.email].permission);
-                    assert.equal("Collaborator", apps[0].collaborators[account.email].permission);
+                    assert_1.default.equal(1, apps.length);
+                    assert_1.default.equal(3, Object.keys(apps[0].collaborators).length);
+                    assert_1.default.equal("Owner", apps[0].collaborators[account2.email].permission);
+                    assert_1.default.equal("Collaborator", apps[0].collaborators[account3.email].permission);
+                    assert_1.default.equal("Collaborator", apps[0].collaborators[account.email].permission);
                     return storage.transferApp(account2.id, appToTransfer.id, account3.email);
                 })
                     .then(() => {
                     return storage.getApps(account3.id);
                 })
                     .then((apps) => {
-                    assert.equal(1, apps.length);
-                    assert.equal(3, Object.keys(apps[0].collaborators).length);
-                    assert.equal("Collaborator", apps[0].collaborators[account2.email].permission);
-                    assert.equal("Owner", apps[0].collaborators[account3.email].permission);
-                    assert.equal("Collaborator", apps[0].collaborators[account.email].permission);
+                    assert_1.default.equal(1, apps.length);
+                    assert_1.default.equal(3, Object.keys(apps[0].collaborators).length);
+                    assert_1.default.equal("Collaborator", apps[0].collaborators[account2.email].permission);
+                    assert_1.default.equal("Owner", apps[0].collaborators[account3.email].permission);
+                    assert_1.default.equal("Collaborator", apps[0].collaborators[account.email].permission);
                 });
             });
         });
@@ -536,38 +572,38 @@ function storageTests(StorageType, disablePersistence) {
                 return storage
                     .getApps(account3.id)
                     .then((apps) => {
-                    assert.equal(0, apps.length);
+                    assert_1.default.equal(0, apps.length);
                     return storage.addCollaborator(account2.id, appToTransfer.id, account3.email);
                 })
                     .then(() => {
                     return storage.getApps(account3.id);
                 })
                     .then((apps) => {
-                    assert.equal(1, apps.length);
-                    assert.equal(2, Object.keys(apps[0].collaborators).length);
+                    assert_1.default.equal(1, apps.length);
+                    assert_1.default.equal(2, Object.keys(apps[0].collaborators).length);
                 });
             });
             it("will reject promise when adding existing collaborator", () => {
                 return storage
                     .getApps(account3.id)
                     .then((apps) => {
-                    assert.equal(0, apps.length);
+                    assert_1.default.equal(0, apps.length);
                     return storage.addCollaborator(account2.id, appToTransfer.id, account2.email);
                 })
                     .then(failOnCallSucceeded, (error) => {
-                    assert.equal(error.code, storageTypes.ErrorCode.AlreadyExists);
+                    assert_1.default.equal(error.code, storageTypes.ErrorCode.AlreadyExists);
                 });
             });
             it("will reject promise when adding invalid collaborator account", () => {
                 return storage
                     .getApps(account3.id)
                     .then((apps) => {
-                    assert.equal(0, apps.length);
+                    assert_1.default.equal(0, apps.length);
                     return storage.addCollaborator(account2.id, appToTransfer.id, "nonexistent@email.com");
                 })
                     .then(failOnCallSucceeded, (error) => {
-                    assert.equal(error.code, storageTypes.ErrorCode.NotFound);
-                    assert.equal(error.message, collaboratorNotFoundMessage);
+                    assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
+                    assert_1.default.equal(error.message, collaboratorNotFoundMessage);
                 });
             });
             it("get list of collaborators succesfully", () => {
@@ -578,9 +614,9 @@ function storageTests(StorageType, disablePersistence) {
                 })
                     .then((collaboratorList) => {
                     var keys = Object.keys(collaboratorList);
-                    assert.equal(2, keys.length);
-                    assert.equal(account2.email, keys[0]);
-                    assert.equal(account3.email, keys[1]);
+                    assert_1.default.equal(2, keys.length);
+                    assert_1.default.equal(account2.email, keys[0]);
+                    assert_1.default.equal(account3.email, keys[1]);
                 });
             });
             it("remove collaborator successfully", () => {
@@ -590,22 +626,22 @@ function storageTests(StorageType, disablePersistence) {
                     return storage.getCollaborators(account2.id, appToTransfer.id);
                 })
                     .then((collaboratorList) => {
-                    assert.equal(2, Object.keys(collaboratorList).length);
+                    assert_1.default.equal(2, Object.keys(collaboratorList).length);
                     return storage.getApps(account3.id);
                 })
                     .then((apps) => {
-                    assert.equal(1, apps.length);
+                    assert_1.default.equal(1, apps.length);
                     return storage.removeCollaborator(account2.id, appToTransfer.id, account3.email);
                 })
                     .then(() => {
                     return storage.getCollaborators(account2.id, appToTransfer.id);
                 })
                     .then((collaboratorList) => {
-                    assert.equal(1, Object.keys(collaboratorList).length);
+                    assert_1.default.equal(1, Object.keys(collaboratorList).length);
                     return storage.getApps(account3.id);
                 })
                     .then((apps) => {
-                    assert.equal(0, apps.length);
+                    assert_1.default.equal(0, apps.length);
                 });
             });
             it("will allow collaborator to remove themselves successfully", () => {
@@ -615,22 +651,22 @@ function storageTests(StorageType, disablePersistence) {
                     return storage.getCollaborators(account2.id, appToTransfer.id);
                 })
                     .then((collaboratorList) => {
-                    assert.equal(2, Object.keys(collaboratorList).length);
+                    assert_1.default.equal(2, Object.keys(collaboratorList).length);
                     return storage.getApps(account3.id);
                 })
                     .then((apps) => {
-                    assert.equal(1, apps.length);
+                    assert_1.default.equal(1, apps.length);
                     return storage.removeCollaborator(account3.id, appToTransfer.id, account3.email);
                 })
                     .then(() => {
                     return storage.getCollaborators(account2.id, appToTransfer.id);
                 })
                     .then((collaboratorList) => {
-                    assert.equal(1, Object.keys(collaboratorList).length);
+                    assert_1.default.equal(1, Object.keys(collaboratorList).length);
                     return storage.getApps(account3.id);
                 })
                     .then((apps) => {
-                    assert.equal(0, apps.length);
+                    assert_1.default.equal(0, apps.length);
                 });
             });
         });
@@ -654,7 +690,7 @@ function storageTests(StorageType, disablePersistence) {
         it("can add a deployment", () => {
             var deployment = utils.makeStorageDeployment();
             return storage.addDeployment(account.id, app.id, deployment).then((deploymentId) => {
-                assert(deploymentId);
+                (0, assert_1.default)(deploymentId);
             });
         });
         it("add deployment creates empty package history", () => {
@@ -662,11 +698,11 @@ function storageTests(StorageType, disablePersistence) {
             return storage
                 .addDeployment(account.id, app.id, deployment)
                 .then((deploymentId) => {
-                assert(deploymentId);
+                (0, assert_1.default)(deploymentId);
                 return storage.getPackageHistory(account.id, app.id, deploymentId);
             })
                 .then((history) => {
-                assert.equal(history.length, 0);
+                assert_1.default.equal(history.length, 0);
             });
         });
         it("rejects promise when adding to a non-existent app", () => {
@@ -674,12 +710,12 @@ function storageTests(StorageType, disablePersistence) {
             return storage
                 .addDeployment(account.id, "non-existent", deployment)
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("rejects promise with an invalid deploymentId", () => {
             return storage.getDeployment(account.id, app.id, "invalid").then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("can get a deployment with an account id & deployment id", () => {
@@ -691,7 +727,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getDeployment(account.id, app.id, deploymentId);
             })
                 .then((deployment) => {
-                assert.equal(deployment.name, "deployment123");
+                assert_1.default.equal(deployment.name, "deployment123");
             });
         });
         it("can retrieve deployments for account id & app id", () => {
@@ -703,22 +739,22 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getDeployments(account.id, app.id);
             })
                 .then((deployments) => {
-                assert.equal(deployments.length, 1);
-                assert.equal("deployment123", deployments[0].name);
+                assert_1.default.equal(deployments.length, 1);
+                assert_1.default.equal("deployment123", deployments[0].name);
             });
         });
         it("can retrieve empty deployment list for account", () => {
             var deployment = utils.makeStorageDeployment();
             deployment.name = "deployment123";
             return storage.getDeployments(account.id, app.id).then((deployments) => {
-                assert.equal(0, deployments.length);
+                assert_1.default.equal(0, deployments.length);
             });
         });
         it("rejects promise when retrieving by invalid app", () => {
             var deployment = utils.makeStorageDeployment();
             deployment.name = "deployment123";
             return storage.getDeployments(account.id, "invalid").then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("can remove a deployment", () => {
@@ -733,24 +769,24 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getDeployment(account.id, app.id, deployment.id);
             })
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
                 return storage.getPackageHistoryFromDeploymentKey(deployment.key);
             })
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
                 return storage.getPackageHistory(account.id, app.id, deployment.id);
             })
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
                 return storage.getApp(account.id, app.id);
             })
                 .then((returnedApp) => {
-                assert.equal(app.name, returnedApp.name);
+                assert_1.default.equal(app.name, returnedApp.name);
             });
         });
         it("rejects promise when removing a non-existent deployment", () => {
             return storage.removeDeployment(account.id, app.id, "invalid").then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("can update a deployment", () => {
@@ -769,14 +805,14 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getDeployment(account.id, app.id, deploymentId);
             })
                 .then((retrievedDeployment) => {
-                assert.equal(retrievedDeployment.name, "updated name");
+                assert_1.default.equal(retrievedDeployment.name, "updated name");
             });
         });
         it("will reject promise when updating non-existent entry", () => {
             var deployment = utils.makeStorageDeployment();
             deployment.id = "non-existent";
             return storage.updateDeployment(account.id, app.id, deployment).then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("addDeployment(...) will not modify the deployment argument", () => {
@@ -784,7 +820,7 @@ function storageTests(StorageType, disablePersistence) {
             var expectedResult = JSON.stringify(deployment);
             return storage.addDeployment(account.id, app.id, deployment).then((deploymentId) => {
                 var actualResult = JSON.stringify(deployment);
-                assert.strictEqual(actualResult, expectedResult);
+                assert_1.default.strictEqual(actualResult, expectedResult);
             });
         });
         it("updateDeployment(...) will not modify the deployment argument", () => {
@@ -804,7 +840,7 @@ function storageTests(StorageType, disablePersistence) {
             })
                 .then(() => {
                 var actualResult = JSON.stringify(updatedDeployment);
-                assert.strictEqual(actualResult, expectedResult);
+                assert_1.default.strictEqual(actualResult, expectedResult);
             });
         });
     });
@@ -832,9 +868,9 @@ function storageTests(StorageType, disablePersistence) {
         });
         it("can get app and deployment ID's", () => {
             return storage.getDeploymentInfo(deployment.key).then((deploymentInfo) => {
-                assert(deploymentInfo);
-                assert.equal(deploymentInfo.appId, app.id);
-                assert.equal(deploymentInfo.deploymentId, deployment.id);
+                (0, assert_1.default)(deploymentInfo);
+                assert_1.default.equal(deploymentInfo.appId, app.id);
+                assert_1.default.equal(deploymentInfo.deploymentId, deployment.id);
             });
         });
     });
@@ -861,7 +897,7 @@ function storageTests(StorageType, disablePersistence) {
                 .then((deploymentId) => {
                 deployment.id = deploymentId;
                 var fileContents = "test blob";
-                return storage.addBlob(shortid.generate(), utils.makeStreamFromString(fileContents), fileContents.length);
+                return storage.addBlob(shortid_1.default.generate(), utils.makeStreamFromString(fileContents), fileContents.length);
             })
                 .then((savedBlobId) => {
                 blobId = savedBlobId;
@@ -873,7 +909,7 @@ function storageTests(StorageType, disablePersistence) {
         });
         it("can get empty package", () => {
             return storage.getDeployment(account.id, app.id, deployment.id).then((deployment) => {
-                assert.equal(deployment.package, null);
+                assert_1.default.equal(deployment.package, null);
             });
         });
         it("can add and get a package", () => {
@@ -886,14 +922,14 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getPackageHistoryFromDeploymentKey(deployment.key);
             })
                 .then((deploymentPackages) => {
-                assert.equal("description123", deploymentPackages[deploymentPackages.length - 1].description);
+                assert_1.default.equal("description123", deploymentPackages[deploymentPackages.length - 1].description);
             });
         });
         it("rejects promise with a non-existent deploymentKey", () => {
             return storage
                 .getPackageHistoryFromDeploymentKey("NonExistentDeploymentKey")
                 .then(failOnCallSucceeded, (error) => {
-                assert.equal(error.code, storageTypes.ErrorCode.NotFound);
+                assert_1.default.equal(error.code, storageTypes.ErrorCode.NotFound);
             });
         });
         it("transferApp still returns history from deploymentKey", () => {
@@ -907,7 +943,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getPackageHistoryFromDeploymentKey(deployment.key);
             })
                 .then((deploymentPackages) => {
-                assert.equal("description123", deploymentPackages[deploymentPackages.length - 1].description);
+                assert_1.default.equal("description123", deploymentPackages[deploymentPackages.length - 1].description);
                 return storage.addAccount(account2);
             })
                 .then((accountId) => {
@@ -921,7 +957,7 @@ function storageTests(StorageType, disablePersistence) {
                 return storage.getPackageHistoryFromDeploymentKey(deployment.key);
             })
                 .then((deploymentPackages) => {
-                assert.equal("description123", deploymentPackages[deploymentPackages.length - 1].description);
+                assert_1.default.equal("description123", deploymentPackages[deploymentPackages.length - 1].description);
             });
         });
         it("commitPackage(...) will not modify the appPackage argument", () => {
@@ -931,21 +967,21 @@ function storageTests(StorageType, disablePersistence) {
             var expectedResult = JSON.stringify(storagePackage);
             return storage.commitPackage(account.id, app.id, deployment.id, storagePackage).then(() => {
                 var actualResult = JSON.stringify(storagePackage);
-                assert.strictEqual(actualResult, expectedResult);
+                assert_1.default.strictEqual(actualResult, expectedResult);
             });
         });
         describe("Package history", () => {
             var expectedPackageHistory;
             beforeEach(() => {
                 expectedPackageHistory = [];
-                var promiseChain = q(null);
+                var promiseChain = (0, q_1.default)(null);
                 var packageNumber = 1;
                 for (var i = 1; i <= 3; i++) {
                     promiseChain = promiseChain
                         .then(() => {
                         var newPackage = utils.makePackage();
                         newPackage.blobUrl = blobUrl;
-                        newPackage.description = shortid.generate();
+                        newPackage.description = shortid_1.default.generate();
                         expectedPackageHistory.push(newPackage);
                         return storage.commitPackage(account.id, app.id, deployment.id, newPackage);
                     })
@@ -959,14 +995,14 @@ function storageTests(StorageType, disablePersistence) {
             });
             it("can get package history", () => {
                 return storage.getPackageHistory(account.id, app.id, deployment.id).then((actualPackageHistory) => {
-                    assert.equal(JSON.stringify(actualPackageHistory), JSON.stringify(expectedPackageHistory));
+                    assert_1.default.equal(JSON.stringify(actualPackageHistory), JSON.stringify(expectedPackageHistory));
                 });
             });
             it("can update package history", () => {
                 return storage
                     .getPackageHistory(account.id, app.id, deployment.id)
                     .then((actualPackageHistory) => {
-                    assert.equal(JSON.stringify(actualPackageHistory), JSON.stringify(expectedPackageHistory));
+                    assert_1.default.equal(JSON.stringify(actualPackageHistory), JSON.stringify(expectedPackageHistory));
                     expectedPackageHistory[0].description = "new description for v1";
                     expectedPackageHistory[1].isMandatory = true;
                     expectedPackageHistory[2].description = "new description for v3";
@@ -978,22 +1014,22 @@ function storageTests(StorageType, disablePersistence) {
                     return storage.getPackageHistory(account.id, app.id, deployment.id);
                 })
                     .then((actualPackageHistory) => {
-                    assert.equal(JSON.stringify(actualPackageHistory), JSON.stringify(expectedPackageHistory));
+                    assert_1.default.equal(JSON.stringify(actualPackageHistory), JSON.stringify(expectedPackageHistory));
                 });
             });
             it("updatePackageHistory does not clear package history", () => {
                 return storage
                     .getPackageHistory(account.id, app.id, deployment.id)
                     .then((actualPackageHistory) => {
-                    assert.equal(JSON.stringify(actualPackageHistory), JSON.stringify(expectedPackageHistory));
+                    assert_1.default.equal(JSON.stringify(actualPackageHistory), JSON.stringify(expectedPackageHistory));
                     return storage.updatePackageHistory(account.id, app.id, deployment.id, /*history*/ null);
                 })
                     .then(failOnCallSucceeded, (error) => {
-                    assert.equal(error.code, storageTypes.ErrorCode.Other);
+                    assert_1.default.equal(error.code, storageTypes.ErrorCode.Other);
                     return storage.getPackageHistory(account.id, app.id, deployment.id);
                 })
                     .then((actualPackageHistory) => {
-                    assert.equal(JSON.stringify(actualPackageHistory), JSON.stringify(expectedPackageHistory));
+                    assert_1.default.equal(JSON.stringify(actualPackageHistory), JSON.stringify(expectedPackageHistory));
                 });
             });
         });
@@ -1002,31 +1038,31 @@ function storageTests(StorageType, disablePersistence) {
         it("can add a blob", () => {
             var fileContents = "test stream";
             return storage
-                .addBlob(shortid.generate(), utils.makeStreamFromString(fileContents), fileContents.length)
+                .addBlob(shortid_1.default.generate(), utils.makeStreamFromString(fileContents), fileContents.length)
                 .then((blobId) => {
-                assert(blobId);
+                (0, assert_1.default)(blobId);
             });
         });
         it("can get a blob url", () => {
             var fileContents = "test stream";
             return storage
-                .addBlob(shortid.generate(), utils.makeStreamFromString(fileContents), fileContents.length)
+                .addBlob(shortid_1.default.generate(), utils.makeStreamFromString(fileContents), fileContents.length)
                 .then((blobId) => {
                 return storage.getBlobUrl(blobId);
             })
                 .then((blobUrl) => {
-                assert(blobUrl);
+                (0, assert_1.default)(blobUrl);
                 return utils.retrieveStringContentsFromUrl(blobUrl);
             })
                 .then((actualContents) => {
-                assert.equal(fileContents, actualContents);
+                assert_1.default.equal(fileContents, actualContents);
             });
         });
         it("can remove a blob", () => {
             var fileContents = "test stream";
             var blobId;
             return storage
-                .addBlob(shortid.generate(), utils.makeStreamFromString(fileContents), fileContents.length)
+                .addBlob(shortid_1.default.generate(), utils.makeStreamFromString(fileContents), fileContents.length)
                 .then((id) => {
                 blobId = id;
                 return storage.removeBlob(blobId);
@@ -1042,10 +1078,10 @@ function storageTests(StorageType, disablePersistence) {
             })
                 .timeout(1000, "timeout")
                 .then((retrievedContents) => {
-                assert.equal(null, retrievedContents);
+                assert_1.default.equal(null, retrievedContents);
             }, (error) => {
                 if (error instanceof Error) {
-                    assert.equal(error.message, "timeout");
+                    assert_1.default.equal(error.message, "timeout");
                 }
                 else {
                     throw error;

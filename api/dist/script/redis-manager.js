@@ -1,11 +1,14 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RedisManager = exports.Utilities = exports.DOWNLOADED = exports.ACTIVE = exports.DEPLOYMENT_FAILED = exports.DEPLOYMENT_SUCCEEDED = void 0;
-const assert = require("assert");
-const q = require("q");
-const redis = require("redis");
+const assert_1 = __importDefault(require("assert"));
+const q_1 = __importDefault(require("q"));
+const redis_1 = __importDefault(require("redis"));
 exports.DEPLOYMENT_SUCCEEDED = "DeploymentSucceeded";
 exports.DEPLOYMENT_FAILED = "DeploymentFailed";
 exports.ACTIVE = "Active";
@@ -48,64 +51,45 @@ var Utilities;
     Utilities.getDeploymentKeyClientsHash = getDeploymentKeyClientsHash;
 })(Utilities || (exports.Utilities = Utilities = {}));
 class PromisifiedRedisClient {
-    // An incomplete set of promisified versions of the original redis methods
-    del = null;
-    execBatch = null;
-    exists = null;
-    expire = null;
-    hdel = null;
-    hget = null;
-    hgetall = null;
-    hincrby = null;
-    hset = null;
-    ping = null;
-    quit = null;
-    select = null;
-    set = null;
     constructor(redisClient) {
+        // An incomplete set of promisified versions of the original redis methods
+        this.del = null;
+        this.execBatch = null;
+        this.exists = null;
+        this.expire = null;
+        this.hdel = null;
+        this.hget = null;
+        this.hgetall = null;
+        this.hincrby = null;
+        this.hset = null;
+        this.ping = null;
+        this.quit = null;
+        this.select = null;
+        this.set = null;
         this.execBatch = (redisBatchClient) => {
-            return q.ninvoke(redisBatchClient, "exec");
+            return q_1.default.ninvoke(redisBatchClient, "exec");
         };
         for (const functionName in this) {
             if (this.hasOwnProperty(functionName) && this[functionName] === null) {
                 const originalFunction = redisClient[functionName];
-                assert(!!originalFunction, "Binding a function that does not exist: " + functionName);
-                this[functionName] = q.nbind(originalFunction, redisClient);
+                (0, assert_1.default)(!!originalFunction, "Binding a function that does not exist: " + functionName);
+                this[functionName] = q_1.default.nbind(originalFunction, redisClient);
             }
         }
     }
 }
 class RedisManager {
-    static DEFAULT_EXPIRY = 3600; // one hour, specified in seconds
-    static METRICS_DB = 1;
-    _opsClient;
-    _promisifiedOpsClient;
-    _metricsClient;
-    _promisifiedMetricsClient;
-    _setupMetricsClientPromise;
-    _isConnected = false;
     constructor() {
+        this._isConnected = false;
         if (process.env.REDIS_HOST && process.env.REDIS_PORT) {
-            const redisConfig = {
-                host: process.env.REDIS_HOST,
-                port: Number(process.env.REDIS_PORT),
-                ...(process.env.REDIS_TLS === "true" && {
-                    tls: {
-                        rejectUnauthorized: true,
-                    },
-                }),
-                enableOfflineQueue: true,
-                enableReadyCheck: true,
-                cluster: false,
-            };
-            console.log("Initializing Redis with config:", {
-                ...redisConfig,
-                host: redisConfig.host,
-                port: redisConfig.port,
-                tls: !!redisConfig.tls,
-            });
-            this._opsClient = redis.createClient(redisConfig);
-            this._metricsClient = redis.createClient(redisConfig);
+            const redisConfig = Object.assign(Object.assign({ host: process.env.REDIS_HOST, port: Number(process.env.REDIS_PORT) }, (process.env.REDIS_TLS === "true" && {
+                tls: {
+                    rejectUnauthorized: true,
+                },
+            })), { enableOfflineQueue: true, enableReadyCheck: true, cluster: false });
+            console.log("Initializing Redis with config:", Object.assign(Object.assign({}, redisConfig), { host: redisConfig.host, port: redisConfig.port, tls: !!redisConfig.tls }));
+            this._opsClient = redis_1.default.createClient(redisConfig);
+            this._metricsClient = redis_1.default.createClient(redisConfig);
             // Add end event handlers
             this._opsClient.on("connect", () => {
                 console.log(`✅ Redis ops client connected successfully to ${redisConfig.host}:${redisConfig.port}`);
@@ -160,9 +144,9 @@ class RedisManager {
     }
     checkHealth() {
         if (!this.isEnabled) {
-            return q.reject("Redis manager is not enabled");
+            return q_1.default.reject("Redis manager is not enabled");
         }
-        return q.all([this._promisifiedOpsClient.ping(), this._promisifiedMetricsClient.ping()]).spread(() => { });
+        return q_1.default.all([this._promisifiedOpsClient.ping(), this._promisifiedMetricsClient.ping()]).spread(() => { });
     }
     /**
      * Get a response from cache if possible, otherwise return null.
@@ -172,15 +156,15 @@ class RedisManager {
      */
     getCachedResponse(expiryKey, url) {
         if (!this.isEnabled) {
-            return q(null);
+            return (0, q_1.default)(null);
         }
         return this._promisifiedOpsClient.hget(expiryKey, url).then((serializedResponse) => {
             if (serializedResponse) {
                 const response = JSON.parse(serializedResponse);
-                return q(response);
+                return (0, q_1.default)(response);
             }
             else {
-                return q(null);
+                return (0, q_1.default)(null);
             }
         });
     }
@@ -192,7 +176,7 @@ class RedisManager {
      */
     setCachedResponse(expiryKey, url, response) {
         if (!this.isEnabled) {
-            return q(null);
+            return (0, q_1.default)(null);
         }
         // Store response in cache with a timed expiry
         const serializedResponse = JSON.stringify(response);
@@ -214,7 +198,7 @@ class RedisManager {
     // or 1 by default. If the field does not exist, it will be created with the value of 1.
     incrementLabelStatusCount(deploymentKey, label, status) {
         if (!this.isEnabled) {
-            return q(null);
+            return (0, q_1.default)(null);
         }
         const hash = Utilities.getDeploymentKeyLabelsHash(deploymentKey);
         const field = Utilities.getLabelStatusField(label, status);
@@ -222,7 +206,7 @@ class RedisManager {
     }
     clearMetricsForDeploymentKey(deploymentKey) {
         if (!this.isEnabled) {
-            return q(null);
+            return (0, q_1.default)(null);
         }
         return this._setupMetricsClientPromise
             .then(() => this._promisifiedMetricsClient.del(Utilities.getDeploymentKeyLabelsHash(deploymentKey), Utilities.getDeploymentKeyClientsHash(deploymentKey)))
@@ -232,7 +216,7 @@ class RedisManager {
     // { "v1:DeploymentSucceeded": 123, "v1:DeploymentFailed": 4, "v1:Active": 123 ... }
     getMetricsWithDeploymentKey(deploymentKey) {
         if (!this.isEnabled) {
-            return q(null);
+            return (0, q_1.default)(null);
         }
         return this._setupMetricsClientPromise
             .then(() => this._promisifiedMetricsClient.hgetall(Utilities.getDeploymentKeyLabelsHash(deploymentKey)))
@@ -250,7 +234,7 @@ class RedisManager {
     }
     recordUpdate(currentDeploymentKey, currentLabel, previousDeploymentKey, previousLabel) {
         if (!this.isEnabled) {
-            return q(null);
+            return (0, q_1.default)(null);
         }
         return this._setupMetricsClientPromise
             .then(() => {
@@ -271,7 +255,7 @@ class RedisManager {
     }
     removeDeploymentKeyClientActiveLabel(deploymentKey, clientUniqueId) {
         if (!this.isEnabled) {
-            return q(null);
+            return (0, q_1.default)(null);
         }
         return this._setupMetricsClientPromise
             .then(() => {
@@ -282,12 +266,12 @@ class RedisManager {
     }
     invalidateCache(expiryKey) {
         if (!this.isEnabled)
-            return q(null);
+            return (0, q_1.default)(null);
         return this._promisifiedOpsClient.del(expiryKey).then(() => { });
     }
     // For unit tests only
     close() {
-        const promiseChain = q(null);
+        const promiseChain = (0, q_1.default)(null);
         if (!this._opsClient && !this._metricsClient)
             return promiseChain;
         return promiseChain
@@ -298,14 +282,14 @@ class RedisManager {
     /* deprecated */
     getCurrentActiveLabel(deploymentKey, clientUniqueId) {
         if (!this.isEnabled) {
-            return q(null);
+            return (0, q_1.default)(null);
         }
         return this._setupMetricsClientPromise.then(() => this._promisifiedMetricsClient.hget(Utilities.getDeploymentKeyClientsHash(deploymentKey), clientUniqueId));
     }
     /* deprecated */
     updateActiveAppForClient(deploymentKey, clientUniqueId, toLabel, fromLabel) {
         if (!this.isEnabled) {
-            return q(null);
+            return (0, q_1.default)(null);
         }
         return this._setupMetricsClientPromise
             .then(() => {
@@ -325,4 +309,6 @@ class RedisManager {
     }
 }
 exports.RedisManager = RedisManager;
+RedisManager.DEFAULT_EXPIRY = 3600; // one hour, specified in seconds
+RedisManager.METRICS_DB = 1;
 //# sourceMappingURL=redis-manager.js.map

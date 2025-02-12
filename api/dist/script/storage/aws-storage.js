@@ -1,15 +1,71 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AwsStorage = void 0;
-const q = require("q");
-const shortid = require("shortid");
-const storage = require("./storage");
-const utils = require("../utils/common");
-const storage_1 = require("./storage");
+const q_1 = __importDefault(require("q"));
+const shortid_1 = __importDefault(require("shortid"));
 const aws_sdk_1 = require("aws-sdk");
 const AWS = require("aws-sdk");
+const storage = __importStar(require("./storage"));
+const utils = __importStar(require("../utils/common"));
+const storage_1 = require("./storage");
 var Keys;
 (function (Keys) {
     // Can these symbols break us?
@@ -124,19 +180,8 @@ var Keys;
     }
 })(Keys || (Keys = {}));
 class AwsStorage {
-    static NO_ID_ERROR = "No id set";
-    static PACKAGE_HISTORY_S3_BUCKET_NAME = process.env.PACKAGE_HISTORY_S3_BUCKET_NAME || "g24x7-stage-ota-pvt-package-history";
-    static PACKAGE_HISTORY_S3_PREFIX = process.env.PACKAGE_HISTORY_S3_PREFIX || "ota-history/package-history";
-    static PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME = process.env.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME || "g24x7-stage-ota-pub-package-download";
-    static PACKAGE_DOWNLOAD_CDN_S3_PREFIX = process.env.PACKAGE_DOWNLOAD_CDN_S3_PREFIX || "ota-releases/package-downloads";
-    static PACKAGE_DOWNLOAD_CDN_URL = process.env.PACKAGE_DOWNLOAD_CDN_URL || "https://stage-cdn.my11circle.com";
-    static MAX_PACKAGE_HISTORY_LENGTH = 50;
-    static TABLE_NAME = process.env.TABLE_NAME || "ota-registery";
-    _setupPromise;
-    _dynamoDBClient;
-    _s3Client;
     constructor(accountName, accountKey) {
-        shortid.characters("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-");
+        shortid_1.default.characters("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-");
         this._setupPromise = this.setup();
     }
     reinitialize(accountName, accountKey) {
@@ -144,11 +189,11 @@ class AwsStorage {
         return this.setup();
     }
     checkHealth() {
-        return q.Promise((resolve, reject) => {
+        return q_1.default.Promise((resolve, reject) => {
             this._setupPromise
                 .then(() => {
                 // Check DynamoDB health
-                const tableCheck = q.Promise((tableResolve, tableReject) => {
+                const tableCheck = q_1.default.Promise((tableResolve, tableReject) => {
                     const params = {
                         TableName: AwsStorage.TABLE_NAME,
                         Key: {
@@ -170,7 +215,7 @@ class AwsStorage {
                         .catch(tableReject);
                 });
                 // Check S3 bucket health
-                const acquisitionBucketCheck = q.Promise((bucketResolve, bucketReject) => {
+                const acquisitionBucketCheck = q_1.default.Promise((bucketResolve, bucketReject) => {
                     const params = {
                         Bucket: AwsStorage.TABLE_NAME,
                         Key: "health",
@@ -183,7 +228,7 @@ class AwsStorage {
                         bucketReject(storage.storageError(storage.ErrorCode.ConnectionFailed, `The S3 service failed the health check for ${AwsStorage.TABLE_NAME}: ${error.message}`));
                     });
                 });
-                const historyBucketCheck = q.Promise((bucketResolve, bucketReject) => {
+                const historyBucketCheck = q_1.default.Promise((bucketResolve, bucketReject) => {
                     const params = {
                         Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,
                         Key: `${AwsStorage.PACKAGE_HISTORY_S3_PREFIX}/health`,
@@ -196,7 +241,7 @@ class AwsStorage {
                         bucketReject(storage.storageError(storage.ErrorCode.ConnectionFailed, `The S3 service failed the health check for ${AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME}: ${error.message}`));
                     });
                 });
-                return q.all([tableCheck, acquisitionBucketCheck, historyBucketCheck]);
+                return q_1.default.all([tableCheck, acquisitionBucketCheck, historyBucketCheck]);
             })
                 .then(() => {
                 resolve();
@@ -295,7 +340,7 @@ class AwsStorage {
     }
     addApp(accountId, app) {
         app = storage.clone(app); // pass by value
-        app.id = shortid.generate();
+        app.id = shortid_1.default.generate();
         return this._setupPromise
             .then(() => {
             return this.getAccount(accountId);
@@ -368,7 +413,7 @@ class AwsStorage {
             .then(() => {
             const getAppPromise = this.getApp(accountId, appId, /*keepCollaboratorIds*/ true);
             const accountPromise = this.getAccountByEmail(email);
-            return q.all([getAppPromise, accountPromise]);
+            return q_1.default.all([getAppPromise, accountPromise]);
         })
             .spread((appPromiseResult, accountPromiseResult) => {
             targetCollaboratorAccountId = accountPromiseResult.id;
@@ -413,7 +458,7 @@ class AwsStorage {
             .then(() => {
             const getAppPromise = this.getApp(accountId, appId, /*keepCollaboratorIds*/ true);
             const accountPromise = this.getAccountByEmail(email);
-            return q.all([getAppPromise, accountPromise]);
+            return q_1.default.all([getAppPromise, accountPromise]);
         })
             .spread((app, account) => {
             // Use the original email stored on the account to ensure casing is consistent
@@ -431,7 +476,7 @@ class AwsStorage {
             return this.getApp(accountId, appId, /*keepCollaboratorIds*/ false);
         })
             .then((app) => {
-            return q(app.collaborators);
+            return (0, q_1.default)(app.collaborators);
         })
             .catch(AwsStorage.awsErrorHandler);
     }
@@ -462,7 +507,7 @@ class AwsStorage {
         return this._setupPromise
             .then(() => {
             const flatDeployment = AwsStorage.flattenDeployment(deployment);
-            flatDeployment.id = shortid.generate();
+            flatDeployment.id = shortid_1.default.generate();
             return this.insertByAppHierarchy(flatDeployment, appId, flatDeployment.id);
         })
             .then((returnedId) => {
@@ -474,7 +519,7 @@ class AwsStorage {
                 Body: JSON.stringify([]),
                 ContentType: "application/json",
             };
-            return q.Promise((resolve, reject) => {
+            return q_1.default.Promise((resolve, reject) => {
                 this._s3Client
                     .putObject(params)
                     .promise()
@@ -496,7 +541,7 @@ class AwsStorage {
                 Item: entity,
                 ConditionExpression: "attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)",
             };
-            return q.Promise((resolve, reject) => {
+            return q_1.default.Promise((resolve, reject) => {
                 this._dynamoDBClient
                     .put(params)
                     .promise()
@@ -676,7 +721,7 @@ class AwsStorage {
                 ContentLength: streamLength,
                 ContentType: "application/octet-stream",
             };
-            return q.Promise((resolve, reject) => {
+            return q_1.default.Promise((resolve, reject) => {
                 this._s3Client
                     .putObject(params)
                     .promise()
@@ -692,7 +737,7 @@ class AwsStorage {
             });
         })
             .then(() => {
-            return q.Promise((resolve, reject) => {
+            return q_1.default.Promise((resolve, reject) => {
                 resolve(`${AwsStorage.PACKAGE_DOWNLOAD_CDN_URL}/${AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_PREFIX}/${blobId}`);
             });
         })
@@ -701,7 +746,7 @@ class AwsStorage {
     getBlobUrl(blobId) {
         return this._setupPromise
             .then(() => {
-            return q.Promise((resolve, reject) => {
+            return q_1.default.Promise((resolve, reject) => {
                 const params = {
                     Bucket: AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME,
                     Key: `${AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_PREFIX}/${blobId}`,
@@ -727,7 +772,7 @@ class AwsStorage {
     removeBlob(blobId) {
         return this._setupPromise
             .then(() => {
-            return q.Promise((resolve, reject) => {
+            return q_1.default.Promise((resolve, reject) => {
                 const params = {
                     Bucket: AwsStorage.TABLE_NAME,
                     Key: blobId,
@@ -757,7 +802,7 @@ class AwsStorage {
     }
     addAccessKey(accountId, accessKey) {
         accessKey = storage.clone(accessKey); // pass by value
-        accessKey.id = shortid.generate();
+        accessKey.id = shortid_1.default.generate();
         return this._setupPromise
             .then(() => {
             // Store access key pointer
@@ -772,7 +817,7 @@ class AwsStorage {
                 Item: this.wrap(accessKeyPointer, partitionKey, rowKey),
                 ConditionExpression: "attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)",
             };
-            return q.Promise((resolve, reject) => {
+            return q_1.default.Promise((resolve, reject) => {
                 this._dynamoDBClient
                     .put(params)
                     .promise()
@@ -822,7 +867,7 @@ class AwsStorage {
             .catch(AwsStorage.awsErrorHandler);
     }
     getAccessKeys(accountId) {
-        const deferred = q.defer();
+        const deferred = q_1.default.defer();
         const partitionKey = Keys.getAccountPartitionKey(accountId);
         const rowKey = Keys.getHierarchicalAccountRowKey(accountId);
         const searchKey = Keys.getAccessKeyRowKey(accountId);
@@ -853,16 +898,13 @@ class AwsStorage {
             }
             return this._dynamoDBClient.query(params).promise();
         })
-            .then(async (result) => {
+            .then((result) => __awaiter(this, void 0, void 0, function* () {
             let items = result.Items || [];
             let lastEvaluatedKey = result.LastEvaluatedKey;
             // Handle pagination if needed
             while (lastEvaluatedKey) {
-                const nextParams = {
-                    ...params,
-                    ExclusiveStartKey: lastEvaluatedKey,
-                };
-                const nextResult = await this._dynamoDBClient.query(nextParams).promise();
+                const nextParams = Object.assign(Object.assign({}, params), { ExclusiveStartKey: lastEvaluatedKey });
+                const nextResult = yield this._dynamoDBClient.query(nextParams).promise();
                 items = items.concat(nextResult.Items || []);
                 lastEvaluatedKey = nextResult.LastEvaluatedKey;
             }
@@ -870,7 +912,7 @@ class AwsStorage {
                 .filter((item) => item.rowKey !== rowKey) // Don't include the account
                 .map((item) => this.unwrap(item));
             deferred.resolve(accessKeys);
-        })
+        }))
             .catch((error) => {
             if (error.code === "ResourceNotFoundException") {
                 deferred.reject(storage.storageError(storage.ErrorCode.NotFound, "Table not found"));
@@ -903,8 +945,8 @@ class AwsStorage {
                 },
                 ConditionExpression: "attribute_exists(partitionKey) AND attribute_exists(rowKey)",
             };
-            return q.all([
-                q.Promise((resolve, reject) => {
+            return q_1.default.all([
+                q_1.default.Promise((resolve, reject) => {
                     this._dynamoDBClient
                         .delete(mainDeleteParams)
                         .promise()
@@ -916,7 +958,7 @@ class AwsStorage {
                         reject(error);
                     });
                 }),
-                q.Promise((resolve, reject) => {
+                q_1.default.Promise((resolve, reject) => {
                     this._dynamoDBClient
                         .delete(shortcutDeleteParams)
                         .promise()
@@ -968,7 +1010,7 @@ class AwsStorage {
                 ExpressionAttributeValues: mainUpdateFields.values,
                 ConditionExpression: "attribute_exists(partitionKey) AND attribute_exists(rowKey)",
             };
-            return q.Promise((resolve, reject) => {
+            return q_1.default.Promise((resolve, reject) => {
                 this._dynamoDBClient
                     .update(mainUpdateParams)
                     .promise()
@@ -1000,7 +1042,7 @@ class AwsStorage {
                 },
                 ConditionExpression: "attribute_exists(partitionKey) AND attribute_exists(rowKey)",
             };
-            return q.Promise((resolve, reject) => {
+            return q_1.default.Promise((resolve, reject) => {
                 this._dynamoDBClient
                     .update(pointerUpdateParams)
                     .promise()
@@ -1017,7 +1059,7 @@ class AwsStorage {
     }
     // No-op for safety, so that we don't drop the wrong db, pending a cleaner solution for removing test data.
     dropAll() {
-        return q(null);
+        return (0, q_1.default)(null);
     }
     setup() {
         console.log("\n=== AWS Configuration ===");
@@ -1028,7 +1070,7 @@ class AwsStorage {
         console.log("AWS Region:", process.env.AWS_REGION);
         console.log("Environment:", process.env.NODE_ENV);
         console.log("=====================\n");
-        return q.Promise((resolve, reject) => {
+        return q_1.default.Promise((resolve, reject) => {
             try {
                 // Initialize AWS clients
                 const awsConfig = {
@@ -1075,7 +1117,7 @@ class AwsStorage {
         });
     }
     blobHealthCheck(blobId) {
-        return q.Promise((resolve, reject) => {
+        return q_1.default.Promise((resolve, reject) => {
             const params = {
                 Bucket: blobId,
                 Key: "health",
@@ -1107,7 +1149,7 @@ class AwsStorage {
         });
     }
     getPackageHistoryFromBlob(deploymentId) {
-        return q.Promise((resolve, reject) => {
+        return q_1.default.Promise((resolve, reject) => {
             const params = {
                 Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,
                 Key: `${AwsStorage.PACKAGE_HISTORY_S3_PREFIX}/${deploymentId}`,
@@ -1139,7 +1181,7 @@ class AwsStorage {
         });
     }
     uploadToHistoryBlob(deploymentId, content) {
-        return q.Promise((resolve, reject) => {
+        return q_1.default.Promise((resolve, reject) => {
             const params = {
                 Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,
                 Key: `${AwsStorage.PACKAGE_HISTORY_S3_PREFIX}/${deploymentId}`,
@@ -1162,7 +1204,7 @@ class AwsStorage {
         });
     }
     deleteHistoryBlob(deploymentId) {
-        return q.Promise((resolve, reject) => {
+        return q_1.default.Promise((resolve, reject) => {
             const params = {
                 Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,
                 Key: `${AwsStorage.PACKAGE_HISTORY_S3_PREFIX}/${deploymentId}`,
@@ -1186,17 +1228,14 @@ class AwsStorage {
         });
     }
     wrap(jsObject, partitionKey, rowKey) {
-        return {
-            partitionKey,
-            rowKey,
-            ...jsObject,
-        };
+        return Object.assign({ partitionKey,
+            rowKey }, jsObject);
     }
     unwrap(entity, includeKey) {
-        const { partitionKey, rowKey, etag, timestamp, createdTime, ...rest } = entity;
-        let unwrapped = includeKey ? { partitionKey, rowKey, ...rest } : rest;
+        const { partitionKey, rowKey, etag, timestamp, createdTime } = entity, rest = __rest(entity, ["partitionKey", "rowKey", "etag", "timestamp", "createdTime"]);
+        let unwrapped = includeKey ? Object.assign({ partitionKey, rowKey }, rest) : rest;
         if (typeof createdTime === "bigint") {
-            unwrapped = { ...unwrapped, createdTime: Number(createdTime) };
+            unwrapped = Object.assign(Object.assign({}, unwrapped), { createdTime: Number(createdTime) });
         }
         return unwrapped;
     }
@@ -1212,7 +1251,7 @@ class AwsStorage {
         }
     }
     addAppPointer(accountId, appId) {
-        const deferred = q.defer();
+        const deferred = q_1.default.defer();
         const appPartitionKey = Keys.getAppPartitionKey(appId);
         const appRowKey = Keys.getHierarchicalAppRowKey(appId);
         const pointer = { partitionKeyPointer: appPartitionKey, rowKeyPointer: appRowKey };
@@ -1241,7 +1280,7 @@ class AwsStorage {
         return deferred.promise;
     }
     removeAppPointer(accountId, appId) {
-        const deferred = q.defer();
+        const deferred = q_1.default.defer();
         const accountPartitionKey = Keys.getAccountPartitionKey(accountId);
         const accountRowKey = Keys.getHierarchicalAccountRowKey(accountId, appId);
         const params = {
@@ -1279,7 +1318,7 @@ class AwsStorage {
                 const collabProperties = collaboratorMap[key];
                 removalPromises.push(this.removeAppPointer(collabProperties.accountId, app.id));
             });
-            return q.allSettled(removalPromises);
+            return q_1.default.allSettled(removalPromises);
         })
             .then(() => { });
     }
@@ -1297,7 +1336,7 @@ class AwsStorage {
         args.shift(); // Remove 'jsObject' argument
         args.pop(); // Remove the leaf id
         // Check for existence of the parent before inserting
-        let fetchParentPromise = q();
+        let fetchParentPromise = (0, q_1.default)();
         if (args.length > 0) {
             const parentRowKey = Keys.getHierarchicalAppRowKey.apply(null, args);
             const parentParams = {
@@ -1307,7 +1346,7 @@ class AwsStorage {
                     rowKey: parentRowKey,
                 },
             };
-            fetchParentPromise = q.Promise((resolve, reject) => {
+            fetchParentPromise = q_1.default.Promise((resolve, reject) => {
                 this._dynamoDBClient
                     .get(parentParams)
                     .promise()
@@ -1333,7 +1372,7 @@ class AwsStorage {
                 Item: entity,
                 ConditionExpression: "attribute_not_exists(partitionKey) AND attribute_not_exists(rowKey)",
             };
-            return q.Promise((resolve, reject) => {
+            return q_1.default.Promise((resolve, reject) => {
                 this._dynamoDBClient
                     .put(params)
                     .promise()
@@ -1354,7 +1393,7 @@ class AwsStorage {
     insertAccessKey(accessKey, accountId) {
         accessKey = storage.clone(accessKey);
         accessKey.name = utils.hashWithSHA256(accessKey.name);
-        const deferred = q.defer();
+        const deferred = q_1.default.defer();
         const partitionKey = Keys.getAccountPartitionKey(accountId);
         const rowKey = Keys.getAccessKeyRowKey(accountId, accessKey.id);
         const entity = this.wrap(accessKey, partitionKey, rowKey);
@@ -1387,7 +1426,7 @@ class AwsStorage {
                 rowKey: rowKey,
             },
         };
-        return q.Promise((resolve, reject) => {
+        return q_1.default.Promise((resolve, reject) => {
             this._dynamoDBClient.get(params, (error, data) => {
                 if (error) {
                     console.error("AWS DynamoDB Error:", error);
@@ -1412,97 +1451,96 @@ class AwsStorage {
      * @param deploymentId - Optional deployment identifier
      * @returns Promise resolving to an array of enriched items
      */
-    async getCollectionByHierarchy(accountId, appId, deploymentId) {
-        try {
-            // Prepare keys for querying
-            const searchKeyArgs = [true, ...Array.from(arguments), ""];
-            let partitionKey;
-            let rowKey;
-            let childrenSearchKey;
-            // Determine the keys based on whether appId is provided
-            if (appId) {
-                searchKeyArgs.splice(1, 1); // remove accountId
-                partitionKey = Keys.getAppPartitionKey(appId);
-                rowKey = Keys.getHierarchicalAppRowKey(appId, deploymentId);
-                childrenSearchKey = Keys.generateHierarchicalAppKey.apply(null, searchKeyArgs);
+    getCollectionByHierarchy(accountId, appId, deploymentId) {
+        var arguments_1 = arguments;
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Prepare keys for querying
+                const searchKeyArgs = [true, ...Array.from(arguments_1), ""];
+                let partitionKey;
+                let rowKey;
+                let childrenSearchKey;
+                // Determine the keys based on whether appId is provided
+                if (appId) {
+                    searchKeyArgs.splice(1, 1); // remove accountId
+                    partitionKey = Keys.getAppPartitionKey(appId);
+                    rowKey = Keys.getHierarchicalAppRowKey(appId, deploymentId);
+                    childrenSearchKey = Keys.generateHierarchicalAppKey.apply(null, searchKeyArgs);
+                }
+                else {
+                    partitionKey = Keys.getAccountPartitionKey(accountId);
+                    rowKey = Keys.getHierarchicalAccountRowKey(accountId);
+                    childrenSearchKey = Keys.generateHierarchicalAccountKey.apply(null, searchKeyArgs);
+                }
+                // Query parameters for parent record
+                const parentParams = {
+                    TableName: AwsStorage.TABLE_NAME,
+                    KeyConditionExpression: "partitionKey = :pk AND rowKey = :rk",
+                    ExpressionAttributeValues: {
+                        ":pk": partitionKey,
+                        ":rk": rowKey,
+                    },
+                };
+                // Query parameters for children records
+                const childrenParams = {
+                    TableName: AwsStorage.TABLE_NAME,
+                    KeyConditionExpression: "partitionKey = :pk AND rowKey BETWEEN :start AND :end",
+                    ExpressionAttributeValues: {
+                        ":pk": partitionKey,
+                        ":start": childrenSearchKey,
+                        ":end": childrenSearchKey + "~",
+                    },
+                };
+                // Execute both queries concurrently
+                const [parentResult, childrenResult] = yield Promise.all([
+                    this._dynamoDBClient.query(parentParams).promise(),
+                    this._dynamoDBClient.query(childrenParams).promise(),
+                ]);
+                if (!parentResult.Items || parentResult.Items.length === 0) {
+                    throw new Error("Entity not found");
+                }
+                // Process and enrich children items
+                const enrichedItems = yield this.enrichChildrenItems(childrenResult.Items || []);
+                return enrichedItems;
             }
-            else {
-                partitionKey = Keys.getAccountPartitionKey(accountId);
-                rowKey = Keys.getHierarchicalAccountRowKey(accountId);
-                childrenSearchKey = Keys.generateHierarchicalAccountKey.apply(null, searchKeyArgs);
+            catch (error) {
+                console.error("Error in getCollectionByHierarchy:", error);
+                throw error;
             }
-            // Query parameters for parent record
-            const parentParams = {
-                TableName: AwsStorage.TABLE_NAME,
-                KeyConditionExpression: "partitionKey = :pk AND rowKey = :rk",
-                ExpressionAttributeValues: {
-                    ":pk": partitionKey,
-                    ":rk": rowKey,
-                },
-            };
-            // Query parameters for children records
-            const childrenParams = {
-                TableName: AwsStorage.TABLE_NAME,
-                KeyConditionExpression: "partitionKey = :pk AND rowKey BETWEEN :start AND :end",
-                ExpressionAttributeValues: {
-                    ":pk": partitionKey,
-                    ":start": childrenSearchKey,
-                    ":end": childrenSearchKey + "~",
-                },
-            };
-            console.log("childrenParams", childrenParams);
-            // Execute both queries concurrently
-            const [parentResult, childrenResult] = await Promise.all([
-                this._dynamoDBClient.query(parentParams).promise(),
-                this._dynamoDBClient.query(childrenParams).promise(),
-            ]);
-            if (!parentResult.Items || parentResult.Items.length === 0) {
-                throw new Error("Entity not found");
-            }
-            // Process and enrich children items
-            const enrichedItems = await this.enrichChildrenItems(childrenResult.Items || []);
-            console.log("getCollectionByHierarchy final result", enrichedItems);
-            return enrichedItems;
-        }
-        catch (error) {
-            console.error("Error in getCollectionByHierarchy:", error);
-            throw error;
-        }
+        });
     }
     /**
      * Helper method to enrich children items with their pointer references
      * @param items - Array of items to be enriched
      * @returns Promise resolving to array of enriched items
      */
-    async enrichChildrenItems(items) {
-        const enrichmentPromises = items.map(async (item) => {
-            console.log("getCollectionByHierarchy Item childrenResult", item);
-            if (item.partitionKeyPointer && item.rowKeyPointer) {
-                const pointerParams = {
-                    TableName: AwsStorage.TABLE_NAME,
-                    KeyConditionExpression: "partitionKey = :pk AND rowKey = :rk",
-                    ExpressionAttributeValues: {
-                        ":pk": item.partitionKeyPointer,
-                        ":rk": item.rowKeyPointer,
-                    },
-                };
-                const pointerResult = await this._dynamoDBClient.query(pointerParams).promise();
-                if (pointerResult.Items && pointerResult.Items.length > 0) {
-                    // Remove pointer fields and merge with referenced item
-                    const { partitionKeyPointer, rowKeyPointer, ...itemWithoutPointers } = item;
-                    const enrichedItem = {
-                        ...itemWithoutPointers,
-                        ...pointerResult.Items[0],
+    enrichChildrenItems(items) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const enrichmentPromises = items.map((item) => __awaiter(this, void 0, void 0, function* () {
+                if (item.partitionKeyPointer && item.rowKeyPointer) {
+                    const pointerParams = {
+                        TableName: AwsStorage.TABLE_NAME,
+                        KeyConditionExpression: "partitionKey = :pk AND rowKey = :rk",
+                        ExpressionAttributeValues: {
+                            ":pk": item.partitionKeyPointer,
+                            ":rk": item.rowKeyPointer,
+                        },
                     };
-                    return this.unwrap(enrichedItem);
+                    const pointerResult = yield this._dynamoDBClient.query(pointerParams).promise();
+                    if (pointerResult.Items && pointerResult.Items.length > 0) {
+                        // Remove pointer fields and merge with referenced item
+                        const { partitionKeyPointer, rowKeyPointer } = item, itemWithoutPointers = __rest(item, ["partitionKeyPointer", "rowKeyPointer"]);
+                        const enrichedItem = Object.assign(Object.assign({}, itemWithoutPointers), pointerResult.Items[0]);
+                        return this.unwrap(enrichedItem);
+                    }
                 }
-            }
-            return this.unwrap(item);
+                return this.unwrap(item);
+            }));
+            return Promise.all(enrichmentPromises);
         });
-        return Promise.all(enrichmentPromises);
     }
     cleanUpByAppHierarchy(appId, deploymentId) {
-        const deferred = q.defer();
+        const deferred = q_1.default.defer();
         const partitionKey = Keys.getAppPartitionKey(appId);
         const rowKey = Keys.getHierarchicalAppRowKey(appId, deploymentId);
         const descendantsSearchKey = Keys.generateHierarchicalAppKey(false, appId, deploymentId);
@@ -1537,7 +1575,7 @@ class AwsStorage {
                 };
                 return this._dynamoDBClient.batchWrite(batchParams).promise();
             });
-            return q.all(batchPromises);
+            return q_1.default.all(batchPromises);
         };
         // First query all items
         this._dynamoDBClient
@@ -1551,10 +1589,7 @@ class AwsStorage {
                 .then(() => {
                 // Handle pagination if there are more items
                 if (result.LastEvaluatedKey) {
-                    const paginatedQuery = {
-                        ...queryParams,
-                        ExclusiveStartKey: result.LastEvaluatedKey,
-                    };
+                    const paginatedQuery = Object.assign(Object.assign({}, queryParams), { ExclusiveStartKey: result.LastEvaluatedKey });
                     return this._dynamoDBClient
                         .query(paginatedQuery)
                         .promise()
@@ -1573,7 +1608,7 @@ class AwsStorage {
         return this.wrap(jsObject, partitionKey, rowKey);
     }
     mergeByAppHierarchy(jsObject, appId, deploymentId) {
-        const deferred = q.defer();
+        const deferred = q_1.default.defer();
         const entity = this.getEntityByAppHierarchy(jsObject, appId, deploymentId);
         // Build update expression and attribute values
         const updateExpressions = [];
@@ -1616,7 +1651,7 @@ class AwsStorage {
         return deferred.promise;
     }
     updateByAppHierarchy(jsObject, appId, deploymentId) {
-        const deferred = q.defer();
+        const deferred = q_1.default.defer();
         const entity = this.getEntityByAppHierarchy(jsObject, appId, deploymentId);
         // Build update expressions
         const updateExpressions = [];
@@ -1819,4 +1854,12 @@ class AwsStorage {
     }
 }
 exports.AwsStorage = AwsStorage;
+AwsStorage.NO_ID_ERROR = "No id set";
+AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME = process.env.PACKAGE_HISTORY_S3_BUCKET_NAME || "g24x7-stage-ota-pvt-package-history";
+AwsStorage.PACKAGE_HISTORY_S3_PREFIX = process.env.PACKAGE_HISTORY_S3_PREFIX || "ota-history/package-history";
+AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME = process.env.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME || "g24x7-stage-ota-pub-package-download";
+AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_PREFIX = process.env.PACKAGE_DOWNLOAD_CDN_S3_PREFIX || "ota-releases/package-downloads";
+AwsStorage.PACKAGE_DOWNLOAD_CDN_URL = process.env.PACKAGE_DOWNLOAD_CDN_URL || "https://stage-cdn.my11circle.com";
+AwsStorage.MAX_PACKAGE_HISTORY_LENGTH = 50;
+AwsStorage.TABLE_NAME = process.env.TABLE_NAME || "ota-registery";
 //# sourceMappingURL=aws-storage.js.map

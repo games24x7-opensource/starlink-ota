@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as q from "q";
-import * as shortid from "shortid";
-import * as stream from "stream";
-import * as storage from "./storage";
-import * as utils from "../utils/common";
-
-import { isPrototypePollutionKey } from "./storage";
-
+import q from "q";
+import shortid from "shortid";
+import stream from "stream";
 import { DynamoDB, S3 } from "aws-sdk";
 import AWS = require("aws-sdk");
+
+import * as storage from "./storage";
+import * as utils from "../utils/common";
+import { isPrototypePollutionKey } from "./storage";
 
 module Keys {
   // Can these symbols break us?
@@ -1688,8 +1687,6 @@ export class AwsStorage implements storage.Storage {
         },
       };
 
-      console.log("childrenParams", childrenParams);
-
       // Execute both queries concurrently
       const [parentResult, childrenResult] = await Promise.all([
         this._dynamoDBClient.query(parentParams).promise(),
@@ -1703,7 +1700,6 @@ export class AwsStorage implements storage.Storage {
       // Process and enrich children items
       const enrichedItems = await this.enrichChildrenItems(childrenResult.Items || []);
 
-      console.log("getCollectionByHierarchy final result", enrichedItems);
       return enrichedItems;
     } catch (error) {
       console.error("Error in getCollectionByHierarchy:", error);
@@ -1718,8 +1714,6 @@ export class AwsStorage implements storage.Storage {
    */
   private async enrichChildrenItems(items: AWS.DynamoDB.DocumentClient.ItemList): Promise<any[]> {
     const enrichmentPromises = items.map(async (item) => {
-      console.log("getCollectionByHierarchy Item childrenResult", item);
-
       if (item.partitionKeyPointer && item.rowKeyPointer) {
         const pointerParams: AWS.DynamoDB.DocumentClient.QueryInput = {
           TableName: AwsStorage.TABLE_NAME,

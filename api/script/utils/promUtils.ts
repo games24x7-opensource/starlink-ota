@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { Counter } from "prom-client";
 import { flowMetricErrorCounter } from "./promMetrics";
-import logger from "../logger";
 
 const buildBasePath = (baseUrl?: string): string => (baseUrl ? `${baseUrl}` : "");
 const buildRoutePath = (route?: { path?: string }): string => (route?.path ? `${route.path}` : "");
@@ -29,7 +28,6 @@ export const collectFlowMetrics = (promCounter: Counter) => {
           method: req.method,
           url: getExpressApiPath(req),
         });
-        logger.error(req, res, `collectFlowMetrics error`, { error: err });
       }
     });
     next();

@@ -1,6 +1,39 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateKey = generateKey;
 exports.makeAccount = makeAccount;
@@ -15,12 +48,12 @@ exports.makeStreamFromString = makeStreamFromString;
 exports.makeStringFromStream = makeStringFromStream;
 exports.getStreamAndSizeForFile = getStreamAndSizeForFile;
 exports.retrieveStringContentsFromUrl = retrieveStringContentsFromUrl;
-const fs = require("fs");
-const http = require("http");
-const https = require("https");
+const fs = __importStar(require("fs"));
+const http = __importStar(require("http"));
+const https = __importStar(require("https"));
 const q_1 = require("q");
-const shortid = require("shortid");
-const stream = require("stream");
+const shortid = __importStar(require("shortid"));
+const stream = __importStar(require("stream"));
 const ACCESS_KEY_EXPIRY = 1000 * 60 * 60 * 24 * 60; // 60 days.
 function generateKey() {
     return shortid.generate() + shortid.generate(); // The REST API validates that keys must be at least 10 characters long

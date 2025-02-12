@@ -6,11 +6,11 @@
  * integrity checks) and CLI (for end-to-end code signing), please keep them in sync.
  */
 
-import * as crypto from "crypto";
-import * as fs from "fs";
-import * as path from "path";
-import * as q from "q";
-import * as stream from "stream";
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+import q from "q";
+import stream from "stream";
 
 // Do not throw an exception if either of these modules are missing, as they may not be needed by the
 // consumer of this file.

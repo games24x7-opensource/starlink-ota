@@ -2,9 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.collectFlowMetrics = exports.getExpressApiPath = void 0;
 const promMetrics_1 = require("./promMetrics");
-const logger_1 = require("../logger");
 const buildBasePath = (baseUrl) => (baseUrl ? `${baseUrl}` : "");
-const buildRoutePath = (route) => (route?.path ? `${route.path}` : "");
+const buildRoutePath = (route) => ((route === null || route === void 0 ? void 0 : route.path) ? `${route.path}` : "");
 const getExpressApiPath = (req) => {
     const basePath = buildBasePath(req.baseUrl);
     const routePath = buildRoutePath(req.route);
@@ -21,14 +20,13 @@ const collectFlowMetrics = (promCounter) => {
         res.on("finish", () => {
             try {
                 //@ts-ignore
-                promCounter.labels({ ...req.metricData }).inc();
+                promCounter.labels(Object.assign({}, req.metricData)).inc();
             }
             catch (err) {
                 promMetrics_1.flowMetricErrorCounter.inc({
                     method: req.method,
                     url: (0, exports.getExpressApiPath)(req),
                 });
-                logger_1.default.error(req, res, `collectFlowMetrics error`, { error: err });
             }
         });
         next();

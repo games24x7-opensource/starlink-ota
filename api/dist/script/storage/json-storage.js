@@ -1,12 +1,48 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JsonStorage = void 0;
-const express = require("express");
-const fs = require("fs");
-const q = require("q");
-const storage = require("./storage");
+const express_1 = __importDefault(require("express"));
+const fs_1 = __importDefault(require("fs"));
+const q_1 = __importDefault(require("q"));
+const storage = __importStar(require("./storage"));
 var clone = storage.clone;
 const storage_1 = require("./storage");
 function merge(original, updates) {
@@ -15,35 +51,31 @@ function merge(original, updates) {
     }
 }
 class JsonStorage {
-    disablePersistence;
-    static NextIdNumber = 0;
-    accounts = {};
-    apps = {};
-    deployments = {};
-    packages = {};
-    blobs = {};
-    accessKeys = {};
-    accountToAppsMap = {};
-    appToAccountMap = {};
-    emailToAccountMap = {};
-    appToDeploymentsMap = {};
-    deploymentToAppMap = {};
-    deploymentKeyToDeploymentMap = {};
-    accountToAccessKeysMap = {};
-    accessKeyToAccountMap = {};
-    accessKeyNameToAccountIdMap = {};
-    static CollaboratorNotFound = "The specified e-mail address doesn't represent a registered user";
-    _blobServerPromise;
     constructor(disablePersistence = true) {
         this.disablePersistence = disablePersistence;
+        this.accounts = {};
+        this.apps = {};
+        this.deployments = {};
+        this.packages = {};
+        this.blobs = {};
+        this.accessKeys = {};
+        this.accountToAppsMap = {};
+        this.appToAccountMap = {};
+        this.emailToAccountMap = {};
+        this.appToDeploymentsMap = {};
+        this.deploymentToAppMap = {};
+        this.deploymentKeyToDeploymentMap = {};
+        this.accountToAccessKeysMap = {};
+        this.accessKeyToAccountMap = {};
+        this.accessKeyNameToAccountIdMap = {};
         this.loadStateAsync(); // Attempts to load real data if any exists
     }
     loadStateAsync() {
         if (this.disablePersistence)
             return;
-        fs.exists("JsonStorage.json", function (exists) {
+        fs_1.default.exists("JsonStorage.json", function (exists) {
             if (exists) {
-                fs.readFile("JsonStorage.json", function (err, data) {
+                fs_1.default.readFile("JsonStorage.json", function (err, data) {
                     if (err)
                         throw err;
                     const obj = JSON.parse(data);
@@ -88,13 +120,13 @@ class JsonStorage {
             accessKeyNameToAccountIdMap: this.accessKeyNameToAccountIdMap,
         };
         const str = JSON.stringify(obj);
-        fs.writeFile("JsonStorage.json", str, function (err) {
+        fs_1.default.writeFile("JsonStorage.json", str, function (err) {
             if (err)
                 throw err;
         });
     }
     checkHealth() {
-        return q.reject("Should not be running JSON storage in production");
+        return q_1.default.reject("Should not be running JSON storage in production");
     }
     addAccount(account) {
         account = clone(account); // pass by value
@@ -109,18 +141,18 @@ class JsonStorage {
         this.emailToAccountMap[email] = account.id;
         this.accounts[account.id] = account;
         this.saveStateAsync();
-        return q(account.id);
+        return (0, q_1.default)(account.id);
     }
     getAccount(accountId) {
         if (!this.accounts[accountId]) {
             return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
         }
-        return q(clone(this.accounts[accountId]));
+        return (0, q_1.default)(clone(this.accounts[accountId]));
     }
     getAccountByEmail(email) {
         for (const id in this.accounts) {
             if (this.accounts[id].email === email) {
-                return q(clone(this.accounts[id]));
+                return (0, q_1.default)(clone(this.accounts[id]));
             }
         }
         return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
@@ -140,7 +172,7 @@ class JsonStorage {
         if (new Date().getTime() >= this.accessKeyNameToAccountIdMap[accessKey].expires) {
             return JsonStorage.getRejectedPromise(storage.ErrorCode.Expired, "The access key has expired.");
         }
-        return q(this.accessKeyNameToAccountIdMap[accessKey].accountId);
+        return (0, q_1.default)(this.accessKeyNameToAccountIdMap[accessKey].accountId);
     }
     addApp(accountId, app) {
         app = clone(app); // pass by value
@@ -162,7 +194,7 @@ class JsonStorage {
         this.appToAccountMap[app.id] = accountId;
         this.apps[app.id] = app;
         this.saveStateAsync();
-        return q(clone(app));
+        return (0, q_1.default)(clone(app));
     }
     getApps(accountId) {
         const appIds = this.accountToAppsMap[accountId];
@@ -174,7 +206,7 @@ class JsonStorage {
             apps.forEach((app) => {
                 this.addIsCurrentAccountProperty(app, accountId);
             });
-            return q(apps);
+            return (0, q_1.default)(apps);
         }
         return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
     }
@@ -184,7 +216,7 @@ class JsonStorage {
         }
         const app = clone(this.apps[appId]);
         this.addIsCurrentAccountProperty(app, accountId);
-        return q(app);
+        return (0, q_1.default)(app);
     }
     removeApp(accountId, appId) {
         if (!this.accounts[accountId] || !this.apps[appId]) {
@@ -198,7 +230,7 @@ class JsonStorage {
         deployments.forEach((deploymentId) => {
             promises.push(this.removeDeployment(accountId, appId, deploymentId));
         });
-        return q.all(promises).then(() => {
+        return q_1.default.all(promises).then(() => {
             delete this.appToDeploymentsMap[appId];
             const app = clone(this.apps[appId]);
             const collaborators = app.collaborators;
@@ -210,7 +242,7 @@ class JsonStorage {
             const accountApps = this.accountToAppsMap[accountId];
             accountApps.splice(accountApps.indexOf(appId), 1);
             this.saveStateAsync();
-            return q(null);
+            return (0, q_1.default)(null);
         });
     }
     updateApp(accountId, app, ensureIsOwner = true) {
@@ -221,7 +253,7 @@ class JsonStorage {
         this.removeIsCurrentAccountProperty(app);
         merge(this.apps[app.id], app);
         this.saveStateAsync();
-        return q(null);
+        return (0, q_1.default)(null);
     }
     transferApp(accountId, appId, email) {
         if ((0, storage_1.isPrototypePollutionKey)(email)) {
@@ -271,7 +303,7 @@ class JsonStorage {
     }
     getCollaborators(accountId, appId) {
         return this.getApp(accountId, appId).then((app) => {
-            return q(app.collaborators);
+            return (0, q_1.default)(app.collaborators);
         });
     }
     removeCollaborator(accountId, appId, email) {
@@ -304,7 +336,7 @@ class JsonStorage {
         this.deployments[deployment.id] = deployment;
         this.deploymentKeyToDeploymentMap[deployment.key] = deployment.id;
         this.saveStateAsync();
-        return q(deployment.id);
+        return (0, q_1.default)(deployment.id);
     }
     getDeploymentInfo(deploymentKey) {
         const deploymentId = this.deploymentKeyToDeploymentMap[deploymentKey];
@@ -316,20 +348,20 @@ class JsonStorage {
         if (!appId) {
             return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
         }
-        return q({ appId: appId, deploymentId: deploymentId });
+        return (0, q_1.default)({ appId: appId, deploymentId: deploymentId });
     }
     getPackageHistoryFromDeploymentKey(deploymentKey) {
         const deploymentId = this.deploymentKeyToDeploymentMap[deploymentKey];
         if (!deploymentId || !this.deployments[deploymentId]) {
             return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
         }
-        return q(clone(this.deployments[deploymentId].packageHistory));
+        return (0, q_1.default)(clone(this.deployments[deploymentId].packageHistory));
     }
     getDeployment(accountId, appId, deploymentId) {
         if (!this.accounts[accountId] || !this.apps[appId] || !this.deployments[deploymentId]) {
             return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
         }
-        return q(clone(this.deployments[deploymentId]));
+        return (0, q_1.default)(clone(this.deployments[deploymentId]));
     }
     getDeployments(accountId, appId) {
         const deploymentIds = this.appToDeploymentsMap[appId];
@@ -337,7 +369,7 @@ class JsonStorage {
             const deployments = deploymentIds.map((id) => {
                 return this.deployments[id];
             });
-            return q(clone(deployments));
+            return (0, q_1.default)(clone(deployments));
         }
         return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
     }
@@ -355,7 +387,7 @@ class JsonStorage {
         const appDeployments = this.appToDeploymentsMap[appId];
         appDeployments.splice(appDeployments.indexOf(deploymentId), 1);
         this.saveStateAsync();
-        return q(null);
+        return (0, q_1.default)(null);
     }
     updateDeployment(accountId, appId, deployment) {
         deployment = clone(deployment); // pass by value
@@ -365,7 +397,7 @@ class JsonStorage {
         delete deployment.package; // No-op if a package update is attempted through this method
         merge(this.deployments[deployment.id], deployment);
         this.saveStateAsync();
-        return q(null);
+        return (0, q_1.default)(null);
     }
     commitPackage(accountId, appId, deploymentId, appPackage) {
         appPackage = clone(appPackage); // pass by value
@@ -385,7 +417,7 @@ class JsonStorage {
         deployment.packageHistory.push(appPackage);
         appPackage.label = "v" + deployment.packageHistory.length;
         this.saveStateAsync();
-        return q(clone(appPackage));
+        return (0, q_1.default)(clone(appPackage));
     }
     clearPackageHistory(accountId, appId, deploymentId) {
         const deployment = this.deployments[deploymentId];
@@ -395,14 +427,14 @@ class JsonStorage {
         delete deployment.package;
         deployment.packageHistory = [];
         this.saveStateAsync();
-        return q(null);
+        return (0, q_1.default)(null);
     }
     getPackageHistory(accountId, appId, deploymentId) {
         const deployment = this.deployments[deploymentId];
         if (!deployment) {
             return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
         }
-        return q(clone(deployment.packageHistory));
+        return (0, q_1.default)(clone(deployment.packageHistory));
     }
     updatePackageHistory(accountId, appId, deploymentId, history) {
         if (!history || !history.length) {
@@ -415,11 +447,11 @@ class JsonStorage {
         deployment.package = history[history.length - 1];
         deployment.packageHistory = history;
         this.saveStateAsync();
-        return q(null);
+        return (0, q_1.default)(null);
     }
     addBlob(blobId, stream, streamLength) {
         this.blobs[blobId] = "";
-        return q.Promise((resolve) => {
+        return q_1.default.Promise((resolve) => {
             stream
                 .on("data", (data) => {
                 this.blobs[blobId] += data;
@@ -438,7 +470,7 @@ class JsonStorage {
     removeBlob(blobId) {
         delete this.blobs[blobId];
         this.saveStateAsync();
-        return q(null);
+        return (0, q_1.default)(null);
     }
     addAccessKey(accountId, accessKey) {
         accessKey = clone(accessKey); // pass by value
@@ -452,21 +484,21 @@ class JsonStorage {
             accountAccessKeys = this.accountToAccessKeysMap[accountId] = [];
         }
         else if (accountAccessKeys.indexOf(accessKey.id) !== -1) {
-            return q("");
+            return (0, q_1.default)("");
         }
         accountAccessKeys.push(accessKey.id);
         this.accessKeyToAccountMap[accessKey.id] = accountId;
         this.accessKeys[accessKey.id] = accessKey;
         this.accessKeyNameToAccountIdMap[accessKey.name] = { accountId, expires: accessKey.expires };
         this.saveStateAsync();
-        return q(accessKey.id);
+        return (0, q_1.default)(accessKey.id);
     }
     getAccessKey(accountId, accessKeyId) {
         const expectedAccountId = this.accessKeyToAccountMap[accessKeyId];
         if (!expectedAccountId || expectedAccountId !== accountId) {
             return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
         }
-        return q(clone(this.accessKeys[accessKeyId]));
+        return (0, q_1.default)(clone(this.accessKeys[accessKeyId]));
     }
     getAccessKeys(accountId) {
         const accessKeyIds = this.accountToAccessKeysMap[accountId];
@@ -474,7 +506,7 @@ class JsonStorage {
             const accessKeys = accessKeyIds.map((id) => {
                 return this.accessKeys[id];
             });
-            return q(clone(accessKeys));
+            return (0, q_1.default)(clone(accessKeys));
         }
         return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
     }
@@ -491,7 +523,7 @@ class JsonStorage {
                 accessKeyIds.splice(index, /*deleteCount*/ 1);
             }
             this.saveStateAsync();
-            return q(null);
+            return (0, q_1.default)(null);
         }
         return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
     }
@@ -503,7 +535,7 @@ class JsonStorage {
                 merge(this.accessKeys[accessKey.id], accessKey);
                 this.accessKeyNameToAccountIdMap[accessKey.name].expires = accessKey.expires;
                 this.saveStateAsync();
-                return q(null);
+                return (0, q_1.default)(null);
             }
         }
         return JsonStorage.getRejectedPromise(storage.ErrorCode.NotFound);
@@ -511,7 +543,7 @@ class JsonStorage {
     dropAll() {
         if (this._blobServerPromise) {
             return this._blobServerPromise.then((server) => {
-                const deferred = q.defer();
+                const deferred = q_1.default.defer();
                 server.close((err) => {
                     if (err) {
                         deferred.reject(err);
@@ -523,7 +555,7 @@ class JsonStorage {
                 return deferred.promise;
             });
         }
-        return q(null);
+        return (0, q_1.default)(null);
     }
     addIsCurrentAccountProperty(app, accountId) {
         if (app && app.collaborators) {
@@ -573,7 +605,7 @@ class JsonStorage {
     }
     getBlobServer() {
         if (!this._blobServerPromise) {
-            const app = express();
+            const app = (0, express_1.default)();
             app.get("/:blobId", (req, res, next) => {
                 const blobId = req.params.blobId;
                 if (this.blobs[blobId]) {
@@ -583,7 +615,7 @@ class JsonStorage {
                     res.sendStatus(404);
                 }
             });
-            const deferred = q.defer();
+            const deferred = q_1.default.defer();
             const server = app.listen(0, () => {
                 deferred.resolve(server);
             });
@@ -597,8 +629,10 @@ class JsonStorage {
         return id;
     }
     static getRejectedPromise(errorCode, message) {
-        return q.reject(storage.storageError(errorCode, message));
+        return q_1.default.reject(storage.storageError(errorCode, message));
     }
 }
 exports.JsonStorage = JsonStorage;
+JsonStorage.NextIdNumber = 0;
+JsonStorage.CollaboratorNotFound = "The specified e-mail address doesn't represent a registered user";
 //# sourceMappingURL=json-storage.js.map

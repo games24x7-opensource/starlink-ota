@@ -1,6 +1,39 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NameResolver = exports.Permissions = exports.ReleaseMethod = exports.ErrorCode = void 0;
 exports.clone = clone;
@@ -8,7 +41,7 @@ exports.isOwnedByCurrentUser = isOwnedByCurrentUser;
 exports.getOwnerEmail = getOwnerEmail;
 exports.isPrototypePollutionKey = isPrototypePollutionKey;
 exports.storageError = storageError;
-const error = require("../error");
+const error = __importStar(require("../error"));
 var ErrorCode;
 (function (ErrorCode) {
     ErrorCode[ErrorCode["ConnectionFailed"] = 0] = "ConnectionFailed";
@@ -59,7 +92,7 @@ function getOwnerEmail(app) {
     return null;
 }
 function isPrototypePollutionKey(key) {
-    return ['__proto__', 'constructor', 'prototype'].includes(key);
+    return ["__proto__", "constructor", "prototype"].includes(key);
 }
 function storageError(errorCode, message) {
     const storageError = error.codePushError(error.ErrorSource.Storage, message);
@@ -68,7 +101,6 @@ function storageError(errorCode, message) {
 }
 // A convenience wrapper on top of any storage implementation to resolve names instead of ID's
 class NameResolver {
-    _storage;
     constructor(storage) {
         this._storage = storage;
     }

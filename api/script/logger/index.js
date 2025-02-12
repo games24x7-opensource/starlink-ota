@@ -1,5 +1,6 @@
 const bunyan = require('bunyan');
 const _ = require('lodash');
+const path = require('path');
 
 /**
  * Why stack-trace npm module?
@@ -8,7 +9,7 @@ const _ = require('lodash');
  * 2. To parse error stack
  *     This module does a pretty good job at parsing error stacks.
  */
-const stackTrace = require('stack-trace');
+import {get,parse} from 'stack-trace';
 
 /**
  * Why custom serializer?
@@ -22,7 +23,7 @@ const serializers = {
   res: bunyan.stdSerializers.res,
 };
 
-const path = require('path');
+
 const getLogStreams = () => {
   const streams = [];
   const {NODE_ENV, ENV} = process.env;
@@ -327,7 +328,7 @@ Logger.status = {
  */
 
 function getCallSite() {
-  const stack = stackTrace.get();
+  const stack = get();
   if (!stack || stack.length < 4) {
     return;
   }
@@ -443,7 +444,7 @@ function parseErrorStack(error) {
     return error;
   }
 
-  const traces = stackTrace.parse(error);
+  const traces = parse(error);
   const errorInfo = traces.map(function (trace) {
     return {
       function: trace.getFunctionName(),

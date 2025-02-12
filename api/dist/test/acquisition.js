@@ -1,15 +1,51 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const assert = require("assert");
-const q = require("q");
-const queryString = require("querystring");
-const request = require("supertest");
-var Promise = q.Promise;
-const defaultServer = require("../script/default-server");
-const redis = require("../script/redis-manager");
-const utils = require("./utils");
+const assert_1 = __importDefault(require("assert"));
+const q_1 = __importDefault(require("q"));
+const querystring_1 = __importDefault(require("querystring"));
+const supertest_1 = __importDefault(require("supertest"));
+const defaultServer = __importStar(require("../script/default-server"));
+const redis = __importStar(require("../script/redis-manager"));
+const utils = __importStar(require("./utils"));
+var Promise = q_1.default.Promise;
 const json_storage_1 = require("../script/storage/json-storage");
 const rest_headers_1 = require("../script/utils/rest-headers");
 const aws_storage_1 = require("../script/storage/aws-storage");
@@ -27,7 +63,7 @@ describe("Acquisition Rest API", () => {
     var isAzureServer;
     before(() => {
         var useJsonStorage = !process.env.TEST_AZURE_STORAGE && !process.env.AZURE_ACQUISITION_URL;
-        return q(null)
+        return (0, q_1.default)(null)
             .then(() => {
             if (process.env.AZURE_ACQUISITION_URL) {
                 serverUrl = process.env.AZURE_ACQUISITION_URL;
@@ -35,7 +71,7 @@ describe("Acquisition Rest API", () => {
                 storageInstance = useJsonStorage ? new json_storage_1.JsonStorage() : new aws_storage_1.AwsStorage();
             }
             else {
-                var deferred = q.defer();
+                var deferred = q_1.default.defer();
                 defaultServer.start(function (err, app, serverStorage) {
                     if (err) {
                         deferred.reject(err);
@@ -108,7 +144,7 @@ describe("Acquisition Rest API", () => {
         });
     });
     after(() => {
-        return q(null)
+        return (0, q_1.default)(null)
             .then(() => {
             if (storageInstance instanceof json_storage_1.JsonStorage) {
                 return storageInstance.dropAll();
@@ -124,7 +160,7 @@ describe("Acquisition Rest API", () => {
         it("should be healthy if and only if correctly configured", (done) => {
             var isProductionReady = storageInstance instanceof aws_storage_1.AwsStorage && redisManager && redisManager.isEnabled;
             var expectedStatusCode = isProductionReady || isAzureServer ? 200 : 500;
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/health")
                 .expect(expectedStatusCode)
                 .end(function (err, result) {
@@ -146,7 +182,7 @@ describe("Acquisition Rest API", () => {
             done();
         });
         it("returns 400 for malformed URL without parameters", (done) => {
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck")
                 .expect(400)
                 .end(function (err, result) {
@@ -156,9 +192,9 @@ describe("Acquisition Rest API", () => {
             });
         });
         it("returns 400 for malformed URL with missing deploymentKey id parameter", (done) => {
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     packageHash: requestParameters.packageHash,
                     appVersion: requestParameters.appVersion,
                 }))
@@ -170,9 +206,9 @@ describe("Acquisition Rest API", () => {
             });
         });
         it("returns 400 for malformed URL with missing app version parameter", (done) => {
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     packageHash: requestParameters.packageHash,
                 }))
@@ -185,9 +221,9 @@ describe("Acquisition Rest API", () => {
         });
         it("returns 400 for malformed URL with non-semver app version parameter", (done) => {
             requestParameters.appVersion = "notSemver";
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     packageHash: requestParameters.packageHash,
                     appVersion: requestParameters.appVersion,
@@ -201,9 +237,9 @@ describe("Acquisition Rest API", () => {
         });
         it("returns 404 for incorrect deployment key", (done) => {
             requestParameters.deploymentKey = "keyThatIsNonExistent";
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: requestParameters.appVersion,
                 }))
@@ -216,9 +252,9 @@ describe("Acquisition Rest API", () => {
         });
         it("returns 400 for malformed deployment key", (done) => {
             requestParameters.deploymentKey = "keywith%character";
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: requestParameters.appVersion,
                 }))
@@ -231,9 +267,9 @@ describe("Acquisition Rest API", () => {
         });
         it("returns 200 for deployment key with leading/trailing invalid characters", (done) => {
             requestParameters.deploymentKey = `\r\n\r\n${requestParameters.deploymentKey}\r\n\r\n`;
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: requestParameters.appVersion,
                 }))
@@ -242,17 +278,17 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
-                assert.equal(response.updateInfo.packageSize, 6);
-                assert.equal(response.updateInfo.isMandatory, true);
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
+                assert_1.default.equal(response.updateInfo.packageSize, 6);
+                assert_1.default.equal(response.updateInfo.isMandatory, true);
                 done();
             });
         });
         it("returns 200 and update for appVersion with missing patch version by assuming patch version of 0", (done) => {
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: "1.0",
                 }))
@@ -261,18 +297,18 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
-                assert.equal(response.updateInfo.packageSize, 6);
-                assert.equal(response.updateInfo.isMandatory, true);
-                assert.equal(response.updateInfo.appVersion, "1.0");
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
+                assert_1.default.equal(response.updateInfo.packageSize, 6);
+                assert_1.default.equal(response.updateInfo.isMandatory, true);
+                assert_1.default.equal(response.updateInfo.appVersion, "1.0");
                 done();
             });
         });
         it("returns 200 and update for appVersion with missing patch version and build metadata by assuming patch version of 0", (done) => {
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: "1.0+metadata",
                 }))
@@ -282,18 +318,18 @@ describe("Acquisition Rest API", () => {
                     throw err;
                 var response = JSON.parse(result.text);
                 // Semver ignores build metadata when matching against ranges
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
-                assert.equal(response.updateInfo.packageSize, 6);
-                assert.equal(response.updateInfo.isMandatory, true);
-                assert.equal(response.updateInfo.appVersion, "1.0+metadata");
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
+                assert_1.default.equal(response.updateInfo.packageSize, 6);
+                assert_1.default.equal(response.updateInfo.isMandatory, true);
+                assert_1.default.equal(response.updateInfo.appVersion, "1.0+metadata");
                 done();
             });
         });
         it("returns 200 and no update for appVersion with missing patch version and pre-release tag by assuming patch version of 0", (done) => {
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: "1.0-prerelease",
                 }))
@@ -303,16 +339,16 @@ describe("Acquisition Rest API", () => {
                     throw err;
                 var response = JSON.parse(result.text);
                 // Semver pre-release tags don't match ranges unless explicitly specified
-                assert.equal(response.updateInfo.isAvailable, false);
-                assert.equal(response.updateInfo.updateAppVersion, true);
-                assert.equal(response.updateInfo.appVersion, "1.0.0");
+                assert_1.default.equal(response.updateInfo.isAvailable, false);
+                assert_1.default.equal(response.updateInfo.updateAppVersion, true);
+                assert_1.default.equal(response.updateInfo.appVersion, "1.0.0");
                 done();
             });
         });
         it("returns 200 and available mandatory update for deployment key and app version but no package hash", (done) => {
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: requestParameters.appVersion,
                 }))
@@ -321,17 +357,17 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
-                assert.equal(response.updateInfo.packageSize, 6);
-                assert.equal(response.updateInfo.isMandatory, true);
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
+                assert_1.default.equal(response.updateInfo.packageSize, 6);
+                assert_1.default.equal(response.updateInfo.isMandatory, true);
                 done();
             });
         });
         it("returns 200 and available mandatory update for deployment key and app version and empty params", (done) => {
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: requestParameters.appVersion,
                     packageHash: "",
@@ -344,10 +380,10 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
-                assert.equal(response.updateInfo.packageSize, 6);
-                assert.equal(response.updateInfo.isMandatory, true);
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
+                assert_1.default.equal(response.updateInfo.packageSize, 6);
+                assert_1.default.equal(response.updateInfo.isMandatory, true);
                 done();
             });
         });
@@ -355,9 +391,9 @@ describe("Acquisition Rest API", () => {
             requestParameters.deploymentKey = deployment.key;
             requestParameters.packageHash = previousPackageHash;
             requestParameters.appVersion = appPackage.appVersion;
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: requestParameters.appVersion,
                     packageHash: requestParameters.packageHash,
@@ -367,17 +403,17 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.diffPackageMap[previousPackageHash].url);
-                assert.equal(response.updateInfo.packageSize, 5);
-                assert.equal(response.updateInfo.isMandatory, false);
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.diffPackageMap[previousPackageHash].url);
+                assert_1.default.equal(response.updateInfo.packageSize, 5);
+                assert_1.default.equal(response.updateInfo.isMandatory, false);
                 done();
             });
         });
         it("returns 200 and available mandatory update for different package hash", (done) => {
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     packageHash: requestParameters.packageHash,
                     appVersion: requestParameters.appVersion,
@@ -387,10 +423,10 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
-                assert.equal(response.updateInfo.packageSize, 6);
-                assert.equal(response.updateInfo.isMandatory, true);
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
+                assert_1.default.equal(response.updateInfo.packageSize, 6);
+                assert_1.default.equal(response.updateInfo.isMandatory, true);
                 done();
             });
         });
@@ -398,9 +434,9 @@ describe("Acquisition Rest API", () => {
             requestParameters.deploymentKey = deployment.key;
             requestParameters.packageHash = previousPackageHash;
             requestParameters.appVersion = appPackage.appVersion;
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: requestParameters.appVersion,
                     packageHash: requestParameters.packageHash,
@@ -411,20 +447,20 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.diffPackageMap[previousPackageHash].url);
-                assert.equal(response.updateInfo.packageSize, 5);
-                assert.equal(response.updateInfo.isMandatory, false);
-                assert.equal(response.updateInfo.label, "v3");
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.diffPackageMap[previousPackageHash].url);
+                assert_1.default.equal(response.updateInfo.packageSize, 5);
+                assert_1.default.equal(response.updateInfo.isMandatory, false);
+                assert_1.default.equal(response.updateInfo.label, "v3");
                 done();
             });
         });
         it("returns 200 and mandatory v3 update from v1 labelled request", (done) => {
             requestParameters.deploymentKey = deployment.key;
             requestParameters.appVersion = appPackage.appVersion;
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     appVersion: requestParameters.appVersion,
                     packageHash: requestParameters.packageHash,
@@ -435,19 +471,19 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
-                assert.equal(response.updateInfo.packageSize, 6);
-                assert.equal(response.updateInfo.isMandatory, true);
-                assert.equal(response.updateInfo.label, "v3");
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
+                assert_1.default.equal(response.updateInfo.packageSize, 6);
+                assert_1.default.equal(response.updateInfo.isMandatory, true);
+                assert_1.default.equal(response.updateInfo.label, "v3");
                 done();
             });
         });
         it("returns 200 and available app update for lesser app version", (done) => {
             requestParameters.appVersion = "0.0.8";
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     packageHash: requestParameters.packageHash,
                     appVersion: requestParameters.appVersion,
@@ -457,17 +493,17 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, false);
-                assert.equal(response.updateInfo.updateAppVersion, true);
-                assert.equal(response.updateInfo.appVersion, appPackage.appVersion);
+                assert_1.default.equal(response.updateInfo.isAvailable, false);
+                assert_1.default.equal(response.updateInfo.updateAppVersion, true);
+                assert_1.default.equal(response.updateInfo.appVersion, appPackage.appVersion);
                 done();
             });
         });
         it("returns 200 and no update for greater app version", (done) => {
             requestParameters.appVersion = "2.0.0";
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     packageHash: requestParameters.packageHash,
                     appVersion: requestParameters.appVersion,
@@ -477,16 +513,16 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, false);
-                assert.equal(response.updateInfo.shouldRunBinaryVersion, true);
-                assert.equal(response.updateInfo.updateAppVersion, false);
+                assert_1.default.equal(response.updateInfo.isAvailable, false);
+                assert_1.default.equal(response.updateInfo.shouldRunBinaryVersion, true);
+                assert_1.default.equal(response.updateInfo.updateAppVersion, false);
                 done();
             });
         });
         it("returns 200 and available update for same app version, different package hashes, and isCompanion=false", (done) => {
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     packageHash: requestParameters.packageHash,
                     appVersion: requestParameters.appVersion,
@@ -497,17 +533,17 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
-                assert.equal(response.updateInfo.packageSize, 6);
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
+                assert_1.default.equal(response.updateInfo.packageSize, 6);
                 done();
             });
         });
         it("returns 200 and available app update for lesser app version, different package hashes, and isCompanion=false", (done) => {
             requestParameters.appVersion = "0.1.0";
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     packageHash: requestParameters.packageHash,
                     appVersion: requestParameters.appVersion,
@@ -518,17 +554,17 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, false);
-                assert.equal(response.updateInfo.updateAppVersion, true);
-                assert.equal(response.updateInfo.appVersion, appPackage.appVersion);
+                assert_1.default.equal(response.updateInfo.isAvailable, false);
+                assert_1.default.equal(response.updateInfo.updateAppVersion, true);
+                assert_1.default.equal(response.updateInfo.appVersion, appPackage.appVersion);
                 done();
             });
         });
         it("returns 200 and no update for greater app version, different package hashes, and isCompanion=false", (done) => {
             requestParameters.appVersion = "2.0.0";
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     packageHash: requestParameters.packageHash,
                     appVersion: requestParameters.appVersion,
@@ -539,19 +575,19 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, false);
-                assert.equal(response.updateInfo.shouldRunBinaryVersion, true);
-                assert.equal(response.updateInfo.updateAppVersion, false);
-                assert.equal(response.updateInfo.appVersion, appPackage.appVersion);
+                assert_1.default.equal(response.updateInfo.isAvailable, false);
+                assert_1.default.equal(response.updateInfo.shouldRunBinaryVersion, true);
+                assert_1.default.equal(response.updateInfo.updateAppVersion, false);
+                assert_1.default.equal(response.updateInfo.appVersion, appPackage.appVersion);
                 done();
             });
         });
         it("returns 200 and update for greater app version, different package hashes, and isCompanion=true", (done) => {
             requestParameters.isCompanion = true;
             requestParameters.appVersion = "2.0.0";
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     packageHash: requestParameters.packageHash,
                     appVersion: requestParameters.appVersion,
@@ -562,18 +598,18 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
-                assert.equal(response.updateInfo.packageSize, 6);
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
+                assert_1.default.equal(response.updateInfo.packageSize, 6);
                 done();
             });
         });
         it("returns 200 and update for lesser app version, different package hashes and isCompanion=true", (done) => {
             requestParameters.isCompanion = true;
             requestParameters.appVersion = "0.0.6";
-            request(server || serverUrl)
+            (0, supertest_1.default)(server || serverUrl)
                 .get("/updateCheck?" +
-                queryString.stringify({
+                querystring_1.default.stringify({
                     deploymentKey: requestParameters.deploymentKey,
                     packageHash: requestParameters.packageHash,
                     appVersion: requestParameters.appVersion,
@@ -584,9 +620,9 @@ describe("Acquisition Rest API", () => {
                 if (err)
                     throw err;
                 var response = JSON.parse(result.text);
-                assert.equal(response.updateInfo.isAvailable, true);
-                assert.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
-                assert.equal(response.updateInfo.packageSize, 6);
+                assert_1.default.equal(response.updateInfo.isAvailable, true);
+                assert_1.default.equal(response.updateInfo.downloadURL, appPackage.blobUrl);
+                assert_1.default.equal(response.updateInfo.packageSize, 6);
                 done();
             });
         });
@@ -656,9 +692,9 @@ describe("Acquisition Rest API", () => {
                 done();
             });
             it("returns 200 and latest available update for 1.0.0 binary", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         appVersion: requestParameters.appVersion,
                         isCompanion: requestParameters.isCompanion,
@@ -668,17 +704,17 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, true);
-                    assert.equal(response.updateInfo.appVersion, "1.0.0");
-                    assert.equal(response.updateInfo.isMandatory, true);
-                    assert.equal(response.updateInfo.label, "v4");
+                    assert_1.default.equal(response.updateInfo.isAvailable, true);
+                    assert_1.default.equal(response.updateInfo.appVersion, "1.0.0");
+                    assert_1.default.equal(response.updateInfo.isMandatory, true);
+                    assert_1.default.equal(response.updateInfo.label, "v4");
                     done();
                 });
             });
             it("returns 200 and update available for 1.0.0 binary and earlier package hash", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         packageHash: requestParameters.packageHash,
                         appVersion: requestParameters.appVersion,
@@ -689,18 +725,18 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, true);
-                    assert.equal(response.updateInfo.appVersion, "1.0.0");
-                    assert.equal(response.updateInfo.isMandatory, true);
-                    assert.equal(response.updateInfo.label, "v4");
+                    assert_1.default.equal(response.updateInfo.isAvailable, true);
+                    assert_1.default.equal(response.updateInfo.appVersion, "1.0.0");
+                    assert_1.default.equal(response.updateInfo.isMandatory, true);
+                    assert_1.default.equal(response.updateInfo.label, "v4");
                     done();
                 });
             });
             it("returns 200 and no update available for 1.0.0 binary on latest package", (done) => {
                 requestParameters.packageHash = "hash103";
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         packageHash: requestParameters.packageHash,
                         appVersion: requestParameters.appVersion,
@@ -711,18 +747,18 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, false);
-                    assert.equal(response.updateInfo.updateAppVersion, true);
-                    assert.equal(response.updateInfo.appVersion, "3.0.0");
+                    assert_1.default.equal(response.updateInfo.isAvailable, false);
+                    assert_1.default.equal(response.updateInfo.updateAppVersion, true);
+                    assert_1.default.equal(response.updateInfo.appVersion, "3.0.0");
                     done();
                 });
             });
             it("returns 200 and update available for 2.0.0 binary for older package hash", (done) => {
                 requestParameters.appVersion = "2.0.0";
                 requestParameters.packageHash = "hash202";
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         packageHash: requestParameters.packageHash,
                         appVersion: requestParameters.appVersion,
@@ -733,18 +769,18 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, true);
-                    assert.equal(response.updateInfo.appVersion, "2.0.0");
-                    assert.equal(response.updateInfo.label, "v6");
+                    assert_1.default.equal(response.updateInfo.isAvailable, true);
+                    assert_1.default.equal(response.updateInfo.appVersion, "2.0.0");
+                    assert_1.default.equal(response.updateInfo.label, "v6");
                     done();
                 });
             });
             it("returns 200 and update available for 3.0.0 binary on older package hash", (done) => {
                 requestParameters.appVersion = "3.0.0";
                 requestParameters.packageHash = "hash304";
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         packageHash: requestParameters.packageHash,
                         appVersion: requestParameters.appVersion,
@@ -755,19 +791,19 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, true);
-                    assert.equal(response.updateInfo.isMandatory, false);
-                    assert.equal(response.updateInfo.appVersion, "3.0.0");
-                    assert.equal(response.updateInfo.label, "v7");
+                    assert_1.default.equal(response.updateInfo.isAvailable, true);
+                    assert_1.default.equal(response.updateInfo.isMandatory, false);
+                    assert_1.default.equal(response.updateInfo.appVersion, "3.0.0");
+                    assert_1.default.equal(response.updateInfo.label, "v7");
                     done();
                 });
             });
             it("returns 200 and no update available for 3.0.0 binary on latest package hash", (done) => {
                 requestParameters.appVersion = "3.0.0";
                 requestParameters.packageHash = "hash306";
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         packageHash: requestParameters.packageHash,
                         appVersion: requestParameters.appVersion,
@@ -778,8 +814,8 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, false);
-                    assert.equal(response.updateInfo.updateAppVersion, false);
+                    assert_1.default.equal(response.updateInfo.isAvailable, false);
+                    assert_1.default.equal(response.updateInfo.updateAppVersion, false);
                     done();
                 });
             });
@@ -830,9 +866,9 @@ describe("Acquisition Rest API", () => {
                 done();
             });
             it("returns 200 and update targeting all versions for 2.0.0 binary", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         appVersion: requestParameters.appVersion,
                         isCompanion: requestParameters.isCompanion,
@@ -842,17 +878,17 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, true);
-                    assert.equal(response.updateInfo.appVersion, "2.0.0");
-                    assert.equal(response.updateInfo.isMandatory, false);
-                    assert.equal(response.updateInfo.label, "v1");
+                    assert_1.default.equal(response.updateInfo.isAvailable, true);
+                    assert_1.default.equal(response.updateInfo.appVersion, "2.0.0");
+                    assert_1.default.equal(response.updateInfo.isMandatory, false);
+                    assert_1.default.equal(response.updateInfo.label, "v1");
                     done();
                 });
             });
             it("returns 200 and update targeting major version 1 and minor version 0 and any patch version for 1.0.1 binary", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         appVersion: "1.0.1",
                         isCompanion: requestParameters.isCompanion,
@@ -862,18 +898,18 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, true);
-                    assert.equal(response.updateInfo.appVersion, "1.0.1");
-                    assert.equal(response.updateInfo.isMandatory, true);
-                    assert.equal(response.updateInfo.label, "v2");
+                    assert_1.default.equal(response.updateInfo.isAvailable, true);
+                    assert_1.default.equal(response.updateInfo.appVersion, "1.0.1");
+                    assert_1.default.equal(response.updateInfo.isMandatory, true);
+                    assert_1.default.equal(response.updateInfo.label, "v2");
                     done();
                 });
             });
             it("returns 200, no update available, and the binary update notification for a 0.0.1 binary that already got the latest applicable package hash", (done) => {
                 requestParameters.packageHash = "hash100";
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         packageHash: requestParameters.packageHash,
                         appVersion: "0.0.1",
@@ -884,17 +920,17 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, false);
-                    assert.equal(response.updateInfo.updateAppVersion, true);
-                    assert.equal(response.updateInfo.appVersion, ">=1.1.0 <1.2.0");
+                    assert_1.default.equal(response.updateInfo.isAvailable, false);
+                    assert_1.default.equal(response.updateInfo.updateAppVersion, true);
+                    assert_1.default.equal(response.updateInfo.appVersion, ">=1.1.0 <1.2.0");
                     done();
                 });
             });
             it("returns 200 and no update available for a 3.0.0 binary that already got the latest applicable package hash", (done) => {
                 requestParameters.packageHash = "hash100";
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         packageHash: requestParameters.packageHash,
                         appVersion: "3.0.0",
@@ -905,17 +941,17 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, false);
-                    assert.equal(response.updateInfo.updateAppVersion, false);
+                    assert_1.default.equal(response.updateInfo.isAvailable, false);
+                    assert_1.default.equal(response.updateInfo.updateAppVersion, false);
                     done();
                 });
             });
             it("returns 200 and update available for 1.1.5 binary with older package hash", (done) => {
                 requestParameters.appVersion = "1.1.5";
                 requestParameters.packageHash = "hash100";
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         packageHash: requestParameters.packageHash,
                         appVersion: requestParameters.appVersion,
@@ -926,9 +962,9 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, true);
-                    assert.equal(response.updateInfo.appVersion, "1.1.5");
-                    assert.equal(response.updateInfo.label, "v3");
+                    assert_1.default.equal(response.updateInfo.isAvailable, true);
+                    assert_1.default.equal(response.updateInfo.appVersion, "1.1.5");
+                    assert_1.default.equal(response.updateInfo.label, "v3");
                     done();
                 });
             });
@@ -990,9 +1026,9 @@ describe("Acquisition Rest API", () => {
                 done();
             });
             it("returns 200 and v2 update since v3 is disabled and v4 does not target 1.0.0", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         deploymentKey: requestParameters.deploymentKey,
                         appVersion: "1.0.0",
                         isCompanion: requestParameters.isCompanion,
@@ -1002,17 +1038,17 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, true);
-                    assert.equal(response.updateInfo.appVersion, "1.0.0");
-                    assert.equal(response.updateInfo.isMandatory, true);
-                    assert.equal(response.updateInfo.label, "v2");
+                    assert_1.default.equal(response.updateInfo.isAvailable, true);
+                    assert_1.default.equal(response.updateInfo.appVersion, "1.0.0");
+                    assert_1.default.equal(response.updateInfo.isMandatory, true);
+                    assert_1.default.equal(response.updateInfo.label, "v2");
                     done();
                 });
             });
             it("returns 200 and v4 update for 2.0.0 binary running v1, isMandatory flag from v3 disabled update should not apply", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .get("/updateCheck?" +
-                    queryString.stringify({
+                    querystring_1.default.stringify({
                         appVersion: requestParameters.appVersion,
                         deploymentKey: requestParameters.deploymentKey,
                         isCompanion: requestParameters.isCompanion,
@@ -1024,10 +1060,10 @@ describe("Acquisition Rest API", () => {
                     if (err)
                         throw err;
                     var response = JSON.parse(result.text);
-                    assert.equal(response.updateInfo.isAvailable, true);
-                    assert.equal(response.updateInfo.appVersion, requestParameters.appVersion);
-                    assert.equal(response.updateInfo.isMandatory, false);
-                    assert.equal(response.updateInfo.label, "v4");
+                    assert_1.default.equal(response.updateInfo.isAvailable, true);
+                    assert_1.default.equal(response.updateInfo.appVersion, requestParameters.appVersion);
+                    assert_1.default.equal(response.updateInfo.isMandatory, false);
+                    assert_1.default.equal(response.updateInfo.label, "v4");
                     done();
                 });
             });
@@ -1042,7 +1078,7 @@ describe("Acquisition Rest API", () => {
         });
         describe("POST /reportStatus/deploy", () => {
             it("returns 400 if invalid json is sent", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .post("/reportStatus/deploy")
                     .set("Content-Type", "application/json")
                     .send("{invalid: json")
@@ -1055,7 +1091,7 @@ describe("Acquisition Rest API", () => {
                 });
             });
             it("returns 400 if deploymentKey is unspecified", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .post("/reportStatus/deploy")
                     .set("Content-Type", "application/json")
                     .send(JSON.stringify({
@@ -1073,7 +1109,7 @@ describe("Acquisition Rest API", () => {
                 });
             });
             it("returns 400 if clientUniqueId is unspecified and SDK version is unspecified", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .post("/reportStatus/deploy")
                     .set("Content-Type", "application/json")
                     .send(JSON.stringify({
@@ -1091,7 +1127,7 @@ describe("Acquisition Rest API", () => {
                 });
             });
             it("returns 400 if clientUniqueId is unspecified and SDK version is <=1.5.1-beta", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .post("/reportStatus/deploy")
                     .set("Content-Type", "application/json")
                     .set(rest_headers_1.SDK_VERSION_HEADER, "1.5.1-beta")
@@ -1110,7 +1146,7 @@ describe("Acquisition Rest API", () => {
                 });
             });
             it("returns 400 if appVersion is unspecified", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .post("/reportStatus/deploy")
                     .set("Content-Type", "application/json")
                     .send(JSON.stringify({
@@ -1128,7 +1164,7 @@ describe("Acquisition Rest API", () => {
                 });
             });
             it("returns 400 if deploymentKey, label, clientUniqueId and appVersion is specified but status is unspecified", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .post("/reportStatus/deploy")
                     .set("Content-Type", "application/json")
                     .send(JSON.stringify({
@@ -1148,7 +1184,7 @@ describe("Acquisition Rest API", () => {
             it("returns 200 and increments the correct counters in Redis if SDK version is unspecified", (done) => {
                 function sendReport(statusReport) {
                     return Promise((resolve, reject) => {
-                        request(server || serverUrl)
+                        (0, supertest_1.default)(server || serverUrl)
                             .post("/reportStatus/deploy")
                             .set("Content-Type", "application/json")
                             .send(statusReport)
@@ -1188,10 +1224,10 @@ describe("Acquisition Rest API", () => {
                     .then(() => {
                     if (redisManager.isEnabled) {
                         return redisManager.getMetricsWithDeploymentKey(deployment.key).then((metrics) => {
-                            assert.equal(metrics[redis.Utilities.getLabelActiveCountField("1.0.0")], 1);
-                            assert.equal(metrics[redis.Utilities.getLabelActiveCountField("v2")], 1);
-                            assert.equal(metrics[redis.Utilities.getLabelStatusField("v2", redis.DEPLOYMENT_SUCCEEDED)], 1);
-                            assert.equal(metrics[redis.Utilities.getLabelStatusField("v3", redis.DEPLOYMENT_FAILED)], 1);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelActiveCountField("1.0.0")], 1);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelActiveCountField("v2")], 1);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelStatusField("v2", redis.DEPLOYMENT_SUCCEEDED)], 1);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelStatusField("v3", redis.DEPLOYMENT_FAILED)], 1);
                             done();
                         });
                     }
@@ -1206,7 +1242,7 @@ describe("Acquisition Rest API", () => {
             it("returns 200 and increments the correct counters in Redis when switching deployment keys if SDK version is >=1.5.2-beta", (done) => {
                 function sendReport(statusReport) {
                     return Promise((resolve, reject) => {
-                        request(server || serverUrl)
+                        (0, supertest_1.default)(server || serverUrl)
                             .post("/reportStatus/deploy")
                             .set("Content-Type", "application/json")
                             .set(rest_headers_1.SDK_VERSION_HEADER, "1.5.2-beta")
@@ -1266,15 +1302,15 @@ describe("Acquisition Rest API", () => {
                         return redisManager
                             .getMetricsWithDeploymentKey(deployment.key)
                             .then((metrics) => {
-                            assert.equal(metrics[redis.Utilities.getLabelActiveCountField("1.0.0")], 1);
-                            assert.equal(metrics[redis.Utilities.getLabelActiveCountField("v2")], 0);
-                            assert.equal(metrics[redis.Utilities.getLabelStatusField("v2", redis.DEPLOYMENT_SUCCEEDED)], 1);
-                            assert.equal(metrics[redis.Utilities.getLabelStatusField("v3", redis.DEPLOYMENT_FAILED)], 1);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelActiveCountField("1.0.0")], 1);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelActiveCountField("v2")], 0);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelStatusField("v2", redis.DEPLOYMENT_SUCCEEDED)], 1);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelStatusField("v3", redis.DEPLOYMENT_FAILED)], 1);
                             return redisManager.getMetricsWithDeploymentKey(anotherDeployment.key);
                         })
                             .then((metrics) => {
-                            assert.equal(metrics[redis.Utilities.getLabelActiveCountField("v1")], 1);
-                            assert.equal(metrics[redis.Utilities.getLabelStatusField("v1", redis.DEPLOYMENT_SUCCEEDED)], 1);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelActiveCountField("v1")], 1);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelStatusField("v1", redis.DEPLOYMENT_SUCCEEDED)], 1);
                             done();
                         });
                     }
@@ -1289,7 +1325,7 @@ describe("Acquisition Rest API", () => {
         });
         describe("POST /reportStatus/download", () => {
             it("returns 400 if invalid json is sent", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .post("/reportStatus/download")
                     .set("Content-Type", "application/json")
                     .send("{invalid: json")
@@ -1302,7 +1338,7 @@ describe("Acquisition Rest API", () => {
                 });
             });
             it("returns 400 if deploymentKey is unspecified", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .post("/reportStatus/download")
                     .set("Content-Type", "application/json")
                     .send(JSON.stringify({
@@ -1317,7 +1353,7 @@ describe("Acquisition Rest API", () => {
                 });
             });
             it("returns 400 if label is unspecified", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .post("/reportStatus/download")
                     .set("Content-Type", "application/json")
                     .send(JSON.stringify({
@@ -1332,7 +1368,7 @@ describe("Acquisition Rest API", () => {
                 });
             });
             it("returns 200 and increments the correct counter in Redis", (done) => {
-                request(server || serverUrl)
+                (0, supertest_1.default)(server || serverUrl)
                     .post("/reportStatus/download")
                     .set("Content-Type", "application/json")
                     .send(JSON.stringify({
@@ -1348,7 +1384,7 @@ describe("Acquisition Rest API", () => {
                         redisManager
                             .getMetricsWithDeploymentKey(deployment.key)
                             .then((metrics) => {
-                            assert.equal(metrics[redis.Utilities.getLabelStatusField("v2", redis.DOWNLOADED)], 1);
+                            assert_1.default.equal(metrics[redis.Utilities.getLabelStatusField("v2", redis.DOWNLOADED)], 1);
                             done();
                         })
                             .catch((err) => {

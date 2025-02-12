@@ -1,25 +1,61 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const json_storage_1 = require("../script/storage/json-storage");
-const assert = require("assert");
-const express = require("express");
-const fs = require("fs");
-const hashUtils = require("../script/utils/hash-utils");
-const packageDiffing = require("../script/utils/package-diffing");
-const path = require("path");
-const shortid = require("shortid");
-const utils = require("./utils");
-const yauzl = require("yauzl");
+const assert_1 = __importDefault(require("assert"));
+const express_1 = __importDefault(require("express"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const shortid_1 = __importDefault(require("shortid"));
+const hashUtils = __importStar(require("../script/utils/hash-utils"));
+const packageDiffing = __importStar(require("../script/utils/package-diffing"));
+const utils = __importStar(require("./utils"));
+const yauzl = __importStar(require("yauzl"));
 var PackageDiffer = packageDiffing.PackageDiffer;
 var PackageManifest = hashUtils.PackageManifest;
 const Pend = require("pend");
 describe("Package diffing with JSON storage", () => packageDiffTests(json_storage_1.JsonStorage));
 function packageDiffTests(StorageType) {
     const TEST_ARCHIVE_FILE_NAMES = ["test.zip", "test2.zip", "test3.zip", "test4.zip"];
-    const TEST_ARCHIVE_FILE_PATH = path.join(__dirname, "resources", TEST_ARCHIVE_FILE_NAMES[0]);
-    const TEST_ARCHIVE_WITH_FOLDERS_FILE_PATH = path.join(__dirname, "resources", "testdirectories.zip");
+    const TEST_ARCHIVE_FILE_PATH = path_1.default.join(__dirname, "resources", TEST_ARCHIVE_FILE_NAMES[0]);
+    const TEST_ARCHIVE_WITH_FOLDERS_FILE_PATH = path_1.default.join(__dirname, "resources", "testdirectories.zip");
     const TEST_ZIP_HASH = "540fed8df3553079e81d1353c5cc4e3cac7db9aea647a85d550f646e8620c317";
     const TEST_ZIP_MANIFEST_HASH = "9e0499ce7df5c04cb304c9deed684dc137fc603cb484a5b027478143c595d80b";
     const HASH_A = "418dd73df63bfe1dc9b1d126d340ccf4941198ccf573eff190a6ff8dc69e87e4";
@@ -37,8 +73,8 @@ function packageDiffTests(StorageType) {
     before(() => {
         storage = new StorageType();
         packageDiffingUtils = new PackageDiffer(storage, /*maxPackagesToDiff*/ 5);
-        var app = express();
-        app.use("/", express.static(path.join(__dirname, "resources")));
+        var app = (0, express_1.default)();
+        app.use("/", express_1.default.static(path_1.default.join(__dirname, "resources")));
         var port = 3000;
         server = app.listen(port);
     });
@@ -60,8 +96,8 @@ function packageDiffTests(StorageType) {
             packageDiffingUtils
                 .generateDiffArchive(oldManifest, newManifest, TEST_ARCHIVE_FILE_PATH)
                 .done((diffArchiveFilePath) => {
-                fs.exists(diffArchiveFilePath, (exists) => {
-                    assert.ok(exists);
+                fs_1.default.exists(diffArchiveFilePath, (exists) => {
+                    assert_1.default.ok(exists);
                     // Now verify that the diff package contents are correct.
                     yauzl.open(diffArchiveFilePath, (error, zipFile) => {
                         if (error) {
@@ -107,7 +143,7 @@ function packageDiffTests(StorageType) {
                                 if (expectedDiffContents.size !== 0) {
                                     throw new Error("The diff archive contents were incorrect.");
                                 }
-                                fs.unlinkSync(diffArchiveFilePath);
+                                fs_1.default.unlinkSync(diffArchiveFilePath);
                                 done();
                             });
                         });
@@ -124,8 +160,8 @@ function packageDiffTests(StorageType) {
             packageDiffingUtils
                 .generateDiffArchive(oldManifest, newManifest, TEST_ARCHIVE_WITH_FOLDERS_FILE_PATH)
                 .done((diffArchiveFilePath) => {
-                fs.exists(diffArchiveFilePath, (exists) => {
-                    assert.ok(exists);
+                fs_1.default.exists(diffArchiveFilePath, (exists) => {
+                    assert_1.default.ok(exists);
                     // Now verify that the diff package contents are correct.
                     yauzl.open(diffArchiveFilePath, (error, zipFile) => {
                         if (error) {
@@ -171,7 +207,7 @@ function packageDiffTests(StorageType) {
                                 if (expectedDiffContents.size !== 0) {
                                     throw new Error("The diff archive contents were incorrect.");
                                 }
-                                fs.unlinkSync(diffArchiveFilePath);
+                                fs_1.default.unlinkSync(diffArchiveFilePath);
                                 done();
                             });
                         });
@@ -192,7 +228,7 @@ function packageDiffTests(StorageType) {
             .then((packageHash) => {
             info.packageHash = packageHash;
             var json = manifest.serialize();
-            return storage.addBlob(shortid.generate(), utils.makeStreamFromString(json), json.length);
+            return storage.addBlob(shortid_1.default.generate(), utils.makeStreamFromString(json), json.length);
         })
             .then((blobId) => {
             return storage.getBlobUrl(blobId);
@@ -202,7 +238,7 @@ function packageDiffTests(StorageType) {
             return utils.getStreamAndSizeForFile(filePath);
         })
             .then((props) => {
-            return storage.addBlob(shortid.generate(), props.stream, props.size);
+            return storage.addBlob(shortid_1.default.generate(), props.stream, props.size);
         })
             .then((blobId) => {
             return storage.getBlobUrl(blobId);

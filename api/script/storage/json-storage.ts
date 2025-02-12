@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as express from "express";
-import * as fs from "fs";
-import * as http from "http";
-import * as q from "q";
-import * as stream from "stream";
+import express from "express";
+import fs from "fs";
+import http from "http";
+import q from "q";
+import stream from "stream";
 
 import * as storage from "./storage";
 

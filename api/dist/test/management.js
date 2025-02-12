@@ -1,16 +1,52 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const assert = require("assert");
-const fs = require("fs");
-const path = require("path");
-const q = require("q");
-const request = require("supertest");
-const defaultServer = require("../script/default-server");
-const redis = require("../script/redis-manager");
-const storage = require("../script/storage/storage");
-const testUtils = require("./utils");
+const assert_1 = __importDefault(require("assert"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const q_1 = __importDefault(require("q"));
+const supertest_1 = __importDefault(require("supertest"));
+const defaultServer = __importStar(require("../script/default-server"));
+const redis = __importStar(require("../script/redis-manager"));
+const storage = __importStar(require("../script/storage/storage"));
+const testUtils = __importStar(require("./utils"));
 const json_storage_1 = require("../script/storage/json-storage");
 var Permissions = storage.Permissions;
 const aws_storage_1 = require("../script/storage/aws-storage");
@@ -39,7 +75,7 @@ function managementTests(useJsonStorage) {
     before(() => {
         account = testUtils.makeAccount();
         otherAccount = testUtils.makeAccount();
-        return q(null)
+        return (0, q_1.default)(null)
             .then(() => {
             if (process.env.AZURE_MANAGEMENT_URL) {
                 serverUrl = process.env.AZURE_MANAGEMENT_URL;
@@ -47,7 +83,7 @@ function managementTests(useJsonStorage) {
             }
             else {
                 // use the middleware defined in DefaultServer
-                var deferred = q.defer();
+                var deferred = q_1.default.defer();
                 defaultServer.start(function (err, app, serverStorage) {
                     if (err)
                         deferred.reject(err);
@@ -72,12 +108,12 @@ function managementTests(useJsonStorage) {
         })
             .then((accessKeyId) => {
             // delete any remaining temp files in the resources folder, which are created by some tests
-            var resourcesDirectory = path.join(__dirname, "resources");
-            var files = fs.readdirSync(resourcesDirectory);
+            var resourcesDirectory = path_1.default.join(__dirname, "resources");
+            var files = fs_1.default.readdirSync(resourcesDirectory);
             files.forEach((file) => {
                 if (file.match(/^temp_.*/)) {
                     try {
-                        fs.unlinkSync(getTestResource(file));
+                        fs_1.default.unlinkSync(getTestResource(file));
                     }
                     catch (err) { }
                 }
@@ -107,7 +143,7 @@ function managementTests(useJsonStorage) {
     describe("GET account", () => {
         it("returns existing account", (done) => {
             GET("/account", (response) => {
-                assert.equal(response.account.name, account.name);
+                assert_1.default.equal(response.account.name, account.name);
                 done();
             });
         });
@@ -118,11 +154,11 @@ function managementTests(useJsonStorage) {
     describe("GET access keys", () => {
         it("returns access keys for existing account, hides actual key strings, and sets accessKey descriptions for backwards compatibility", (done) => {
             GET("/accessKeys", (response) => {
-                assert(response.accessKeys.length > 0);
+                (0, assert_1.default)(response.accessKeys.length > 0);
                 response.accessKeys.forEach((accessKey) => {
-                    assert(accessKey.friendlyName);
-                    assert.equal(accessKey.name, ACCESS_KEY_MASKING_STRING);
-                    assert.equal(accessKey.friendlyName, accessKey.description);
+                    (0, assert_1.default)(accessKey.friendlyName);
+                    assert_1.default.equal(accessKey.name, ACCESS_KEY_MASKING_STRING);
+                    assert_1.default.equal(accessKey.friendlyName, accessKey.description);
                 });
                 done();
             });
@@ -134,11 +170,11 @@ function managementTests(useJsonStorage) {
             // Rely on the server to generate a name
             delete accessKeyRequest.name;
             POST("/accessKeys", accessKeyRequest, (location, response) => {
-                assert(!!response.accessKey.name);
-                assert.notEqual(response.accessKey.name, accessKey.name);
-                assert(response.accessKey.expires > 0);
-                assert.equal(response.accessKey.friendlyName, accessKeyRequest.friendlyName);
-                assert.equal(response.accessKey.description, accessKeyRequest.friendlyName);
+                (0, assert_1.default)(!!response.accessKey.name);
+                assert_1.default.notEqual(response.accessKey.name, accessKey.name);
+                (0, assert_1.default)(response.accessKey.expires > 0);
+                assert_1.default.equal(response.accessKey.friendlyName, accessKeyRequest.friendlyName);
+                assert_1.default.equal(response.accessKey.description, accessKeyRequest.friendlyName);
                 GET(location, () => {
                     done();
                 });
@@ -205,15 +241,15 @@ function managementTests(useJsonStorage) {
     describe("GET access key", () => {
         it("successfully gets an existing access key by name", (done) => {
             GET("/accessKeys/" + accessKey.name, (response) => {
-                assert.equal(response.accessKey.friendlyName, accessKey.friendlyName);
-                assert(response.accessKey.expires);
+                assert_1.default.equal(response.accessKey.friendlyName, accessKey.friendlyName);
+                (0, assert_1.default)(response.accessKey.expires);
                 done();
             });
         });
         it("successfully gets an existing access key by friendlyName", (done) => {
             GET("/accessKeys/" + accessKey.friendlyName, (response) => {
-                assert.equal(response.accessKey.friendlyName, accessKey.friendlyName);
-                assert(response.accessKey.expires);
+                assert_1.default.equal(response.accessKey.friendlyName, accessKey.friendlyName);
+                (0, assert_1.default)(response.accessKey.expires);
                 done();
             });
         });
@@ -239,10 +275,10 @@ function managementTests(useJsonStorage) {
             var newUrl = "/accessKeys/" + newAccessKey.friendlyName;
             PATCH(oldUrl, newAccessKey, () => {
                 GET(newUrl, (response) => {
-                    assert.equal(response.accessKey.friendlyName, newAccessKey.friendlyName);
-                    assert.equal(response.accessKey.description, newAccessKey.friendlyName);
-                    assert(response.accessKey.expires <= new Date().getTime() + newTtl + 1000 * 60); // One minute buffer to account for clocks being out of sync
-                    assert(response.accessKey.expires > new Date().getTime() + newTtl - 1000 * 60 * 60 * 1); // Should expire sometime within this time buffer of one hour
+                    assert_1.default.equal(response.accessKey.friendlyName, newAccessKey.friendlyName);
+                    assert_1.default.equal(response.accessKey.description, newAccessKey.friendlyName);
+                    (0, assert_1.default)(response.accessKey.expires <= new Date().getTime() + newTtl + 1000 * 60); // One minute buffer to account for clocks being out of sync
+                    (0, assert_1.default)(response.accessKey.expires > new Date().getTime() + newTtl - 1000 * 60 * 60 * 1); // Should expire sometime within this time buffer of one hour
                     GET(oldUrl, done, 404);
                 });
             });
@@ -273,8 +309,8 @@ function managementTests(useJsonStorage) {
             var newKeyUrl = "/accessKeys/" + newAccessKey.name;
             PATCH(oldUrl, newAccessKey, () => {
                 GET(newUrl, (response) => {
-                    assert.equal(response.accessKey.friendlyName, newAccessKey.friendlyName);
-                    assert.equal(response.accessKey.description, newAccessKey.friendlyName);
+                    assert_1.default.equal(response.accessKey.friendlyName, newAccessKey.friendlyName);
+                    assert_1.default.equal(response.accessKey.description, newAccessKey.friendlyName);
                     GET(newKeyUrl, done, 404);
                 });
             });
@@ -283,9 +319,9 @@ function managementTests(useJsonStorage) {
             var newAccessKey = {};
             PATCH("/accessKeys/" + accessKey.friendlyName, newAccessKey, () => {
                 GET("/accessKeys/" + accessKey.friendlyName, (response) => {
-                    assert.equal(response.accessKey.friendlyName, accessKey.friendlyName);
-                    assert.equal(response.accessKey.description, accessKey.description);
-                    assert.equal(response.accessKey.expires, accessKey.expires);
+                    assert_1.default.equal(response.accessKey.friendlyName, accessKey.friendlyName);
+                    assert_1.default.equal(response.accessKey.description, accessKey.description);
+                    assert_1.default.equal(response.accessKey.expires, accessKey.expires);
                     done();
                 });
             });
@@ -294,9 +330,9 @@ function managementTests(useJsonStorage) {
             var newAccessKey = { friendlyName: null };
             PATCH("/accessKeys/" + accessKey.friendlyName, newAccessKey, () => {
                 GET("/accessKeys/" + accessKey.friendlyName, (response) => {
-                    assert.equal(response.accessKey.friendlyName, accessKey.friendlyName);
-                    assert.equal(response.accessKey.description, accessKey.description);
-                    assert.equal(response.accessKey.expires, accessKey.expires);
+                    assert_1.default.equal(response.accessKey.friendlyName, accessKey.friendlyName);
+                    assert_1.default.equal(response.accessKey.description, accessKey.description);
+                    assert_1.default.equal(response.accessKey.expires, accessKey.expires);
                     done();
                 });
             });
@@ -337,7 +373,7 @@ function managementTests(useJsonStorage) {
             var accessKeyToDelete = testUtils.makeAccessKeyRequest();
             POST("/accessKeys", accessKeyToDelete, (keyLocation) => {
                 GET(keyLocation, (key) => {
-                    assert(!!key && !!key.accessKey);
+                    (0, assert_1.default)(!!key && !!key.accessKey);
                     DELETE(`/accessKeys/${accessKeyToDelete.name}`, () => {
                         GET(keyLocation, done, 404);
                     });
@@ -348,7 +384,7 @@ function managementTests(useJsonStorage) {
             var accessKeyToDelete = testUtils.makeAccessKeyRequest();
             POST("/accessKeys", accessKeyToDelete, (keyLocation) => {
                 GET(keyLocation, (key) => {
-                    assert(!!key && !!key.accessKey);
+                    (0, assert_1.default)(!!key && !!key.accessKey);
                     DELETE(`/accessKeys/${key.accessKey.friendlyName}`, () => {
                         GET(keyLocation, done, 404);
                     });
@@ -438,7 +474,7 @@ function managementTests(useJsonStorage) {
         describe("GET apps", () => {
             it("returns apps for existing account", (done) => {
                 GET("/apps", (response) => {
-                    assert(response.apps.length > 0);
+                    (0, assert_1.default)(response.apps.length > 0);
                     done();
                 });
             });
@@ -452,11 +488,11 @@ function managementTests(useJsonStorage) {
                     POST(`/apps/${duplicateApp.name}/transfer/${otherAccount.email}`, /*objToSend*/ {}, (response) => {
                         POST("/apps", duplicateApp, (response) => {
                             GET(`/apps/${duplicateApp.name}`, (response) => {
-                                assert.equal(response.app.name, duplicateApp.name);
-                                assert.equal(response.app.collaborators[account.email].permission, Permissions.Owner);
+                                assert_1.default.equal(response.app.name, duplicateApp.name);
+                                assert_1.default.equal(response.app.collaborators[account.email].permission, Permissions.Owner);
                                 GET(`/apps/${otherAccount.email}:${duplicateApp.name}`, (response) => {
-                                    assert.equal(response.app.name, `${otherAccount.email}:${duplicateApp.name}`);
-                                    assert.equal(response.app.collaborators[account.email].permission, Permissions.Collaborator);
+                                    assert_1.default.equal(response.app.name, `${otherAccount.email}:${duplicateApp.name}`);
+                                    assert_1.default.equal(response.app.collaborators[account.email].permission, Permissions.Collaborator);
                                     done();
                                 });
                             });
@@ -470,7 +506,7 @@ function managementTests(useJsonStorage) {
                 var newApp = testUtils.makeRestApp();
                 POST("/apps", newApp, (location) => {
                     GET(location, (response) => {
-                        assert.equal(response.app.name, newApp.name);
+                        assert_1.default.equal(response.app.name, newApp.name);
                         done();
                     });
                 });
@@ -479,13 +515,13 @@ function managementTests(useJsonStorage) {
                 var newApp = testUtils.makeRestApp();
                 var url = "/apps";
                 POST(url, newApp, (location, responseBody) => {
-                    assert(responseBody);
+                    (0, assert_1.default)(responseBody);
                     var app = responseBody.app;
-                    assert(app);
-                    assert.equal(app.deployments.length, 2);
+                    (0, assert_1.default)(app);
+                    assert_1.default.equal(app.deployments.length, 2);
                     for (var i = 0; i < app.deployments.length; ++i) {
                         var deploymentName = app.deployments[i];
-                        assert(deploymentName === "Production" || deploymentName === "Staging", "deploymentName = " + deploymentName);
+                        (0, assert_1.default)(deploymentName === "Production" || deploymentName === "Staging", "deploymentName = " + deploymentName);
                     }
                     done();
                 });
@@ -497,7 +533,7 @@ function managementTests(useJsonStorage) {
                 POST(url, newApp, (location) => {
                     url += "/" + newApp.name + "/deployments";
                     GET(url, (response) => {
-                        assert.equal(response.deployments.length, 0);
+                        assert_1.default.equal(response.deployments.length, 0);
                         done();
                     });
                 });
@@ -521,7 +557,7 @@ function managementTests(useJsonStorage) {
                         .then((apps) => {
                         for (var app of apps) {
                             if (app.name === newApp.name) {
-                                assert(app.createdTime);
+                                (0, assert_1.default)(app.createdTime);
                                 return;
                             }
                         }
@@ -534,7 +570,7 @@ function managementTests(useJsonStorage) {
         describe("GET app", () => {
             it("successfully gets an existing app", (done) => {
                 GET("/apps/" + app.name, (response) => {
-                    assert.equal(response.app.name, app.name);
+                    assert_1.default.equal(response.app.name, app.name);
                     done();
                 });
             });
@@ -562,7 +598,7 @@ function managementTests(useJsonStorage) {
                 var newUrl = "/apps/" + newApp.name;
                 PATCH(oldUrl, newApp, () => {
                     GET(newUrl, (response) => {
-                        assert.equal(response.app.name, newApp.name);
+                        assert_1.default.equal(response.app.name, newApp.name);
                         GET(oldUrl, done, 404);
                     });
                 });
@@ -576,7 +612,7 @@ function managementTests(useJsonStorage) {
                 var newApp = {};
                 PATCH("/apps/" + app.name, newApp, () => {
                     GET("/apps/" + app.name, (response) => {
-                        assert.equal(response.app.name, app.name);
+                        assert_1.default.equal(response.app.name, app.name);
                         done();
                     });
                 });
@@ -586,7 +622,7 @@ function managementTests(useJsonStorage) {
                 newApp.name = null;
                 PATCH("/apps/" + app.name, newApp, () => {
                     GET("/apps/" + app.name, (response) => {
-                        assert.equal(response.app.name, app.name);
+                        assert_1.default.equal(response.app.name, app.name);
                         done();
                     });
                 });
@@ -609,8 +645,8 @@ function managementTests(useJsonStorage) {
             it("returns deployments for existing app", (done) => {
                 var url = "/apps/" + app.name + "/deployments";
                 GET(url, (response) => {
-                    assert.equal(response.deployments.length, 1);
-                    assert.equal(response.deployments[0].key, deployment.key);
+                    assert_1.default.equal(response.deployments.length, 1);
+                    assert_1.default.equal(response.deployments[0].key, deployment.key);
                     done();
                 });
             });
@@ -625,7 +661,7 @@ function managementTests(useJsonStorage) {
                 var url = "/apps/" + app.name + "/deployments";
                 POST(url, newDeployment, (location) => {
                     GET(location, (response) => {
-                        assert(!!response.deployment.key);
+                        (0, assert_1.default)(!!response.deployment.key);
                         done();
                     });
                 });
@@ -636,7 +672,7 @@ function managementTests(useJsonStorage) {
                 var url = "/apps/" + app.name + "/deployments";
                 POST(url, newDeployment, (location) => {
                     GET(location, (response) => {
-                        assert.equal(response.deployment.key, newDeployment.key);
+                        assert_1.default.equal(response.deployment.key, newDeployment.key);
                         done();
                     });
                 });
@@ -666,7 +702,7 @@ function managementTests(useJsonStorage) {
                         .then((deployments) => {
                         for (var deployment of deployments) {
                             if (deployment.name === newDeployment.name) {
-                                assert(deployment.createdTime);
+                                (0, assert_1.default)(deployment.createdTime);
                                 return;
                             }
                         }
@@ -679,8 +715,8 @@ function managementTests(useJsonStorage) {
         describe("GET deployment", () => {
             it("successfully gets a deployment for an existing app", (done) => {
                 GET("/apps/" + app.name + "/deployments/" + deployment.name, (response) => {
-                    assert.equal(response.deployment.name, deployment.name);
-                    assert.equal(response.deployment.key, deployment.key);
+                    assert_1.default.equal(response.deployment.name, deployment.name);
+                    assert_1.default.equal(response.deployment.key, deployment.key);
                     done();
                 });
             });
@@ -708,8 +744,8 @@ function managementTests(useJsonStorage) {
                 var updatedUrl = "/apps/" + app.name + "/deployments/" + updatedDeployment.name;
                 PATCH(oldUrl, updatedDeployment, () => {
                     GET(updatedUrl, (response) => {
-                        assert.equal(response.deployment.name, updatedDeployment.name);
-                        assert.equal(response.deployment.key, deployment.key);
+                        assert_1.default.equal(response.deployment.name, updatedDeployment.name);
+                        assert_1.default.equal(response.deployment.key, deployment.key);
                         done();
                     });
                 });
@@ -726,7 +762,7 @@ function managementTests(useJsonStorage) {
                 POST(url, newDeployment, (location) => {
                     GET(location, (response) => {
                         response.deployment.name = deployment.name;
-                        assert.notEqual(response.deployment.key, deployment.key);
+                        assert_1.default.notEqual(response.deployment.key, deployment.key);
                         PATCH(location, response.deployment, done, 409);
                     });
                 });
@@ -736,9 +772,9 @@ function managementTests(useJsonStorage) {
             it("gets info for a deployment", (done) => {
                 var url = "/apps/" + app.name + "/deployments/" + deployment.name;
                 GET(url, (response) => {
-                    assert.equal(response.deployment.package.description, packageDescription);
-                    assert.equal(response.deployment.package.packageHash, packageHash);
-                    assert.equal(response.deployment.package.label, "v1");
+                    assert_1.default.equal(response.deployment.package.description, packageDescription);
+                    assert_1.default.equal(response.deployment.package.packageHash, packageHash);
+                    assert_1.default.equal(response.deployment.package.label, "v1");
                     done();
                 });
             });
@@ -747,7 +783,7 @@ function managementTests(useJsonStorage) {
                 storage.addDeployment(account.id, app.id, deployment).then((deploymentId) => {
                     var url = "/apps/" + app.name + "/deployments/" + deployment.name + "/history";
                     GET(url, (response) => {
-                        assert.equal(response.history.length, 0);
+                        assert_1.default.equal(response.history.length, 0);
                         done();
                     });
                 });
@@ -755,8 +791,8 @@ function managementTests(useJsonStorage) {
             it("gets package history for deployment with history", (done) => {
                 var url = "/apps/" + app.name + "/deployments/" + deployment.name + "/history";
                 GET(url, (response) => {
-                    assert.equal(response.history.length, 1);
-                    assert.equal(response.history[0].description, packageDescription);
+                    assert_1.default.equal(response.history.length, 1);
+                    assert_1.default.equal(response.history[0].description, packageDescription);
                     done();
                 });
             });
@@ -764,7 +800,7 @@ function managementTests(useJsonStorage) {
                 it("gets metrics for deployment", (done) => {
                     var url = "/apps/" + app.name + "/deployments/" + deployment.name + "/metrics";
                     GET(url, (response) => {
-                        assert.equal(response.metrics.v1.installed, 1);
+                        assert_1.default.equal(response.metrics.v1.installed, 1);
                         done();
                     });
                 });
@@ -802,12 +838,12 @@ function managementTests(useJsonStorage) {
                 var url = `/apps/${app.name}/deployments/${deployment.name}/history`;
                 DELETE(url, () => {
                     GET(url, (response) => {
-                        assert.equal(response.history.length, 0);
+                        assert_1.default.equal(response.history.length, 0);
                         // Test that metrics has been cleared too.
                         if (isTestingMetrics) {
                             var url = `/apps/${app.name}/deployments/${deployment.name}/metrics`;
                             GET(url, (response) => {
-                                assert.equal(JSON.stringify(response.metrics), "{}");
+                                assert_1.default.equal(JSON.stringify(response.metrics), "{}");
                                 done();
                             });
                         }
@@ -973,7 +1009,7 @@ function managementTests(useJsonStorage) {
                         storage
                             .getPackageHistory(account.id, app.id, deployment.id)
                             .then((packageHistory) => {
-                            assert.strictEqual(packageHistory[1].rollout, null);
+                            assert_1.default.strictEqual(packageHistory[1].rollout, null);
                         })
                             .done(done, done);
                     }, differentPackage);
@@ -990,8 +1026,8 @@ function managementTests(useJsonStorage) {
                     storage
                         .getPackageHistory(account.id, app.id, deployment.id)
                         .then((packageHistory) => {
-                        assert.equal(packageHistory.length, 2);
-                        assert.equal(packageHistory[1].isDisabled, true);
+                        assert_1.default.equal(packageHistory.length, 2);
+                        assert_1.default.equal(packageHistory[1].isDisabled, true);
                     })
                         .done(done, done);
                 }, differentPackage);
@@ -1126,9 +1162,9 @@ function managementTests(useJsonStorage) {
                         storage
                             .getDeployment(account.id, app.id, otherDeployment.id)
                             .then((deployment) => {
-                            assert.equal(deployment.package.packageHash, result.package.packageHash);
-                            assert.equal(deployment.package.description, newDescription);
-                            assert.equal(deployment.package.isMandatory, newIsMandatory);
+                            assert_1.default.equal(deployment.package.packageHash, result.package.packageHash);
+                            assert_1.default.equal(deployment.package.description, newDescription);
+                            assert_1.default.equal(deployment.package.isMandatory, newIsMandatory);
                         })
                             .done(done, done);
                     });
@@ -1158,10 +1194,10 @@ function managementTests(useJsonStorage) {
                                 .then((newPackageHistory) => {
                                 var disabledPackage = newPackageHistory[newPackageHistory.length - 2];
                                 var promotedPackage = newPackageHistory[newPackageHistory.length - 1];
-                                assert.strictEqual(disabledPackage.rollout, null);
-                                assert.equal(promotedPackage.description, otherPackage.description);
-                                assert.strictEqual(promotedPackage.rollout, null);
-                                assert.equal(promotedPackage.packageHash, result.package.packageHash);
+                                assert_1.default.strictEqual(disabledPackage.rollout, null);
+                                assert_1.default.equal(promotedPackage.description, otherPackage.description);
+                                assert_1.default.strictEqual(promotedPackage.rollout, null);
+                                assert_1.default.equal(promotedPackage.packageHash, result.package.packageHash);
                             })
                                 .done(done, done);
                         });
@@ -1180,7 +1216,7 @@ function managementTests(useJsonStorage) {
                     storage.addDeployment(account.id, app.id, targetDeployment).then((targetDeploymentId) => {
                         var url = `/apps/${app.name}/deployments/${deployment.name}/promote/${targetDeployment.name}`;
                         POST(url, {}, (location, promotedBody) => {
-                            assert.equal(promotedBody.package.packageHash, resultBody.package.packageHash);
+                            assert_1.default.equal(promotedBody.package.packageHash, resultBody.package.packageHash);
                             done();
                         });
                     });
@@ -1198,7 +1234,7 @@ function managementTests(useJsonStorage) {
                     storage.addDeployment(account.id, app.id, targetDeployment).then((targetDeploymentId) => {
                         var url = `/apps/${app.name}/deployments/${deployment.name}/promote/${targetDeployment.name}`;
                         POST(url, {}, (location, promotedBody) => {
-                            assert.equal(promotedBody.package.packageHash, resultBody.package.packageHash);
+                            assert_1.default.equal(promotedBody.package.packageHash, resultBody.package.packageHash);
                             done();
                         });
                     });
@@ -1216,8 +1252,8 @@ function managementTests(useJsonStorage) {
                     storage.addDeployment(account.id, app.id, targetDeployment).then((targetDeploymentId) => {
                         var url = `/apps/${app.name}/deployments/${deployment.name}/promote/${targetDeployment.name}`;
                         POST(url, { packageInfo: { appVersion: "1.0.1" } }, (location, promotedBody) => {
-                            assert.equal(promotedBody.package.packageHash, resultBody.package.packageHash);
-                            assert.equal(promotedBody.package.appVersion, "1.0.1");
+                            assert_1.default.equal(promotedBody.package.packageHash, resultBody.package.packageHash);
+                            assert_1.default.equal(promotedBody.package.appVersion, "1.0.1");
                             done();
                         });
                     });
@@ -1331,13 +1367,13 @@ function managementTests(useJsonStorage) {
                         var historyUrl = "/apps/" + otherApp.name + "/deployments/" + otherDeployment.name + "/history";
                         GET(historyUrl, (response) => {
                             var history = response.history;
-                            assert.notEqual(history.length, 0);
+                            assert_1.default.notEqual(history.length, 0);
                             var latest = history[history.length - 1];
-                            assert.equal(latest.rollout, toPatch.rollout);
-                            assert.equal(latest.description, toPatch.description);
-                            assert.equal(latest.isDisabled, toPatch.isDisabled);
-                            assert.equal(latest.isMandatory, toPatch.isMandatory);
-                            assert.equal(latest.appVersion, toPatch.appVersion);
+                            assert_1.default.equal(latest.rollout, toPatch.rollout);
+                            assert_1.default.equal(latest.description, toPatch.description);
+                            assert_1.default.equal(latest.isDisabled, toPatch.isDisabled);
+                            assert_1.default.equal(latest.isMandatory, toPatch.isMandatory);
+                            assert_1.default.equal(latest.appVersion, toPatch.appVersion);
                             done();
                         });
                     });
@@ -1354,9 +1390,9 @@ function managementTests(useJsonStorage) {
                             var historyUrl = "/apps/" + otherApp.name + "/deployments/" + otherDeployment.name + "/history";
                             GET(historyUrl, (response) => {
                                 var history = response.history;
-                                assert.notEqual(history.length, 0);
+                                assert_1.default.notEqual(history.length, 0);
                                 var latest = history[history.length - 1];
-                                assert.equal(latest.isDisabled, toPatch.isDisabled);
+                                assert_1.default.equal(latest.isDisabled, toPatch.isDisabled);
                                 done();
                             });
                         });
@@ -1371,9 +1407,9 @@ function managementTests(useJsonStorage) {
                         var historyUrl = "/apps/" + otherApp.name + "/deployments/" + otherDeployment.name + "/history";
                         GET(historyUrl, (response) => {
                             var history = response.history;
-                            assert.notEqual(history.length, 0);
+                            assert_1.default.notEqual(history.length, 0);
                             var latest = history[history.length - 1];
-                            assert.equal(latest.rollout, null);
+                            assert_1.default.equal(latest.rollout, null);
                             done();
                         });
                     });
@@ -1392,9 +1428,9 @@ function managementTests(useJsonStorage) {
                         var historyUrl = "/apps/" + otherApp.name + "/deployments/" + otherDeployment.name + "/history";
                         GET(historyUrl, (response) => {
                             var history = response.history;
-                            assert.notEqual(history.length, 0);
+                            assert_1.default.notEqual(history.length, 0);
                             var latest = history[history.length - 1];
-                            assert.equal(latest.appVersion, toPatch.appVersion);
+                            assert_1.default.equal(latest.appVersion, toPatch.appVersion);
                             done();
                         });
                     });
@@ -1477,9 +1513,9 @@ function managementTests(useJsonStorage) {
                     POST(url, /*body=*/ {}, (response) => {
                         GET("/apps/" + app.name + "/deployments/" + deployment.name, (response) => {
                             var restPackage = response.deployment.package;
-                            assert.equal(restPackage.description, packageDescription);
-                            assert.equal(restPackage.releaseMethod, "Rollback");
-                            assert.equal(restPackage.originalLabel, "v1");
+                            assert_1.default.equal(restPackage.description, packageDescription);
+                            assert_1.default.equal(restPackage.releaseMethod, "Rollback");
+                            assert_1.default.equal(restPackage.originalLabel, "v1");
                             done();
                         });
                     });
@@ -1505,9 +1541,9 @@ function managementTests(useJsonStorage) {
                     POST(url, /*body=*/ {}, (response) => {
                         GET("/apps/" + app.name + "/deployments/" + deployment.name, (response) => {
                             var restPackage = response.deployment.package;
-                            assert.equal(restPackage.description, packageDescription);
-                            assert.equal(restPackage.releaseMethod, "Rollback");
-                            assert.equal(restPackage.originalLabel, "v1");
+                            assert_1.default.equal(restPackage.description, packageDescription);
+                            assert_1.default.equal(restPackage.releaseMethod, "Rollback");
+                            assert_1.default.equal(restPackage.originalLabel, "v1");
                             done();
                         });
                     });
@@ -1533,10 +1569,10 @@ function managementTests(useJsonStorage) {
                     POST(url, /*body=*/ {}, (response) => {
                         GET("/apps/" + app.name + "/deployments/" + deployment.name, (response) => {
                             var restPackage = response.deployment.package;
-                            assert.equal(restPackage.description, secondPackage.description);
-                            assert.equal(restPackage.releaseMethod, "Rollback");
-                            assert.equal(restPackage.isDisabled, true);
-                            assert.equal(restPackage.originalLabel, "v2");
+                            assert_1.default.equal(restPackage.description, secondPackage.description);
+                            assert_1.default.equal(restPackage.releaseMethod, "Rollback");
+                            assert_1.default.equal(restPackage.isDisabled, true);
+                            assert_1.default.equal(restPackage.originalLabel, "v2");
                             done();
                         });
                     });
@@ -1573,10 +1609,10 @@ function managementTests(useJsonStorage) {
                     POST(url, /*objToSend*/ {}, (response) => {
                         GET("/apps/" + app.name + "/deployments/" + deployment.name, (response) => {
                             var restPackage = response.deployment.package;
-                            assert.equal(restPackage.description, packageDescription);
-                            assert.equal(restPackage.releaseMethod, "Rollback");
-                            assert.equal(restPackage.originalLabel, "v2");
-                            assert.deepEqual(restPackage.diffPackageMap, secondPackage.diffPackageMap);
+                            assert_1.default.equal(restPackage.description, packageDescription);
+                            assert_1.default.equal(restPackage.releaseMethod, "Rollback");
+                            assert_1.default.equal(restPackage.originalLabel, "v2");
+                            assert_1.default.deepEqual(restPackage.diffPackageMap, secondPackage.diffPackageMap);
                             done();
                         });
                     });
@@ -1604,7 +1640,7 @@ function managementTests(useJsonStorage) {
                         GET("/apps/" + app.name + "/deployments/" + deployment.name + "/history", (response) => {
                             var packageHistory = response.history;
                             packageHistory.forEach((appPackage) => {
-                                assert.equal(appPackage.rollout, null);
+                                assert_1.default.equal(appPackage.rollout, null);
                             });
                             done();
                         });
@@ -1623,11 +1659,11 @@ function managementTests(useJsonStorage) {
             it("succeeds as owner", (done) => {
                 GET("/apps/" + app.name + "/collaborators", (response) => {
                     var collaboratorMap = response.collaborators;
-                    assert(collaboratorMap);
-                    assert(collaboratorMap[account.email]);
-                    assert(collaboratorMap[account.email].permission === "Owner");
-                    assert(collaboratorMap[otherAccount.email]);
-                    assert(collaboratorMap[otherAccount.email].permission === "Collaborator");
+                    (0, assert_1.default)(collaboratorMap);
+                    (0, assert_1.default)(collaboratorMap[account.email]);
+                    (0, assert_1.default)(collaboratorMap[account.email].permission === "Owner");
+                    (0, assert_1.default)(collaboratorMap[otherAccount.email]);
+                    (0, assert_1.default)(collaboratorMap[otherAccount.email].permission === "Collaborator");
                     done();
                 });
             });
@@ -1642,11 +1678,11 @@ function managementTests(useJsonStorage) {
                     .then(() => {
                     GET("/apps/" + otherApp.name + "/collaborators", (response) => {
                         var collaboratorMap = response.collaborators;
-                        assert(collaboratorMap);
-                        assert(collaboratorMap[account.email]);
-                        assert(collaboratorMap[account.email].permission === "Collaborator");
-                        assert(collaboratorMap[otherAccount.email]);
-                        assert(collaboratorMap[otherAccount.email].permission === "Owner");
+                        (0, assert_1.default)(collaboratorMap);
+                        (0, assert_1.default)(collaboratorMap[account.email]);
+                        (0, assert_1.default)(collaboratorMap[account.email].permission === "Collaborator");
+                        (0, assert_1.default)(collaboratorMap[otherAccount.email]);
+                        (0, assert_1.default)(collaboratorMap[otherAccount.email].permission === "Owner");
                         done();
                     });
                 });
@@ -1657,9 +1693,9 @@ function managementTests(useJsonStorage) {
                 POST("/apps/" + app.name + "/collaborators/" + otherAccount.email, {}, () => {
                     GET("/apps/" + app.name + "/collaborators", (response) => {
                         var collaboratorMap = response.collaborators;
-                        assert(collaboratorMap);
-                        assert(collaboratorMap[otherAccount.email]);
-                        assert(collaboratorMap[otherAccount.email].permission === "Collaborator");
+                        (0, assert_1.default)(collaboratorMap);
+                        (0, assert_1.default)(collaboratorMap[otherAccount.email]);
+                        (0, assert_1.default)(collaboratorMap[otherAccount.email].permission === "Collaborator");
                         done();
                     });
                 });
@@ -1767,7 +1803,7 @@ function managementTests(useJsonStorage) {
     });
     // This function wraps the Supertest scaffolding for a simple, non-customizable Get
     function GET(url, callback, expect = 200 /*OK*/, accessKeyOverride) {
-        request(server || serverUrl)
+        (0, supertest_1.default)(server || serverUrl)
             .get(url)
             .expect(expect)
             .set("Authorization", `Bearer ${accessKeyOverride || accessKey.name}`)
@@ -1784,14 +1820,14 @@ function managementTests(useJsonStorage) {
         });
     }
     function POST(url, objToSend, callback, fileToUpload, statusCode = 201 /* Created */) {
-        var newRequest = request(server || serverUrl)
+        var newRequest = (0, supertest_1.default)(server || serverUrl)
             .post(url)
             .set("Content-Type", "application/json")
             .set("Authorization", `Bearer ${accessKey.name}`)
             .expect(statusCode);
         if (fileToUpload) {
             Object.keys(objToSend).forEach((key) => (newRequest = newRequest.field(key, JSON.stringify(objToSend[key]))));
-            newRequest.attach("package", fs.createReadStream(fileToUpload));
+            newRequest.attach("package", fs_1.default.createReadStream(fileToUpload));
         }
         else {
             newRequest.send(JSON.stringify(objToSend));
@@ -1804,7 +1840,7 @@ function managementTests(useJsonStorage) {
     }
     // This function wraps the Supertest setup for a simple PATCH to update an item
     function PATCH(url, objToSend, callback, statusCode = 200 /* OK */) {
-        request(server || serverUrl)
+        (0, supertest_1.default)(server || serverUrl)
             .patch(url)
             .set("Content-Type", "application/json")
             .send(JSON.stringify(objToSend))
@@ -1817,7 +1853,7 @@ function managementTests(useJsonStorage) {
         });
     }
     function DELETE(url, callback, statusCode = 204 /* No Content */) {
-        request(server || serverUrl)
+        (0, supertest_1.default)(server || serverUrl)
             .delete(url)
             .expect(statusCode)
             .set("Authorization", `Bearer ${accessKey.name}`)
@@ -1828,7 +1864,7 @@ function managementTests(useJsonStorage) {
         });
     }
     function getTestResource(resourceName) {
-        return path.join(__dirname, "resources", resourceName);
+        return path_1.default.join(__dirname, "resources", resourceName);
     }
 }
 //# sourceMappingURL=management.js.map

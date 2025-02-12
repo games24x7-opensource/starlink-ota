@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as express from "express";
+import express from "express";
 
 const REQUEST_TIMEOUT_IN_MILLISECONDS: number = parseInt(process.env.REQUEST_TIMEOUT_IN_MILLISECONDS) || 120000;
 

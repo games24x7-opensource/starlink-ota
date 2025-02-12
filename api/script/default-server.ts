@@ -1,20 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import bodyParser from "body-parser";
+const domain = require("express-domain-middleware");
+import express, { Response } from "express";
+import q from "q";
+import promClient from "prom-client";
+
 import * as api from "./api";
 import { AwsStorage } from "./storage/aws-storage";
 import { fileUploadMiddleware } from "./file-upload-manager";
 import { JsonStorage } from "./storage/json-storage";
 import { RedisManager } from "./redis-manager";
 import { Storage } from "./storage/storage";
-import { Response } from "express";
-import * as promClient from "prom-client";
-
-import * as bodyParser from "body-parser";
-const domain = require("express-domain-middleware");
-import * as express from "express";
-import * as q from "q";
-
 import { awsErrorMiddleware } from "./utils/awsErrorHandler";
 
 interface Secret {
@@ -142,7 +140,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
       app.set("views", __dirname + "/views");
       app.set("view engine", "ejs");
       app.use("/auth/images/", express.static(__dirname + "/views/images"));
-      app.use(api.headers({ origin: process.env.CORS_ORIGIN}));
+      app.use(api.headers({ origin: process.env.CORS_ORIGIN }));
 
       /**
        * TODO: This will actually check S3 object/ dynamo table read etc..
@@ -150,11 +148,10 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
        */
       // app.use(api.health({ storage: storage, redisManager: redisManager }));
 
-
       /**
        * If acquisition is enabled we make sure management routes are disabled
-       * Management routes are disabled by default and enabled only when acquisition routes are off and management is enabled 
-      */
+       * Management routes are disabled by default and enabled only when acquisition routes are off and management is enabled
+       */
       if (process.env.DISABLE_ACQUISITION !== "true") {
         console.log("Acquisition routes are enabled ✅");
         app.use(api.acquisition({ storage: storage, redisManager: redisManager }));

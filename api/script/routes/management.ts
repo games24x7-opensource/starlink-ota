@@ -1,33 +1,36 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { Request, Response, Router } from "express";
+import fs from "fs";
+import q from "q";
+import semver from "semver";
+import stream from "stream";
+import streamifier from "streamifier";
+import tryJSON = require("try-json");
+import rateLimit from "express-rate-limit";
+
 import { createTempFileFromBuffer, getFileWithField } from "../file-upload-manager";
 import { getIpAddress } from "../utils/rest-headers";
 import { isUnfinishedRollout } from "../utils/rollout-selector";
+import * as hashUtils from "../utils/hash-utils";
+import * as redis from "../redis-manager";
+import * as restTypes from "../types/rest-definitions";
+import * as security from "../utils/security";
+import * as storageTypes from "../storage/storage";
+import * as validationUtils from "../utils/validation";
 import * as packageDiffing from "../utils/package-diffing";
 import * as converterUtils from "../utils/converter";
 import * as diffErrorUtils from "../utils/diff-error-handling";
 import * as error from "../error";
 import * as errorUtils from "../utils/rest-error-handling";
-import { Request, Response, Router } from "express";
-import * as fs from "fs";
-import * as hashUtils from "../utils/hash-utils";
-import * as q from "q";
-import * as redis from "../redis-manager";
-import * as restTypes from "../types/rest-definitions";
-import * as security from "../utils/security";
-import * as semver from "semver";
-import * as stream from "stream";
-import * as streamifier from "streamifier";
-import * as storageTypes from "../storage/storage";
-import * as validationUtils from "../utils/validation";
+import { isPrototypePollutionKey } from "../storage/storage";
+const Logger = require("../logger");
+
 import PackageDiffer = packageDiffing.PackageDiffer;
 import NameResolver = storageTypes.NameResolver;
 import PackageManifest = hashUtils.PackageManifest;
 import Promise = q.Promise;
-import tryJSON = require("try-json");
-import rateLimit from "express-rate-limit";
-import { isPrototypePollutionKey } from "../storage/storage";
 
 const DEFAULT_ACCESS_KEY_EXPIRY = 1000 * 60 * 60 * 24 * 60; // 60 days
 const ACCESS_KEY_MASKING_STRING = "(hidden)";
@@ -56,7 +59,6 @@ export function getManagementRouter(config: ManagementConfig): Router {
   const packageDiffing = new PackageDiffer(storage, parseInt(process.env.DIFF_PACKAGE_COUNT) || 5);
   const router: Router = Router();
   const nameResolver: NameResolver = new NameResolver(config.storage);
-
 
   router.get("/account", (req: Request, res: Response, next: (err?: any) => void): any => {
     const accountId: string = req.user.id;
@@ -278,6 +280,7 @@ export function getManagementRouter(config: ManagementConfig): Router {
         return q.all(restAppPromises);
       })
       .then((restApps: restTypes.App[]) => {
+        Logger.instance("[Starlink::Admin::").setExpressReq(req).setUpstreamResponse({ body: restApps }).log();
         res.send({ apps: converterUtils.sortAndUpdateDisplayNameOfRestAppsList(restApps) });
       })
       .catch((error: error.CodePushError) => errorUtils.restErrorHandler(res, error, next))
@@ -325,10 +328,20 @@ export function getManagementRouter(config: ManagementConfig): Router {
             })
             .then((deploymentNames: string[]): void => {
               res.setHeader("Location", urlEncode([`/apps/${storageApp.name}`]));
-              res.status(201).send({ app: converterUtils.toRestApp(storageApp, /*displayName=*/ storageApp.name, deploymentNames) });
+              let respData = converterUtils.toRestApp(storageApp, /*displayName=*/ storageApp.name, deploymentNames);
+
+              Logger.instance("[Starlink::Admin::")
+                .setExpressReq(req)
+                .setUpstreamRequestParams(appRequest)
+                .setUpstreamResponse({ body: respData })
+                .log();
+              res.status(201).send({ app: respData });
             });
         })
-        .catch((error: error.CodePushError) => errorUtils.restErrorHandler(res, error, next))
+        .catch((error: error.CodePushError) => {
+          Logger.instance("[Starlink::Admin::").setExpressReq(req).setError(error).log();
+          errorUtils.restErrorHandler(res, error, next);
+        })
         .done();
     }
   });
@@ -347,7 +360,10 @@ export function getManagementRouter(config: ManagementConfig): Router {
         const deploymentNames: string[] = deployments.map((deployment) => deployment.name);
         res.send({ app: converterUtils.toRestApp(storageApp, /*displayName=*/ appName, deploymentNames) });
       })
-      .catch((error: error.CodePushError) => errorUtils.restErrorHandler(res, error, next))
+      .catch((error: error.CodePushError) => {
+        Logger.instance("[Starlink::Admin::").setExpressReq(req).setError(error).log();
+        errorUtils.restErrorHandler(res, error, next);
+      })
       .done();
   });
 
@@ -380,7 +396,10 @@ export function getManagementRouter(config: ManagementConfig): Router {
         res.sendStatus(204);
         if (invalidationError) throw invalidationError;
       })
-      .catch((error: error.CodePushError) => errorUtils.restErrorHandler(res, error, next))
+      .catch((error: error.CodePushError) => {
+        Logger.instance("[Starlink::Admin::").setExpressReq(req).setError(error).log();
+        errorUtils.restErrorHandler(res, error, next);
+      })
       .done();
   });
 
@@ -761,10 +780,19 @@ export function getManagementRouter(config: ManagementConfig): Router {
 
         if (updateRelease) {
           return storage.updatePackageHistory(accountId, appId, storageDeployment.id, packageHistory).then(() => {
+            Logger.instance("[Starlink::Admin::UpdateRelease::success")
+              .setExpressReq(req)
+              .setUpstreamRequestParams({ appName, deploymentName, accountId, info })
+              .setUpstreamResponse({ body: converterUtils.toRestPackage(packageToUpdate) })
+              .log();
             res.send({ package: converterUtils.toRestPackage(packageToUpdate) });
             return invalidateCachedPackage(storageDeployment.key);
           });
         } else {
+          Logger.instance("[Starlink::Admin::UpdateRelease::no-update")
+            .setExpressReq(req)
+            .setUpstreamRequestParams({ appName, deploymentName, accountId, info })
+            .log();
           res.sendStatus(204);
         }
       })
@@ -970,6 +998,12 @@ export function getManagementRouter(config: ManagementConfig): Router {
         return storage.getPackageHistory(accountId, appId, deployment.id);
       })
       .then((packageHistory: storageTypes.Package[]) => {
+        Logger.instance("[Starlink::Admin::GetPackageHistory")
+          .setExpressReq(req)
+          .setUpstreamRequestParams({ appName, deploymentName, accountId })
+          .setUpstreamResponse({ body: packageHistory })
+          .log();
+
         res.send({ history: packageHistory });
       })
       .catch((error: error.CodePushError) => errorUtils.restErrorHandler(res, error, next))
@@ -1000,6 +1034,12 @@ export function getManagementRouter(config: ManagementConfig): Router {
         })
         .then((metrics: redis.DeploymentMetrics) => {
           const deploymentMetrics: restTypes.DeploymentMetrics = converterUtils.toRestDeploymentMetrics(metrics);
+
+          Logger.instance("[Starlink::Admin::GetDeploymentMetrics")
+            .setExpressReq(req)
+            .setUpstreamRequestParams({ appName, deploymentName, accountId })
+            .setUpstreamResponse({ body: deploymentMetrics })
+            .log();
           res.send({ metrics: deploymentMetrics });
         })
         .catch((error: error.CodePushError) => errorUtils.restErrorHandler(res, error, next))

@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as express from "express";
-import * as semver from "semver";
+import express from "express";
+import semver from "semver";
+import q from "q";
+import queryString from "querystring";
+import URL from "url";
 
 import * as utils from "../utils/common";
 import * as acquisitionUtils from "../utils/acquisition";
@@ -12,13 +15,11 @@ import * as restHeaders from "../utils/rest-headers";
 import * as rolloutSelector from "../utils/rollout-selector";
 import * as storageTypes from "../storage/storage";
 import { UpdateCheckCacheResponse, UpdateCheckRequest, UpdateCheckResponse } from "../types/rest-definitions";
-import * as validationUtils from "../utils/validation";
+import validationUtils from "../utils/validation";
 
-import * as q from "q";
-import * as queryString from "querystring";
-import * as URL from "url";
+const Logger = require("../logger");
+
 import Promise = q.Promise;
-
 const METRICS_BREAKING_VERSION = "1.5.2-beta";
 
 export interface AcquisitionConfig {
@@ -182,8 +183,22 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
 
           // Change in new API
           updateCheckBody.updateInfo.target_binary_range = updateCheckBody.updateInfo.appVersion;
-
           res.locals.fromCache = fromCache;
+
+          Logger.instance("[Starlink::OTA::updateCheck")
+            .setExpressReq(req)
+            .setUpstreamRequestParams({
+              deploymentKey,
+              clientUniqueId,
+              url,
+              appVersion: req.query.appVersion || req.query.app_version,
+              packageHash: req.query.packageHash || req.query.package_hash,
+              isCompanion: req.query.isCompanion || req.query.is_companion,
+              label: req.query.label,
+            })
+            .setUpstreamResponse(updateCheckBody)
+            .log();
+
           res.status(response.statusCode).send(newApi ? utils.convertObjectToSnakeCase(updateCheckBody) : updateCheckBody);
 
           // Update REDIS cache after sending the response so that we don't block the request.
@@ -193,10 +208,14 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
         })
         .then(() => {
           if (redisError) {
+            Logger.instance("[Starlink::OTA::updateCheck::redisError").setExpressReq(req).setError(redisError).log();
             throw redisError;
           }
         })
-        .catch((error: storageTypes.StorageError) => errorUtils.restErrorHandler(res, error, next));
+        .catch((error: storageTypes.StorageError) => {
+          Logger.instance("[Starlink::OTA::updateCheck::StorageError").setExpressReq(req).setError(error).log();
+          return errorUtils.restErrorHandler(res, error, next);
+        });
     };
   };
 
@@ -236,12 +255,27 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
 
       redisUpdatePromise
         .then(() => {
+          Logger.instance("[Starlink::OTA::reportStatusDeploy::success")
+            .setExpressReq(req)
+            .setUpstreamRequestParams({
+              deploymentKey,
+              clientUniqueId,
+              appVersion,
+              previousDeploymentKey,
+              previousLabelOrAppVersion,
+              status: req.body.status,
+            })
+            .log();
+
           res.sendStatus(200);
           if (clientUniqueId) {
             redisManager.removeDeploymentKeyClientActiveLabel(previousDeploymentKey, clientUniqueId);
           }
         })
-        .catch((error: any) => errorUtils.sendUnknownError(res, error, next))
+        .catch((error: any) => {
+          Logger.instance("[Starlink::OTA::reportStatusDeploy::error").setExpressReq(req).setError(error).log();
+          errorUtils.sendUnknownError(res, error, next);
+        })
         .done();
     } else {
       if (!clientUniqueId) {
@@ -265,9 +299,23 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
           }
         })
         .then(() => {
+          Logger.instance("[Starlink::OTA::reportStatusDeploy::success")
+            .setExpressReq(req)
+            .setUpstreamRequestParams({
+              deploymentKey,
+              clientUniqueId,
+              appVersion,
+              previousDeploymentKey,
+              previousLabelOrAppVersion,
+              status: req.body.status,
+            })
+            .log();
           res.sendStatus(200);
         })
-        .catch((error: any) => errorUtils.sendUnknownError(res, error, next))
+        .catch((error: any) => {
+          Logger.instance("[Starlink::OTA::reportStatusDeploy::error").setExpressReq(req).setError(error).log();
+          errorUtils.sendUnknownError(res, error, next);
+        })
         .done();
     }
   };
@@ -283,9 +331,19 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
     return redisManager
       .incrementLabelStatusCount(deploymentKey, req.body.label, redis.DOWNLOADED)
       .then(() => {
+        Logger.instance("[Starlink::OTA::reportStatusDownload::success")
+          .setExpressReq(req)
+          .setUpstreamRequestParams({
+            deploymentKey,
+            label: req.body.label,
+          })
+          .log();
         res.sendStatus(200);
       })
-      .catch((error: any) => errorUtils.sendUnknownError(res, error, next))
+      .catch((error: any) => {
+        Logger.instance("[Starlink::OTA::reportStatusDownload::error").setExpressReq(req).setError(error).log();
+        errorUtils.sendUnknownError(res, error, next);
+      })
       .done();
   };
 

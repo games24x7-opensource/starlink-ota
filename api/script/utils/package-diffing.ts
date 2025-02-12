@@ -1,23 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import fs from "fs";
+import path from "path";
+import q from "q";
+import semver from "semver";
+import stream from "stream";
+import request = require("superagent");
+import streamifier from "streamifier";
+import superagent from "superagent";
+import yazl from "yazl";
+import yauzl from "yauzl";
+
 import * as diffErrorUtils from "./diff-error-handling";
 import * as env from "../environment";
-import * as fs from "fs";
 import * as hashUtils from "../utils/hash-utils";
-import * as path from "path";
-import * as q from "q";
 import * as security from "../utils/security";
-import * as semver from "semver";
 import * as storageTypes from "../storage/storage";
-import * as stream from "stream";
-import * as streamifier from "streamifier";
-import * as superagent from "superagent";
-import * as yazl from "yazl";
-import * as yauzl from "yauzl";
+
 import PackageManifest = hashUtils.PackageManifest;
 import Promise = q.Promise;
-import request = require("superagent");
 
 interface IArchiveDiff {
   deletedFiles: string[];

@@ -1,22 +1,22 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const assert = require("assert");
-const q = require("q");
-const shortid = require("shortid");
+const assert_1 = __importDefault(require("assert"));
+const q_1 = __importDefault(require("q"));
+const shortid_1 = __importDefault(require("shortid"));
 const redis_manager_1 = require("../script/redis-manager");
 class DummyExpressResponse {
-    statusCode;
-    body;
-    locals;
     status(statusCode) {
-        assert(!this.statusCode);
+        (0, assert_1.default)(!this.statusCode);
         this.statusCode = statusCode;
         return this;
     }
     send(body) {
-        assert(!this.body);
+        (0, assert_1.default)(!this.body);
         this.body = body;
         return this;
     }
@@ -40,7 +40,7 @@ function redisTests() {
         body: "",
     };
     var responseGenerator = () => {
-        return q(expectedResponse);
+        return (0, q_1.default)(expectedResponse);
     };
     after(() => {
         return redisManager.close();
@@ -49,58 +49,58 @@ function redisTests() {
         return redisManager.checkHealth();
     });
     it("first cache request should return null", () => {
-        var expiryKey = "test:" + shortid.generate();
-        var url = shortid.generate();
+        var expiryKey = "test:" + shortid_1.default.generate();
+        var url = shortid_1.default.generate();
         return redisManager.getCachedResponse(expiryKey, url).then((cacheResponse) => {
-            assert.strictEqual(cacheResponse, null);
+            assert_1.default.strictEqual(cacheResponse, null);
         });
     });
     it("Should get cache request after setting it once", () => {
-        var expiryKey = "test:" + shortid.generate();
-        var url = shortid.generate();
+        var expiryKey = "test:" + shortid_1.default.generate();
+        var url = shortid_1.default.generate();
         expectedResponse.statusCode = 200;
         expectedResponse.body = "I am cached";
         return redisManager
             .getCachedResponse(expiryKey, url)
             .then((cacheResponse) => {
-            assert.strictEqual(cacheResponse, null);
+            assert_1.default.strictEqual(cacheResponse, null);
             return redisManager.setCachedResponse(expiryKey, url, expectedResponse);
         })
             .then(() => {
             return redisManager.getCachedResponse(expiryKey, url);
         })
             .then((cacheResponse) => {
-            assert.equal(cacheResponse.statusCode, expectedResponse.statusCode);
-            assert.equal(cacheResponse.body, expectedResponse.body);
+            assert_1.default.equal(cacheResponse.statusCode, expectedResponse.statusCode);
+            assert_1.default.equal(cacheResponse.body, expectedResponse.body);
             return redisManager.getCachedResponse(expiryKey, url);
         })
             .then((cacheResponse) => {
-            assert.equal(cacheResponse.statusCode, expectedResponse.statusCode);
-            assert.equal(cacheResponse.body, expectedResponse.body);
-            var newUrl = shortid.generate();
+            assert_1.default.equal(cacheResponse.statusCode, expectedResponse.statusCode);
+            assert_1.default.equal(cacheResponse.body, expectedResponse.body);
+            var newUrl = shortid_1.default.generate();
             return redisManager.getCachedResponse(expiryKey, newUrl);
         })
             .then((cacheResponse) => {
-            assert.strictEqual(cacheResponse, null);
+            assert_1.default.strictEqual(cacheResponse, null);
         });
     });
     it("should be able to invalidate cached request", () => {
-        var expiryKey = "test:" + shortid.generate();
-        var url = shortid.generate();
+        var expiryKey = "test:" + shortid_1.default.generate();
+        var url = shortid_1.default.generate();
         expectedResponse.statusCode = 200;
         expectedResponse.body = "I am cached";
         return redisManager
             .getCachedResponse(expiryKey, url)
             .then((cacheResponse) => {
-            assert.strictEqual(cacheResponse, null);
+            assert_1.default.strictEqual(cacheResponse, null);
             return redisManager.setCachedResponse(expiryKey, url, expectedResponse);
         })
             .then(() => {
             return redisManager.getCachedResponse(expiryKey, url);
         })
             .then((cacheResponse) => {
-            assert.equal(cacheResponse.statusCode, expectedResponse.statusCode);
-            assert.equal(cacheResponse.body, expectedResponse.body);
+            assert_1.default.equal(cacheResponse.statusCode, expectedResponse.statusCode);
+            assert_1.default.equal(cacheResponse.body, expectedResponse.body);
             expectedResponse.body = "I am a new body";
             return redisManager.invalidateCache(expiryKey);
         })
@@ -108,7 +108,7 @@ function redisTests() {
             return redisManager.getCachedResponse(expiryKey, url);
         })
             .then((cacheResponse) => {
-            assert.strictEqual(cacheResponse, null);
+            assert_1.default.strictEqual(cacheResponse, null);
         });
     });
 }

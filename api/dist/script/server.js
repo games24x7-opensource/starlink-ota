@@ -1,29 +1,63 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-const defaultServer = require("./default-server");
-const prom_client_1 = require("prom-client");
-const cluster = require("cluster");
 const https = require("https");
+const cluster = require("cluster");
 const fs = require("fs");
+const prom_client_1 = require("prom-client");
+const defaultServer = __importStar(require("./default-server"));
 const aggregatorRegistry = new prom_client_1.AggregatorRegistry();
 const masterRegistry = new prom_client_1.Registry();
 const productType = process.env.PRODUCT_TYPE || "all";
-const defaultLabels = { application: "code-push-client", productType };
+const defaultLabels = { application: "starlink-ota", productType };
 masterRegistry.setDefaultLabels(defaultLabels);
 const processCrashCounter = new prom_client_1.Counter({
     name: "process_crash",
     help: "None",
     registers: [masterRegistry],
 });
-if (cluster?.isPrimary) {
+if (cluster === null || cluster === void 0 ? void 0 : cluster.isPrimary) {
     // Get the number of available CPU cores
     let numCPUs = require("os").availableParallelism();
     /**
      * For K8 environment we take the numCPUs value from the environment variable NODEJS_WORKERS
      */
-    if (process.env?.NODEJS_WORKERS) {
+    if ((_a = process.env) === null || _a === void 0 ? void 0 : _a.NODEJS_WORKERS) {
         numCPUs = process.env.NODEJS_WORKERS;
         numCPUs = parseInt(numCPUs);
     }

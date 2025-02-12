@@ -1,9 +1,12 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const security_1 = require("./security");
-const semver = require("semver");
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+const semver_1 = __importDefault(require("semver"));
 const emailValidator = require("email-validator");
+const security_1 = require("./security");
 var Validation;
 (function (Validation) {
     function getStringValidator(maxLength = 1000, minLength = 0) {
@@ -18,11 +21,11 @@ var Validation;
         };
     }
     function isValidAppVersionField(appVersion) {
-        return appVersion && semver.valid(appVersion) !== null;
+        return appVersion && semver_1.default.valid(appVersion) !== null;
     }
     Validation.isValidAppVersionField = isValidAppVersionField;
     function isValidAppVersionRangeField(appVersion) {
-        return !!semver.validRange(appVersion);
+        return !!semver_1.default.validRange(appVersion);
     }
     function isValidBooleanField(val) {
         return typeof val === "boolean";

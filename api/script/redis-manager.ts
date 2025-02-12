@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as assert from "assert";
-import * as express from "express";
-import * as q from "q";
-import * as redis from "redis";
+import assert from "assert";
+import q from "q";
+import redis from "redis";
 
 import Promise = q.Promise;
 

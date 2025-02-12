@@ -1,12 +1,48 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppInsights = void 0;
-const express = require("express");
-const restHeaders = require("../utils/rest-headers");
-const ApplicationInsights = require("applicationinsights");
+const express_1 = __importDefault(require("express"));
 const tryJSON = require("try-json");
+const ApplicationInsights = require("applicationinsights");
+const restHeaders = __importStar(require("../utils/rest-headers"));
 var ServiceResource;
 (function (ServiceResource) {
     ServiceResource[ServiceResource["AccessKeys"] = 0] = "AccessKeys";
@@ -37,62 +73,6 @@ var ServiceResource;
 })(ServiceResource || (ServiceResource = {}));
 const INSTRUMENTATION_KEY = process.env["APP_INSIGHTS_INSTRUMENTATION_KEY"];
 class AppInsights {
-    static ORIGIN_TAG = "Origin";
-    static ORIGIN_VERSION_TAG = "Origin version";
-    static SERVICE_RESOURCE_DEFINITIONS = [
-        // /accessKeys
-        { resource: ServiceResource.AccessKeys, regExp: /^\/accessKeys[\/]?$/i, tag: "AccessKeys" },
-        // /accessKeys/def123
-        { resource: ServiceResource.AccessKeysWithId, regExp: /^\/accessKeys\/[^\/]+[\/]?$/i, tag: "AccessKey" },
-        // /account
-        { resource: ServiceResource.Account, regExp: /^\/account[\/]?$/i, tag: "Account" },
-        // /apps/abc123/transfer/foo@bar.com
-        { resource: ServiceResource.AppTransfer, regExp: /^\/apps\/[^\/]+\/transfer\/[^\/]+[\/]?$/i, tag: "App transfer" },
-        // /apps
-        { resource: ServiceResource.Apps, regExp: /^\/apps[\/]?$/i, tag: "Apps" },
-        // /apps/abc123
-        { resource: ServiceResource.AppsWithId, regExp: /^\/apps\/[^\/]+[\/]?$/i, tag: "App" },
-        // /apps/abc123/collaborators
-        { resource: ServiceResource.Collaborators, regExp: /^\/apps\/[^\/]+\/collaborators[\/]?$/i, tag: "Collaborators" },
-        // /apps/abc123/collaborators/foo@bar.com
-        { resource: ServiceResource.CollaboratorsWithEmail, regExp: /^\/apps\/[^\/]+\/collaborators\/[^\/]+[\/]?$/i, tag: "Collaborator" },
-        // /apps/abc123/deployments/xyz123/history
-        {
-            resource: ServiceResource.DeploymentHistory,
-            regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+\/history[\/]?$/i,
-            tag: "DeploymentHistory",
-        },
-        // /apps/abc123/deployments
-        { resource: ServiceResource.Deployments, regExp: /^\/apps\/[^\/]+\/deployments[\/]?$/i, tag: "Deployments" },
-        // /apps/abc123/deployments/xyz123
-        { resource: ServiceResource.DeploymentsWithId, regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+[\/]?$/i, tag: "Deployment" },
-        // /auth/link/github
-        { resource: ServiceResource.LinkGitHub, regExp: /^\/auth\/link\/github[\/]?/i, tag: "Link GitHub account" },
-        // /auth/link/microsoft
-        { resource: ServiceResource.LinkMicrosoft, regExp: /^\/auth\/link\/microsoft[\/]?/i, tag: "Link Microsoft account" },
-        // /auth/login/github
-        { resource: ServiceResource.LoginGitHub, regExp: /^\/auth\/login\/github[\/]?/i, tag: "Login with GitHub" },
-        // /auth/login/microsoft
-        { resource: ServiceResource.LoginMicrosoft, regExp: /^\/auth\/login\/microsoft[\/]?/i, tag: "Login with Microsoft" },
-        // /apps/abc123/deployments/xyz123/metrics
-        { resource: ServiceResource.Metrics, regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+\/metrics[\/]?$/i, tag: "Deployment Metrics" },
-        // /apps/abc123/deployments/xyz123/promote/def123
-        { resource: ServiceResource.Promote, regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+\/promote\/[^\/]+[\/]?$/i, tag: "Package" },
-        // /auth/register/github
-        { resource: ServiceResource.RegisterGitHub, regExp: /^\/auth\/register\/github[\/]?/i, tag: "Register with GitHub" },
-        // /auth/register/microsoft
-        { resource: ServiceResource.RegisterMicrosoft, regExp: /^\/auth\/register\/microsoft[\/]?/i, tag: "Register with Microsoft" },
-        // /apps/abc123/deployments/xyz123/release
-        { resource: ServiceResource.Release, regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+\/release[\/]?$/i, tag: "Package" },
-        // /reportStatus/deploy or /reportStatus/deploy/
-        { resource: ServiceResource.ReportStatusDeploy, regExp: /^\/reportStatus\/deploy[\/]?$/i, tag: "ReportStatusDeploy" },
-        // /reportStatus/download or /reportStatus/download/
-        { resource: ServiceResource.ReportStatusDownload, regExp: /^\/reportStatus\/download[\/]?$/i, tag: "ReportStatusDownload" },
-        // /apps/abc123/deployments/xyz123/rollback or /apps/abc123/deployments/xyz123/rollback/v4
-        { resource: ServiceResource.Rollback, regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+\/rollback(\/[^\/]+)?[\/]?$/i, tag: "Package" },
-        // starts with /updateCheck
-        { resource: ServiceResource.UpdateCheck, regExp: /^\/updateCheck/i, tag: "UpdateCheck" },
-    ];
     constructor() {
         if (INSTRUMENTATION_KEY) {
             ApplicationInsights.setup(INSTRUMENTATION_KEY)
@@ -138,7 +118,7 @@ class AppInsights {
         }
     }
     getRouter() {
-        const router = express.Router();
+        const router = express_1.default.Router();
         router.use((req, res, next) => {
             const reqStart = new Date().getTime();
             // If the application insights has not been instrumented, short circuit to next middleware.
@@ -355,4 +335,60 @@ class AppInsights {
     }
 }
 exports.AppInsights = AppInsights;
+AppInsights.ORIGIN_TAG = "Origin";
+AppInsights.ORIGIN_VERSION_TAG = "Origin version";
+AppInsights.SERVICE_RESOURCE_DEFINITIONS = [
+    // /accessKeys
+    { resource: ServiceResource.AccessKeys, regExp: /^\/accessKeys[\/]?$/i, tag: "AccessKeys" },
+    // /accessKeys/def123
+    { resource: ServiceResource.AccessKeysWithId, regExp: /^\/accessKeys\/[^\/]+[\/]?$/i, tag: "AccessKey" },
+    // /account
+    { resource: ServiceResource.Account, regExp: /^\/account[\/]?$/i, tag: "Account" },
+    // /apps/abc123/transfer/foo@bar.com
+    { resource: ServiceResource.AppTransfer, regExp: /^\/apps\/[^\/]+\/transfer\/[^\/]+[\/]?$/i, tag: "App transfer" },
+    // /apps
+    { resource: ServiceResource.Apps, regExp: /^\/apps[\/]?$/i, tag: "Apps" },
+    // /apps/abc123
+    { resource: ServiceResource.AppsWithId, regExp: /^\/apps\/[^\/]+[\/]?$/i, tag: "App" },
+    // /apps/abc123/collaborators
+    { resource: ServiceResource.Collaborators, regExp: /^\/apps\/[^\/]+\/collaborators[\/]?$/i, tag: "Collaborators" },
+    // /apps/abc123/collaborators/foo@bar.com
+    { resource: ServiceResource.CollaboratorsWithEmail, regExp: /^\/apps\/[^\/]+\/collaborators\/[^\/]+[\/]?$/i, tag: "Collaborator" },
+    // /apps/abc123/deployments/xyz123/history
+    {
+        resource: ServiceResource.DeploymentHistory,
+        regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+\/history[\/]?$/i,
+        tag: "DeploymentHistory",
+    },
+    // /apps/abc123/deployments
+    { resource: ServiceResource.Deployments, regExp: /^\/apps\/[^\/]+\/deployments[\/]?$/i, tag: "Deployments" },
+    // /apps/abc123/deployments/xyz123
+    { resource: ServiceResource.DeploymentsWithId, regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+[\/]?$/i, tag: "Deployment" },
+    // /auth/link/github
+    { resource: ServiceResource.LinkGitHub, regExp: /^\/auth\/link\/github[\/]?/i, tag: "Link GitHub account" },
+    // /auth/link/microsoft
+    { resource: ServiceResource.LinkMicrosoft, regExp: /^\/auth\/link\/microsoft[\/]?/i, tag: "Link Microsoft account" },
+    // /auth/login/github
+    { resource: ServiceResource.LoginGitHub, regExp: /^\/auth\/login\/github[\/]?/i, tag: "Login with GitHub" },
+    // /auth/login/microsoft
+    { resource: ServiceResource.LoginMicrosoft, regExp: /^\/auth\/login\/microsoft[\/]?/i, tag: "Login with Microsoft" },
+    // /apps/abc123/deployments/xyz123/metrics
+    { resource: ServiceResource.Metrics, regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+\/metrics[\/]?$/i, tag: "Deployment Metrics" },
+    // /apps/abc123/deployments/xyz123/promote/def123
+    { resource: ServiceResource.Promote, regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+\/promote\/[^\/]+[\/]?$/i, tag: "Package" },
+    // /auth/register/github
+    { resource: ServiceResource.RegisterGitHub, regExp: /^\/auth\/register\/github[\/]?/i, tag: "Register with GitHub" },
+    // /auth/register/microsoft
+    { resource: ServiceResource.RegisterMicrosoft, regExp: /^\/auth\/register\/microsoft[\/]?/i, tag: "Register with Microsoft" },
+    // /apps/abc123/deployments/xyz123/release
+    { resource: ServiceResource.Release, regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+\/release[\/]?$/i, tag: "Package" },
+    // /reportStatus/deploy or /reportStatus/deploy/
+    { resource: ServiceResource.ReportStatusDeploy, regExp: /^\/reportStatus\/deploy[\/]?$/i, tag: "ReportStatusDeploy" },
+    // /reportStatus/download or /reportStatus/download/
+    { resource: ServiceResource.ReportStatusDownload, regExp: /^\/reportStatus\/download[\/]?$/i, tag: "ReportStatusDownload" },
+    // /apps/abc123/deployments/xyz123/rollback or /apps/abc123/deployments/xyz123/rollback/v4
+    { resource: ServiceResource.Rollback, regExp: /^\/apps\/[^\/]+\/deployments\/[^\/]+\/rollback(\/[^\/]+)?[\/]?$/i, tag: "Package" },
+    // starts with /updateCheck
+    { resource: ServiceResource.UpdateCheck, regExp: /^\/updateCheck/i, tag: "UpdateCheck" },
+];
 //# sourceMappingURL=app-insights.js.map

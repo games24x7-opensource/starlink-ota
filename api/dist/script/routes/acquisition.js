@@ -1,26 +1,63 @@
 "use strict";
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getHealthRouter = getHealthRouter;
 exports.getAcquisitionRouter = getAcquisitionRouter;
-const express = require("express");
-const semver = require("semver");
-const utils = require("../utils/common");
-const acquisitionUtils = require("../utils/acquisition");
-const errorUtils = require("../utils/rest-error-handling");
-const redis = require("../redis-manager");
-const restHeaders = require("../utils/rest-headers");
-const rolloutSelector = require("../utils/rollout-selector");
-const validationUtils = require("../utils/validation");
-const q = require("q");
-const queryString = require("querystring");
-const URL = require("url");
+const express_1 = __importDefault(require("express"));
+const semver_1 = __importDefault(require("semver"));
+const q_1 = __importDefault(require("q"));
+const querystring_1 = __importDefault(require("querystring"));
+const url_1 = __importDefault(require("url"));
+const utils = __importStar(require("../utils/common"));
+const acquisitionUtils = __importStar(require("../utils/acquisition"));
+const errorUtils = __importStar(require("../utils/rest-error-handling"));
+const redis = __importStar(require("../redis-manager"));
+const restHeaders = __importStar(require("../utils/rest-headers"));
+const rolloutSelector = __importStar(require("../utils/rollout-selector"));
+const validation_1 = __importDefault(require("../utils/validation"));
+const Logger = require("../logger");
 const METRICS_BREAKING_VERSION = "1.5.2-beta";
 function getUrlKey(originalUrl) {
-    const obj = URL.parse(originalUrl, /*parseQueryString*/ true);
+    const obj = url_1.default.parse(originalUrl, /*parseQueryString*/ true);
     delete obj.query.clientUniqueId;
-    return obj.pathname + "?" + queryString.stringify(obj.query);
+    return obj.pathname + "?" + querystring_1.default.stringify(obj.query);
 }
 function createResponseUsingStorage(req, res, storage) {
     const deploymentKey = String(req.query.deploymentKey || req.query.deployment_key);
@@ -53,7 +90,7 @@ function createResponseUsingStorage(req, res, storage) {
             updateRequest.appVersion = originalAppVersion.slice(0, semverTagIndex) + ".0" + originalAppVersion.slice(semverTagIndex);
         }
     }
-    if (validationUtils.isValidUpdateCheckRequest(updateRequest)) {
+    if (validation_1.default.isValidUpdateCheckRequest(updateRequest)) {
         return storage.getPackageHistoryFromDeploymentKey(updateRequest.deploymentKey).then((packageHistory) => {
             const updateObject = acquisitionUtils.getUpdatePackageInfo(packageHistory, updateRequest);
             if ((isMissingPatchVersion || isPlainIntegerNumber) && updateObject.originalPackage.appVersion === updateRequest.appVersion) {
@@ -67,28 +104,28 @@ function createResponseUsingStorage(req, res, storage) {
                 statusCode: 200,
                 body: updateObject,
             };
-            return q(cacheableResponse);
+            return (0, q_1.default)(cacheableResponse);
         });
     }
     else {
-        if (!validationUtils.isValidKeyField(updateRequest.deploymentKey)) {
+        if (!validation_1.default.isValidKeyField(updateRequest.deploymentKey)) {
             errorUtils.sendMalformedRequestError(res, "An update check must include a valid deployment key - please check that your app has been " +
                 "configured correctly. To view available deployment keys, run 'code-push-standalone deployment ls <appName> -k'.");
         }
-        else if (!validationUtils.isValidAppVersionField(updateRequest.appVersion)) {
+        else if (!validation_1.default.isValidAppVersionField(updateRequest.appVersion)) {
             errorUtils.sendMalformedRequestError(res, "An update check must include a binary version that conforms to the semver standard (e.g. '1.0.0'). " +
                 "The binary version is normally inferred from the App Store/Play Store version configured with your app.");
         }
         else {
             errorUtils.sendMalformedRequestError(res, "An update check must include a valid deployment key and provide a semver-compliant app version.");
         }
-        return q(null);
+        return (0, q_1.default)(null);
     }
 }
 function getHealthRouter(config) {
     const storage = config.storage;
     const redisManager = config.redisManager;
-    const router = express.Router();
+    const router = express_1.default.Router();
     router.get("/health", (req, res, next) => {
         storage
             .checkHealth()
@@ -106,7 +143,7 @@ function getHealthRouter(config) {
 function getAcquisitionRouter(config) {
     const storage = config.storage;
     const redisManager = config.redisManager;
-    const router = express.Router();
+    const router = express_1.default.Router();
     const updateCheck = function (newApi) {
         return function (req, res, next) {
             const deploymentKey = String(req.query.deploymentKey || req.query.deployment_key);
@@ -120,7 +157,7 @@ function getAcquisitionRouter(config) {
                 .catch((error) => {
                 // Store the redis error to be thrown after we send response.
                 redisError = error;
-                return q(null);
+                return (0, q_1.default)(null);
             })
                 .then((cachedResponse) => {
                 fromCache = !!cachedResponse;
@@ -128,7 +165,7 @@ function getAcquisitionRouter(config) {
             })
                 .then((response) => {
                 if (!response) {
-                    return q(null);
+                    return (0, q_1.default)(null);
                 }
                 let giveRolloutPackage = false;
                 const cachedResponseObject = response.body;
@@ -142,6 +179,19 @@ function getAcquisitionRouter(config) {
                 // Change in new API
                 updateCheckBody.updateInfo.target_binary_range = updateCheckBody.updateInfo.appVersion;
                 res.locals.fromCache = fromCache;
+                Logger.instance("[Starlink::OTA::updateCheck")
+                    .setExpressReq(req)
+                    .setUpstreamRequestParams({
+                    deploymentKey,
+                    clientUniqueId,
+                    url,
+                    appVersion: req.query.appVersion || req.query.app_version,
+                    packageHash: req.query.packageHash || req.query.package_hash,
+                    isCompanion: req.query.isCompanion || req.query.is_companion,
+                    label: req.query.label,
+                })
+                    .setUpstreamResponse(updateCheckBody)
+                    .log();
                 res.status(response.statusCode).send(newApi ? utils.convertObjectToSnakeCase(updateCheckBody) : updateCheckBody);
                 // Update REDIS cache after sending the response so that we don't block the request.
                 if (!fromCache) {
@@ -150,10 +200,14 @@ function getAcquisitionRouter(config) {
             })
                 .then(() => {
                 if (redisError) {
+                    Logger.instance("[Starlink::OTA::updateCheck::redisError").setExpressReq(req).setError(redisError).log();
                     throw redisError;
                 }
             })
-                .catch((error) => errorUtils.restErrorHandler(res, error, next));
+                .catch((error) => {
+                Logger.instance("[Starlink::OTA::updateCheck::StorageError").setExpressReq(req).setError(error).log();
+                return errorUtils.restErrorHandler(res, error, next);
+            });
         };
     };
     const reportStatusDeploy = function (req, res, next) {
@@ -174,7 +228,7 @@ function getAcquisitionRouter(config) {
             }
         }
         const sdkVersion = restHeaders.getSdkVersion(req);
-        if (semver.valid(sdkVersion) && semver.gte(sdkVersion, METRICS_BREAKING_VERSION)) {
+        if (semver_1.default.valid(sdkVersion) && semver_1.default.gte(sdkVersion, METRICS_BREAKING_VERSION)) {
             // If previousDeploymentKey not provided, assume it is the same deployment key.
             let redisUpdatePromise;
             if (req.body.label && req.body.status === redis.DEPLOYMENT_FAILED) {
@@ -186,12 +240,26 @@ function getAcquisitionRouter(config) {
             }
             redisUpdatePromise
                 .then(() => {
+                Logger.instance("[Starlink::OTA::reportStatusDeploy::success")
+                    .setExpressReq(req)
+                    .setUpstreamRequestParams({
+                    deploymentKey,
+                    clientUniqueId,
+                    appVersion,
+                    previousDeploymentKey,
+                    previousLabelOrAppVersion,
+                    status: req.body.status,
+                })
+                    .log();
                 res.sendStatus(200);
                 if (clientUniqueId) {
                     redisManager.removeDeploymentKeyClientActiveLabel(previousDeploymentKey, clientUniqueId);
                 }
             })
-                .catch((error) => errorUtils.sendUnknownError(res, error, next))
+                .catch((error) => {
+                Logger.instance("[Starlink::OTA::reportStatusDeploy::error").setExpressReq(req).setError(error).log();
+                errorUtils.sendUnknownError(res, error, next);
+            })
                 .done();
         }
         else {
@@ -213,9 +281,23 @@ function getAcquisitionRouter(config) {
                 }
             })
                 .then(() => {
+                Logger.instance("[Starlink::OTA::reportStatusDeploy::success")
+                    .setExpressReq(req)
+                    .setUpstreamRequestParams({
+                    deploymentKey,
+                    clientUniqueId,
+                    appVersion,
+                    previousDeploymentKey,
+                    previousLabelOrAppVersion,
+                    status: req.body.status,
+                })
+                    .log();
                 res.sendStatus(200);
             })
-                .catch((error) => errorUtils.sendUnknownError(res, error, next))
+                .catch((error) => {
+                Logger.instance("[Starlink::OTA::reportStatusDeploy::error").setExpressReq(req).setError(error).log();
+                errorUtils.sendUnknownError(res, error, next);
+            })
                 .done();
         }
     };
@@ -227,9 +309,19 @@ function getAcquisitionRouter(config) {
         return redisManager
             .incrementLabelStatusCount(deploymentKey, req.body.label, redis.DOWNLOADED)
             .then(() => {
+            Logger.instance("[Starlink::OTA::reportStatusDownload::success")
+                .setExpressReq(req)
+                .setUpstreamRequestParams({
+                deploymentKey,
+                label: req.body.label,
+            })
+                .log();
             res.sendStatus(200);
         })
-            .catch((error) => errorUtils.sendUnknownError(res, error, next))
+            .catch((error) => {
+            Logger.instance("[Starlink::OTA::reportStatusDownload::error").setExpressReq(req).setError(error).log();
+            errorUtils.sendUnknownError(res, error, next);
+        })
             .done();
     };
     router.get("/updateCheck", updateCheck(false));

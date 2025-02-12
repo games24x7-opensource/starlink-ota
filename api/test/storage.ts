@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as assert from "assert";
-import * as shortid from "shortid";
-import * as q from "q";
+import assert from "assert";
+import shortid from "shortid";
+import q from "q";
 
 import { JsonStorage } from "../script/storage/json-storage";
 import * as storageTypes from "../script/storage/storage";

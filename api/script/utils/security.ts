@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as crypto from "crypto";
+import crypto from "crypto";
 
 export const ALLOWED_KEY_CHARACTERS_TEST: RegExp = /^[a-zA-Z0-9_-]+$/;
 

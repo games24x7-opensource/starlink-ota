@@ -2,20 +2,21 @@
 // Licensed under the MIT License.
 
 import { JsonStorage } from "../script/storage/json-storage";
-import * as assert from "assert";
-import * as diffErrorUtils from "../script/utils/diff-error-handling";
-import * as express from "express";
-import * as fs from "fs";
+import assert from "assert";
+import express from "express";
+import fs from "fs";
+import http from "http";
+import path from "path";
+import q from "q";
+import shortid from "shortid";
+import stream from "stream";
+
 import * as hashUtils from "../script/utils/hash-utils";
-import * as http from "http";
 import * as packageDiffing from "../script/utils/package-diffing";
-import * as path from "path";
-import * as q from "q";
-import * as shortid from "shortid";
 import * as storage from "../script/storage/storage";
-import * as stream from "stream";
 import * as utils from "./utils";
 import * as yauzl from "yauzl";
+
 import clone = storage.clone;
 import PackageDiffer = packageDiffing.PackageDiffer;
 import PackageManifest = hashUtils.PackageManifest;

@@ -1,4 +1,4 @@
-import * as promClient from "prom-client";
+import promClient from "prom-client";
 
 export const flowMetricErrorCounter = new promClient.Counter({
   name: "flow_metric_error",

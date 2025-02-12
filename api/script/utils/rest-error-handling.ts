@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as express from "express";
+import  express from "express";
 
 import * as errorModule from "../error";
 import * as storageTypes from "../storage/storage";

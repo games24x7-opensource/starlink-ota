@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as semver from "semver";
+import semver from "semver";
 import { UpdateCheckCacheResponse, UpdateCheckRequest, UpdateCheckResponse } from "../types/rest-definitions";
 import { Package } from "../storage/storage";
 import { isUnfinishedRollout } from "./rollout-selector";

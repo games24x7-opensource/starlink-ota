@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as express from "express";
+import express from "express";
 
 export const API_VERSION = 2;
 export const API_VERSION_HEADER = "X-CodePush-API-Version";

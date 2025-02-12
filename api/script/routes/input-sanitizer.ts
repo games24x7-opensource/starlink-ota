@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as express from "express";
+import express from "express";
 
 export function InputSanitizer(req: express.Request, res: express.Response, next: (err?: any) => void): any {
   if (req.query) {
