@@ -45,4 +45,4 @@ JsonStorage.json
 *.cnf
 
 # Distribution folder
-*/dist
+/dist
