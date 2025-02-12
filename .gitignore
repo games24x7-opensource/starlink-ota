@@ -43,3 +43,6 @@ JsonStorage.json
 *.pem
 *.key
 *.cnf
+
+# Distribution folder
+/dist
