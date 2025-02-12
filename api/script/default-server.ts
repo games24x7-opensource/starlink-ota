@@ -15,6 +15,8 @@ const domain = require("express-domain-middleware");
 import * as express from "express";
 import * as q from "q";
 
+import { awsErrorMiddleware } from "./utils/awsErrorHandler";
+
 interface Secret {
   id: string;
   value: string;
@@ -113,7 +115,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
       app.use(appInsights.router());
 
       app.get("/", (req: express.Request, res: express.Response, next: (err?: Error) => void): any => {
-        res.send("Welcome to the CodePush REST API!");
+        res.send("Welcome to the Starlink OTA REST API!");
       });
 
       app.get("/alb/healthCheck", (req: express.Request, res: express.Response, next: (err?: Error) => void): any => {
@@ -140,39 +142,45 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
       app.set("views", __dirname + "/views");
       app.set("view engine", "ejs");
       app.use("/auth/images/", express.static(__dirname + "/views/images"));
-      app.use(api.headers({ origin: process.env.CORS_ORIGIN || "http://localhost:3002" }));
-      app.use(api.health({ storage: storage, redisManager: redisManager }));
+      app.use(api.headers({ origin: process.env.CORS_ORIGIN}));
 
+      /**
+       * TODO: This will actually check S3 object/ dynamo table read etc..
+       * Do we need to check redis health?
+       */
+      // app.use(api.health({ storage: storage, redisManager: redisManager }));
+
+
+      /**
+       * If acquisition is enabled we make sure management routes are disabled
+       * Management routes are disabled by default and enabled only when acquisition routes are off and management is enabled 
+      */
       if (process.env.DISABLE_ACQUISITION !== "true") {
+        console.log("Acquisition routes are enabled ✅");
         app.use(api.acquisition({ storage: storage, redisManager: redisManager }));
-      }
-
-      if (process.env.DISABLE_MANAGEMENT !== "true") {
-        if (process.env.DEBUG_DISABLE_AUTH === "true") {
-          app.use((req, res, next) => {
-            let userId: string = "default";
-            if (process.env.DEBUG_USER_ID) {
-              userId = process.env.DEBUG_USER_ID;
-            } else {
-              console.log("No DEBUG_USER_ID environment variable configured. Using 'default' as user id");
-            }
-
-            req.user = {
-              id: "g24x7",
-            };
-
-            next();
-          });
-        } else {
-          app.use(auth.router());
-        }
-        app.use(fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
       } else {
-        app.use(auth.legacyRouter());
+        if (process.env.DISABLE_MANAGEMENT !== "true") {
+          if (process.env.DEBUG_DISABLE_AUTH === "true") {
+            app.use((req: express.Request, res: express.Response, next: Function): any => {
+              const userId = process.env.DEBUG_USER_ID || "default";
+              req.user = { id: userId };
+              next();
+            });
+          } else {
+            app.use(auth.router());
+          }
+          console.log("Management routes are enabled ✅");
+          app.use(fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
+        } else {
+          app.use(auth.legacyRouter());
+        }
       }
 
       // Error handler needs to be the last middleware so that it can catch all unhandled exceptions
       app.use(appInsights.errorHandler);
+      // Error handling middleware for AWS errors
+      app.use(awsErrorMiddleware);
+
       done(null, app, storage);
     })
     .done();

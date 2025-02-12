@@ -57,6 +57,7 @@ export function getManagementRouter(config: ManagementConfig): Router {
   const router: Router = Router();
   const nameResolver: NameResolver = new NameResolver(config.storage);
 
+
   router.get("/account", (req: Request, res: Response, next: (err?: any) => void): any => {
     const accountId: string = req.user.id;
     storage
@@ -72,8 +73,8 @@ export function getManagementRouter(config: ManagementConfig): Router {
   router.post("/account", (req: Request, res: Response, next: (err?: any) => void): any => {
     const newUser: storageTypes.Account = {
       createdTime: new Date().getTime(),
-      email: "starlink-user@games24x7.com",
-      name: "starlink.user",
+      email: process.env.DEFAULT_USER_EMAIL || "starlink-ota@games24x7.com",
+      name: process.env.DEFAULT_USER_NAME || "starlink.user",
     };
 
     storage
