@@ -1039,7 +1039,7 @@ class AwsStorage {
                 if (process.env.NODE_ENV === "development") {
                     console.log("🔑 Using local AWS credentials");
                     awsConfig.credentials = new AWS.SharedIniFileCredentials({
-                        profile: "272110293415_Dev-L3-Poker-Stage",
+                        profile: "default",
                     });
                 }
                 else {
