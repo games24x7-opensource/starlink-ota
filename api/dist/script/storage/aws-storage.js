@@ -738,10 +738,22 @@ class AwsStorage {
         })
             .then(() => {
             return q_1.default.Promise((resolve, reject) => {
-                resolve(`${AwsStorage.PACKAGE_DOWNLOAD_CDN_URL}/${AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_PREFIX}/${blobId}`);
+                //${AwsStorage.PACKAGE_DOWNLOAD_CDN_URL}/
+                resolve(`${AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_PREFIX}/${blobId}`);
             });
         })
             .catch(AwsStorage.awsErrorHandler);
+    }
+    /**
+     * Instead of `getBlobUrl` which returns a signed URL we will return our CDN permanent url for any blobId
+     * Returns a URL like "https://cdn.yourdomain.com/ota-releases/package-downloads/{blobId}"
+     * @param blobId
+     * @returns
+     */
+    getCdnUrl(blobId) {
+        return q_1.default.Promise((resolve) => {
+            resolve(`${AwsStorage.PACKAGE_DOWNLOAD_CDN_URL}/${blobId}`);
+        });
     }
     getBlobUrl(blobId) {
         return this._setupPromise
@@ -751,6 +763,7 @@ class AwsStorage {
                     Bucket: AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME,
                     Key: `${AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_PREFIX}/${blobId}`,
                 };
+                //'ota-releases/package-downloads/https://stage-cdn.my11circle.com/ota-releases/package-downloads/XxoBEuBDPG_44a4lpYfs_0K8vTj3g24x7'
                 this._s3Client
                     .getSignedUrlPromise("getObject", params)
                     .then((url) => {

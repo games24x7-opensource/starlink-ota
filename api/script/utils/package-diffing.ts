@@ -219,7 +219,7 @@ export class PackageDiffer {
           this._storage
             .addBlob(blobId, readable, stats.size)
             .then((blobId: string): Promise<string> => {
-              return this._storage.getBlobUrl(blobId);
+              return this._storage.getCdnUrl(blobId);
             })
             .then((blobUrl: string): void => {
               fs.unlink(diffArchiveFilePath, (error) => {

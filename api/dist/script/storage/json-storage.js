@@ -467,6 +467,11 @@ class JsonStorage {
             return server.address() + "/" + blobId;
         });
     }
+    getCdnUrl(blobId) {
+        return this.getBlobServer().then((server) => {
+            return server.address() + "/" + blobId;
+        });
+    }
     removeBlob(blobId) {
         delete this.blobs[blobId];
         this.saveStateAsync();

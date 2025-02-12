@@ -193,7 +193,7 @@ class PackageDiffer {
                 this._storage
                     .addBlob(blobId, readable, stats.size)
                     .then((blobId) => {
-                    return this._storage.getBlobUrl(blobId);
+                    return this._storage.getCdnUrl(blobId);
                 })
                     .then((blobUrl) => {
                     fs_1.default.unlink(diffArchiveFilePath, (error) => {

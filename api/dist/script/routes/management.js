@@ -716,7 +716,7 @@ function getManagementRouter(config) {
                 });
             }
             else {
-                Logger.instance("[Starlink::Admin::UpdateRelease::no-update")
+                Logger.instance("[Starlink::Admin::UpdateRelease::no")
                     .setExpressReq(req)
                     .setUpstreamRequestParams({ appName, deploymentName, accountId, info })
                     .log();
@@ -797,7 +797,7 @@ function getManagementRouter(config) {
                 }
                 return storage.addBlob(security.generateSecureKey(accountId), fs_1.default.createReadStream(filePath), stats.size);
             })
-                .then((blobId) => storage.getBlobUrl(blobId))
+                .then((blobId) => storage.getCdnUrl(blobId))
                 .then((blobUrl) => {
                 restPackage.blobUrl = blobUrl;
                 restPackage.size = stats.size;
@@ -811,7 +811,7 @@ function getManagementRouter(config) {
             })
                 .then((blobId) => {
                 if (blobId) {
-                    return storage.getBlobUrl(blobId);
+                    return storage.getCdnUrl(blobId);
                 }
                 return (0, q_1.default)(null);
             })

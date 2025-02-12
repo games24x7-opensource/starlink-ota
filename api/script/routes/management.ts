@@ -789,7 +789,7 @@ export function getManagementRouter(config: ManagementConfig): Router {
             return invalidateCachedPackage(storageDeployment.key);
           });
         } else {
-          Logger.instance("[Starlink::Admin::UpdateRelease::no-update")
+          Logger.instance("[Starlink::Admin::UpdateRelease::no")
             .setExpressReq(req)
             .setUpstreamRequestParams({ appName, deploymentName, accountId, info })
             .log();
@@ -889,7 +889,7 @@ export function getManagementRouter(config: ManagementConfig): Router {
 
             return storage.addBlob(security.generateSecureKey(accountId), fs.createReadStream(filePath), stats.size);
           })
-          .then((blobId: string) => storage.getBlobUrl(blobId))
+          .then((blobId: string) => storage.getCdnUrl(blobId))
           .then((blobUrl: string) => {
             restPackage.blobUrl = blobUrl;
             restPackage.size = stats.size;
@@ -906,7 +906,7 @@ export function getManagementRouter(config: ManagementConfig): Router {
           })
           .then((blobId?: string) => {
             if (blobId) {
-              return storage.getBlobUrl(blobId);
+              return storage.getCdnUrl(blobId);
             }
 
             return q(<string>null);
