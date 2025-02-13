@@ -164,6 +164,7 @@ export interface Storage {
 
   addBlob(blobId: string, addstream: stream.Readable, streamLength: number): Promise<string>;
   getBlobUrl(blobId: string): Promise<string>;
+  getCdnUrl(blobId: string): Promise<string>;
   removeBlob(blobId: string): Promise<void>;
 
   addAccessKey(accountId: string, accessKey: AccessKey): Promise<string>;

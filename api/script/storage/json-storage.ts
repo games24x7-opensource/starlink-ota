@@ -547,6 +547,11 @@ export class JsonStorage implements storage.Storage {
       return server.address() + "/" + blobId;
     });
   }
+  public getCdnUrl(blobId: string): Promise<string> {
+    return this.getBlobServer().then((server: http.Server) => {
+      return server.address() + "/" + blobId;
+    });
+  }
 
   public removeBlob(blobId: string): Promise<void> {
     delete this.blobs[blobId];
