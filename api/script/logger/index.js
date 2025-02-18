@@ -238,7 +238,7 @@ class Logger {
     }
 
     if (headers[SDK_VERSION_HEADER]) {
-      this._sdkVersion = headers[SDK_VERSION];
+      this._sdkVersion = headers[SDK_VERSION_HEADER];
     }
 
   }
