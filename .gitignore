@@ -46,3 +46,4 @@ JsonStorage.json
 
 # Distribution folder
 /dist
+api/dist

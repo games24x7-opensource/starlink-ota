@@ -56,9 +56,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
       const redisManager = new RedisManager();
 
       app.use(function requestStart(req, res, next) {
-        Logger.info('access-log in')
-                .setExpressReq(req, true)
-                .log();
+        Logger.info("access-log in").setExpressReq(req, true).log();
 
         next();
       });
@@ -161,10 +159,8 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
           app.use(auth.legacyRouter());
         }
       }
-
       // Error handling middleware for AWS errors
       app.use(awsErrorMiddleware);
-
       done(null, app, storage);
     })
     .done();

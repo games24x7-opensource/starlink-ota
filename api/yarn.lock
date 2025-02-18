@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@azure/abort-controller@^2.0.0", "@azure/abort-controller@^2.1.2":
+"@azure/abort-controller@^2.0.0":
   version "2.1.2"
   resolved "https://verdaccio.games24x7.com/@azure%2fabort-controller/-/abort-controller-2.1.2.tgz"
   integrity sha512-nBrLsEWm4J2u5LpAPjxADTlq3trDgVZZXHNKabeXZtpq3d3AbN/KGO82R87rdDz5/lYB024rtEf10/q0urNgsA==
@@ -18,52 +18,13 @@
     "@azure/core-util" "^1.1.0"
     tslib "^2.6.2"
 
-"@azure/core-auth@^1.3.0", "@azure/core-auth@^1.4.0", "@azure/core-auth@^1.8.0", "@azure/core-auth@^1.9.0":
+"@azure/core-auth@^1.4.0":
   version "1.9.0"
   resolved "https://verdaccio.games24x7.com/@azure%2fcore-auth/-/core-auth-1.9.0.tgz"
   integrity sha512-FPwHpZywuyasDSLMqJ6fhbOK3TqUdviZNF8OqRGA4W5Ewib2lEEZ+pBsYcBa88B2NGO/SEnYPGhyBqNlE8ilSw==
   dependencies:
     "@azure/abort-controller" "^2.0.0"
     "@azure/core-util" "^1.11.0"
-    tslib "^2.6.2"
-
-"@azure/core-client@^1.0.0", "@azure/core-client@^1.3.0", "@azure/core-client@^1.5.0", "@azure/core-client@^1.6.2", "@azure/core-client@^1.9.2":
-  version "1.9.2"
-  resolved "https://verdaccio.games24x7.com/@azure%2fcore-client/-/core-client-1.9.2.tgz"
-  integrity sha512-kRdry/rav3fUKHl/aDLd/pDLcB+4pOFwPPTVEExuMyaI5r+JBbMWqRbCY1pn5BniDaU3lRxO9eaQ1AmSMehl/w==
-  dependencies:
-    "@azure/abort-controller" "^2.0.0"
-    "@azure/core-auth" "^1.4.0"
-    "@azure/core-rest-pipeline" "^1.9.1"
-    "@azure/core-tracing" "^1.0.0"
-    "@azure/core-util" "^1.6.1"
-    "@azure/logger" "^1.0.0"
-    tslib "^2.6.2"
-
-"@azure/core-http-compat@^2.0.0", "@azure/core-http-compat@^2.0.1":
-  version "2.1.2"
-  resolved "https://verdaccio.games24x7.com/@azure%2fcore-http-compat/-/core-http-compat-2.1.2.tgz"
-  integrity sha512-5MnV1yqzZwgNLLjlizsU3QqOeQChkIXw781Fwh1xdAqJR5AA32IUaq6xv1BICJvfbHoa+JYcaij2HFkhLbNTJQ==
-  dependencies:
-    "@azure/abort-controller" "^2.0.0"
-    "@azure/core-client" "^1.3.0"
-    "@azure/core-rest-pipeline" "^1.3.0"
-
-"@azure/core-lro@^2.2.0":
-  version "2.7.2"
-  resolved "https://verdaccio.games24x7.com/@azure%2fcore-lro/-/core-lro-2.7.2.tgz"
-  integrity sha512-0YIpccoX8m/k00O7mDDMdJpbr6mf1yWo2dfmxt5A8XVZVVMz2SSKaEbMCeJRvgQ0IaSlqhjT47p4hVIRRy90xw==
-  dependencies:
-    "@azure/abort-controller" "^2.0.0"
-    "@azure/core-util" "^1.2.0"
-    "@azure/logger" "^1.0.0"
-    tslib "^2.6.2"
-
-"@azure/core-paging@^1.1.1":
-  version "1.6.2"
-  resolved "https://verdaccio.games24x7.com/@azure%2fcore-paging/-/core-paging-1.6.2.tgz"
-  integrity sha512-YKWi9YuCU04B55h25cnOYZHxXYtEvQEbKST5vqRga7hWY9ydd3FZHdeQF8pyh+acWZvppw13M/LMGx0LABUVMA==
-  dependencies:
     tslib "^2.6.2"
 
 "@azure/core-rest-pipeline@1.16.3":
@@ -80,28 +41,14 @@
     https-proxy-agent "^7.0.0"
     tslib "^2.6.2"
 
-"@azure/core-rest-pipeline@^1.1.0", "@azure/core-rest-pipeline@^1.10.1", "@azure/core-rest-pipeline@^1.17.0", "@azure/core-rest-pipeline@^1.3.0", "@azure/core-rest-pipeline@^1.8.0", "@azure/core-rest-pipeline@^1.9.1":
-  version "1.18.2"
-  resolved "https://verdaccio.games24x7.com/@azure%2fcore-rest-pipeline/-/core-rest-pipeline-1.18.2.tgz"
-  integrity sha512-IkTf/DWKyCklEtN/WYW3lqEsIaUDshlzWRlZNNwSYtFcCBQz++OtOjxNpm8rr1VcbMS6RpjybQa3u6B6nG0zNw==
-  dependencies:
-    "@azure/abort-controller" "^2.0.0"
-    "@azure/core-auth" "^1.8.0"
-    "@azure/core-tracing" "^1.0.1"
-    "@azure/core-util" "^1.11.0"
-    "@azure/logger" "^1.0.0"
-    http-proxy-agent "^7.0.0"
-    https-proxy-agent "^7.0.0"
-    tslib "^2.6.2"
-
-"@azure/core-tracing@^1.0.0", "@azure/core-tracing@^1.0.1", "@azure/core-tracing@^1.1.2", "@azure/core-tracing@^1.2.0":
+"@azure/core-tracing@^1.0.1", "@azure/core-tracing@^1.2.0":
   version "1.2.0"
   resolved "https://verdaccio.games24x7.com/@azure%2fcore-tracing/-/core-tracing-1.2.0.tgz"
   integrity sha512-UKTiEJPkWcESPYJz3X5uKRYyOcJD+4nYph+KpfdPRnQJVrZfk0KJgdnaAWKfhsBBtAf/D58Az4AvCJEmWgIBAg==
   dependencies:
     tslib "^2.6.2"
 
-"@azure/core-util@^1.0.0", "@azure/core-util@^1.1.0", "@azure/core-util@^1.10.0", "@azure/core-util@^1.11.0", "@azure/core-util@^1.2.0", "@azure/core-util@^1.6.1", "@azure/core-util@^1.9.0":
+"@azure/core-util@^1.1.0", "@azure/core-util@^1.11.0", "@azure/core-util@^1.9.0":
   version "1.11.0"
   resolved "https://verdaccio.games24x7.com/@azure%2fcore-util/-/core-util-1.11.0.tgz"
   integrity sha512-DxOSLua+NdpWoSqULhjDyAZTXFdP/LKkqtYuxxz1SCN289zk3OG8UOpnCQAz/tygyACBtWp/BoO72ptK7msY8g==
@@ -109,113 +56,12 @@
     "@azure/abort-controller" "^2.0.0"
     tslib "^2.6.2"
 
-"@azure/core-xml@^1.0.0", "@azure/core-xml@^1.4.3":
-  version "1.4.4"
-  resolved "https://verdaccio.games24x7.com/@azure%2fcore-xml/-/core-xml-1.4.4.tgz"
-  integrity sha512-J4FYAqakGXcbfeZjwjMzjNcpcH4E+JtEBv+xcV1yL0Ydn/6wbQfeFKTCHh9wttAi0lmajHw7yBbHPRG+YHckZQ==
-  dependencies:
-    fast-xml-parser "^4.4.1"
-    tslib "^2.6.2"
-
-"@azure/data-tables@^13.2.2":
-  version "13.3.0"
-  resolved "https://verdaccio.games24x7.com/@azure%2fdata-tables/-/data-tables-13.3.0.tgz"
-  integrity sha512-g5dbhURt151j1sEbAaAkQ5eVXiZeyZxzrmIO2q9qpvzdOiijRt+jmo8Nmy0QaMb1uGgPeEHtBaKjgS6lxN3/NA==
-  dependencies:
-    "@azure/core-auth" "^1.3.0"
-    "@azure/core-client" "^1.0.0"
-    "@azure/core-paging" "^1.1.1"
-    "@azure/core-rest-pipeline" "^1.1.0"
-    "@azure/core-tracing" "^1.0.0"
-    "@azure/core-util" "^1.6.1"
-    "@azure/core-xml" "^1.0.0"
-    "@azure/logger" "^1.0.0"
-    tslib "^2.2.0"
-
-"@azure/identity@^4.2.1":
-  version "4.6.0"
-  resolved "https://verdaccio.games24x7.com/@azure%2fidentity/-/identity-4.6.0.tgz"
-  integrity sha512-ANpO1iAvcZmpD4QY7/kaE/P2n66pRXsDp3nMUC6Ow3c9KfXOZF7qMU9VgqPw8m7adP7TVIbVyrCEmD9cth3KQQ==
-  dependencies:
-    "@azure/abort-controller" "^2.0.0"
-    "@azure/core-auth" "^1.9.0"
-    "@azure/core-client" "^1.9.2"
-    "@azure/core-rest-pipeline" "^1.17.0"
-    "@azure/core-tracing" "^1.0.0"
-    "@azure/core-util" "^1.11.0"
-    "@azure/logger" "^1.0.0"
-    "@azure/msal-browser" "^4.0.1"
-    "@azure/msal-node" "^2.15.0"
-    events "^3.0.0"
-    jws "^4.0.0"
-    open "^8.0.0"
-    stoppable "^1.1.0"
-    tslib "^2.2.0"
-
-"@azure/keyvault-common@^2.0.0":
-  version "2.0.0"
-  resolved "https://verdaccio.games24x7.com/@azure%2fkeyvault-common/-/keyvault-common-2.0.0.tgz"
-  integrity sha512-wRLVaroQtOqfg60cxkzUkGKrKMsCP6uYXAOomOIysSMyt1/YM0eUn9LqieAWM8DLcU4+07Fio2YGpPeqUbpP9w==
-  dependencies:
-    "@azure/abort-controller" "^2.0.0"
-    "@azure/core-auth" "^1.3.0"
-    "@azure/core-client" "^1.5.0"
-    "@azure/core-rest-pipeline" "^1.8.0"
-    "@azure/core-tracing" "^1.0.0"
-    "@azure/core-util" "^1.10.0"
-    "@azure/logger" "^1.1.4"
-    tslib "^2.2.0"
-
-"@azure/keyvault-secrets@^4.7.0":
-  version "4.9.0"
-  resolved "https://verdaccio.games24x7.com/@azure%2fkeyvault-secrets/-/keyvault-secrets-4.9.0.tgz"
-  integrity sha512-XkLsuzxFdhVIOVcELhso8OhQgY2lSWZcZn6fqjE848FwP9lJemJhu7nxYy8Q1nns6XqPB0WsTPmEkR8eu852vA==
-  dependencies:
-    "@azure/abort-controller" "^2.0.0"
-    "@azure/core-auth" "^1.3.0"
-    "@azure/core-client" "^1.5.0"
-    "@azure/core-http-compat" "^2.0.1"
-    "@azure/core-lro" "^2.2.0"
-    "@azure/core-paging" "^1.1.1"
-    "@azure/core-rest-pipeline" "^1.8.0"
-    "@azure/core-tracing" "^1.0.0"
-    "@azure/core-util" "^1.0.0"
-    "@azure/keyvault-common" "^2.0.0"
-    "@azure/logger" "^1.0.0"
-    tslib "^2.2.0"
-
-"@azure/logger@^1.0.0", "@azure/logger@^1.1.4":
+"@azure/logger@^1.0.0":
   version "1.1.4"
   resolved "https://verdaccio.games24x7.com/@azure%2flogger/-/logger-1.1.4.tgz"
   integrity sha512-4IXXzcCdLdlXuCG+8UKEwLA1T1NHqUfanhXYHiQTn+6sfWCZXduqbtXDGceg3Ce5QxTGo7EqmbV6Bi+aqKuClQ==
   dependencies:
     tslib "^2.6.2"
-
-"@azure/msal-browser@^4.0.1":
-  version "4.0.2"
-  resolved "https://verdaccio.games24x7.com/@azure%2fmsal-browser/-/msal-browser-4.0.2.tgz"
-  integrity sha512-bq6PasUpJgBSOSMeSlh8gXh4LZGgAaPoJFNcu5u0zxwueh+I8NpMb9oxlCfS/8CJHyXUhTUAMLSnvThemNdyQw==
-  dependencies:
-    "@azure/msal-common" "15.0.2"
-
-"@azure/msal-common@14.16.0":
-  version "14.16.0"
-  resolved "https://verdaccio.games24x7.com/@azure%2fmsal-common/-/msal-common-14.16.0.tgz"
-  integrity sha512-1KOZj9IpcDSwpNiQNjt0jDYZpQvNZay7QAEi/5DLubay40iGYtLzya/jbjRPLyOTZhEKyL1MzPuw2HqBCjceYA==
-
-"@azure/msal-common@15.0.2":
-  version "15.0.2"
-  resolved "https://verdaccio.games24x7.com/@azure%2fmsal-common/-/msal-common-15.0.2.tgz"
-  integrity sha512-RQHmI5vOMYLNSO0ER7d/O9TojWWEn4m0YtWbL8mZthkKGQI7ALn5ONHUVTUSxSVYwGYdHGNrwiHAzQhboqwZzQ==
-
-"@azure/msal-node@^2.15.0":
-  version "2.16.2"
-  resolved "https://verdaccio.games24x7.com/@azure%2fmsal-node/-/msal-node-2.16.2.tgz"
-  integrity sha512-An7l1hEr0w1HMMh1LU+rtDtqL7/jw74ORlc9Wnh06v7TU/xpG39/Zdr1ZJu3QpjUfKJ+E0/OXMW8DRSWTlh7qQ==
-  dependencies:
-    "@azure/msal-common" "14.16.0"
-    jsonwebtoken "^9.0.0"
-    uuid "^8.3.0"
 
 "@azure/opentelemetry-instrumentation-azure-sdk@^1.0.0-beta.5":
   version "1.0.0-beta.7"
@@ -228,42 +74,6 @@
     "@opentelemetry/core" "^1.26.0"
     "@opentelemetry/instrumentation" "^0.53.0"
     tslib "^2.7.0"
-
-"@azure/storage-blob@^12.14.0":
-  version "12.26.0"
-  resolved "https://verdaccio.games24x7.com/@azure%2fstorage-blob/-/storage-blob-12.26.0.tgz"
-  integrity sha512-SriLPKezypIsiZ+TtlFfE46uuBIap2HeaQVS78e1P7rz5OSbq0rsd52WE1mC5f7vAeLiXqv7I7oRhL3WFZEw3Q==
-  dependencies:
-    "@azure/abort-controller" "^2.1.2"
-    "@azure/core-auth" "^1.4.0"
-    "@azure/core-client" "^1.6.2"
-    "@azure/core-http-compat" "^2.0.0"
-    "@azure/core-lro" "^2.2.0"
-    "@azure/core-paging" "^1.1.1"
-    "@azure/core-rest-pipeline" "^1.10.1"
-    "@azure/core-tracing" "^1.1.2"
-    "@azure/core-util" "^1.6.1"
-    "@azure/core-xml" "^1.4.3"
-    "@azure/logger" "^1.0.0"
-    events "^3.0.0"
-    tslib "^2.2.0"
-
-"@azure/storage-queue@^12.13.0":
-  version "12.25.0"
-  resolved "https://verdaccio.games24x7.com/@azure%2fstorage-queue/-/storage-queue-12.25.0.tgz"
-  integrity sha512-uoobHFbH/o7wIul/sCm32X2YFq6zb1XpNdpKIms9I60mwG3BBaOpEs5pgQV5a5ONG5WMSHlo8E1dNFB5ZZIa1g==
-  dependencies:
-    "@azure/abort-controller" "^2.1.2"
-    "@azure/core-auth" "^1.4.0"
-    "@azure/core-client" "^1.6.2"
-    "@azure/core-http-compat" "^2.0.0"
-    "@azure/core-paging" "^1.1.1"
-    "@azure/core-rest-pipeline" "^1.10.1"
-    "@azure/core-tracing" "^1.1.2"
-    "@azure/core-util" "^1.6.1"
-    "@azure/core-xml" "^1.4.3"
-    "@azure/logger" "^1.0.0"
-    tslib "^2.2.0"
 
 "@babel/code-frame@^7.12.13":
   version "7.26.2"
@@ -1245,11 +1055,6 @@ define-data-property@^1.1.4:
     es-errors "^1.3.0"
     gopd "^1.0.1"
 
-define-lazy-prop@^2.0.0:
-  version "2.0.0"
-  resolved "https://verdaccio.games24x7.com/define-lazy-prop/-/define-lazy-prop-2.0.0.tgz"
-  integrity sha512-Ds09qNh8yw3khSjiJjiUInaGX9xlqZDY7JVryGxdxV7NPeuqQfplOpQ66yJFZut3jLa5zOwkXw1g9EI2uKh4Og==
-
 delayed-stream@~1.0.0:
   version "1.0.0"
   resolved "https://verdaccio.games24x7.com/delayed-stream/-/delayed-stream-1.0.0.tgz"
@@ -1558,11 +1363,6 @@ events@1.1.1:
   resolved "https://verdaccio.games24x7.com/events/-/events-1.1.1.tgz"
   integrity sha1-nr23Y1rQmccNzEwqH1AEKI6L2SQ=
 
-events@^3.0.0:
-  version "3.3.0"
-  resolved "https://verdaccio.games24x7.com/events/-/events-3.3.0.tgz"
-  integrity sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==
-
 expect@^29.0.0:
   version "29.7.0"
   resolved "https://verdaccio.games24x7.com/expect/-/expect-29.7.0.tgz"
@@ -1651,13 +1451,6 @@ fast-safe-stringify@^2.1.1:
   version "2.1.1"
   resolved "https://verdaccio.games24x7.com/fast-safe-stringify/-/fast-safe-stringify-2.1.1.tgz"
   integrity sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==
-
-fast-xml-parser@^4.4.1:
-  version "4.5.1"
-  resolved "https://verdaccio.games24x7.com/fast-xml-parser/-/fast-xml-parser-4.5.1.tgz"
-  integrity sha512-y655CeyUQ+jj7KBbYMc4FG01V8ZQqjN+gDYGJ50RtfsUB8iG9AmwmwoAgeKLJdmueKKMrH1RJ7yXHTSoczdv5w==
-  dependencies:
-    strnum "^1.0.5"
 
 fastq@^1.6.0:
   version "1.18.0"
@@ -2081,11 +1874,6 @@ is-core-module@^2.16.0:
   dependencies:
     hasown "^2.0.2"
 
-is-docker@^2.0.0, is-docker@^2.1.1:
-  version "2.2.1"
-  resolved "https://verdaccio.games24x7.com/is-docker/-/is-docker-2.2.1.tgz"
-  integrity sha1-M+6r4jz+hvFL3kQIoCwM+4U6zao=
-
 is-extglob@^2.1.1:
   version "2.1.1"
   resolved "https://verdaccio.games24x7.com/is-extglob/-/is-extglob-2.1.1.tgz"
@@ -2144,13 +1932,6 @@ is-typed-array@^1.1.3:
   integrity sha512-p3EcsicXjit7SaskXHs1hA91QxgTw46Fv6EFKKGS5DRFLD8yKnohjF3hxoju94b/OcMZoQukzpPpBE9uLVKzgQ==
   dependencies:
     which-typed-array "^1.1.16"
-
-is-wsl@^2.2.0:
-  version "2.2.0"
-  resolved "https://verdaccio.games24x7.com/is-wsl/-/is-wsl-2.2.0.tgz"
-  integrity sha512-fKzAra0rGJUUBwGBgNkHZuToZcn+TtXHpeCgmkMJMMYx1sQDYaCSyjJBSCa2nH1DGm7s3n1oBnohoVTBaN7Lww==
-  dependencies:
-    is-docker "^2.0.0"
 
 isarray@^1.0.0, isarray@~1.0.0:
   version "1.0.0"
@@ -2265,22 +2046,6 @@ json-stable-stringify-without-jsonify@^1.0.1:
   resolved "https://verdaccio.games24x7.com/json-stable-stringify-without-jsonify/-/json-stable-stringify-without-jsonify-1.0.1.tgz"
   integrity sha1-nbe1lJatPzz+8wp1FC0tkwrXJlE=
 
-jsonwebtoken@^9.0.0:
-  version "9.0.2"
-  resolved "https://verdaccio.games24x7.com/jsonwebtoken/-/jsonwebtoken-9.0.2.tgz"
-  integrity sha512-PRp66vJ865SSqOlgqS8hujT5U4AOgMfhrwYIuIhfKaoSCZcirrmASQr8CX7cUg+RMih+hgznrjp99o+W4pJLHQ==
-  dependencies:
-    jws "^3.2.2"
-    lodash.includes "^4.3.0"
-    lodash.isboolean "^3.0.3"
-    lodash.isinteger "^4.0.4"
-    lodash.isnumber "^3.0.3"
-    lodash.isplainobject "^4.0.6"
-    lodash.isstring "^4.0.1"
-    lodash.once "^4.0.0"
-    ms "^2.1.1"
-    semver "^7.5.4"
-
 jwa@^1.4.1:
   version "1.4.1"
   resolved "https://verdaccio.games24x7.com/jwa/-/jwa-1.4.1.tgz"
@@ -2290,29 +2055,12 @@ jwa@^1.4.1:
     ecdsa-sig-formatter "1.0.11"
     safe-buffer "^5.0.1"
 
-jwa@^2.0.0:
-  version "2.0.0"
-  resolved "https://verdaccio.games24x7.com/jwa/-/jwa-2.0.0.tgz"
-  integrity sha512-jrZ2Qx916EA+fq9cEAeCROWPTfCwi1IVHqT2tapuqLEVVDKFDENFw1oL+MwrTvH6msKxsd1YTDVw6uKEcsrLEA==
-  dependencies:
-    buffer-equal-constant-time "1.0.1"
-    ecdsa-sig-formatter "1.0.11"
-    safe-buffer "^5.0.1"
-
-jws@^3.1.3, jws@^3.2.2:
+jws@^3.1.3:
   version "3.2.2"
   resolved "https://verdaccio.games24x7.com/jws/-/jws-3.2.2.tgz"
   integrity sha512-YHlZCB6lMTllWDtSPHz/ZXTsi8S00usEV6v1tjq8tOUZzw7DpSDWVXjXDre6ed1w/pd495ODpHZYSdkRTsa0HA==
   dependencies:
     jwa "^1.4.1"
-    safe-buffer "^5.0.1"
-
-jws@^4.0.0:
-  version "4.0.0"
-  resolved "https://verdaccio.games24x7.com/jws/-/jws-4.0.0.tgz"
-  integrity sha512-KDncfTmOZoOMTFG4mBlG0qUIOlc03fmzH+ru6RgYVZhPkyiy/92Owlt/8UEN+a4TXR1FQetfIpJE8ApdvdVxTg==
-  dependencies:
-    jwa "^2.0.0"
     safe-buffer "^5.0.1"
 
 keygrip@~1.1.0:
@@ -2349,45 +2097,10 @@ lodash.clonedeep@^4.5.0:
   resolved "https://verdaccio.games24x7.com/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz"
   integrity sha1-4j8/nE+Pvd6HJSnBBxhXoIblzO8=
 
-lodash.includes@^4.3.0:
-  version "4.3.0"
-  resolved "https://verdaccio.games24x7.com/lodash.includes/-/lodash.includes-4.3.0.tgz"
-  integrity sha1-YLuYqHy5I8aMoeUTJUgzFISfVT8=
-
-lodash.isboolean@^3.0.3:
-  version "3.0.3"
-  resolved "https://verdaccio.games24x7.com/lodash.isboolean/-/lodash.isboolean-3.0.3.tgz"
-  integrity sha1-bC4XHbKiV82WgC/UOwGyDV9YcPY=
-
-lodash.isinteger@^4.0.4:
-  version "4.0.4"
-  resolved "https://verdaccio.games24x7.com/lodash.isinteger/-/lodash.isinteger-4.0.4.tgz"
-  integrity sha1-YZwK89A/iwTDH1iChAt3sRzWg0M=
-
-lodash.isnumber@^3.0.3:
-  version "3.0.3"
-  resolved "https://verdaccio.games24x7.com/lodash.isnumber/-/lodash.isnumber-3.0.3.tgz"
-  integrity sha1-POdoEMWSjQM1IwGsKHMX8RwLH/w=
-
-lodash.isplainobject@^4.0.6:
-  version "4.0.6"
-  resolved "https://verdaccio.games24x7.com/lodash.isplainobject/-/lodash.isplainobject-4.0.6.tgz"
-  integrity sha1-fFJqUtibRcRcxpC4gWO+BJf1UMs=
-
-lodash.isstring@^4.0.1:
-  version "4.0.1"
-  resolved "https://verdaccio.games24x7.com/lodash.isstring/-/lodash.isstring-4.0.1.tgz"
-  integrity sha1-1SfftUVuynzJu5XV2ur4i6VKVFE=
-
 lodash.merge@^4.6.2:
   version "4.6.2"
   resolved "https://verdaccio.games24x7.com/lodash.merge/-/lodash.merge-4.6.2.tgz"
   integrity sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
-
-lodash.once@^4.0.0:
-  version "4.1.1"
-  resolved "https://verdaccio.games24x7.com/lodash.once/-/lodash.once-4.1.1.tgz"
-  integrity sha1-DdOXEhPHxW34gJd9UEyI+0cal6w=
 
 lodash@^4.11.2, lodash@^4.17.21:
   version "4.17.21"
@@ -2683,15 +2396,6 @@ once@^1.3.0, once@^1.4.0:
   integrity sha1-WDsap3WWHUsROsF9nFC6753Xa9E=
   dependencies:
     wrappy "1"
-
-open@^8.0.0:
-  version "8.4.2"
-  resolved "https://verdaccio.games24x7.com/open/-/open-8.4.2.tgz"
-  integrity sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==
-  dependencies:
-    define-lazy-prop "^2.0.0"
-    is-docker "^2.1.1"
-    is-wsl "^2.2.0"
 
 optionator@^0.9.3:
   version "0.9.4"
@@ -3320,11 +3024,6 @@ statuses@2.0.1:
   resolved "https://verdaccio.games24x7.com/statuses/-/statuses-2.0.1.tgz"
   integrity sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==
 
-stoppable@^1.1.0:
-  version "1.1.0"
-  resolved "https://verdaccio.games24x7.com/stoppable/-/stoppable-1.1.0.tgz"
-  integrity sha512-KXDYZ9dszj6bzvnEMRYvxgeTHU74QBFL54XKtP3nyMuJ81CFYtABZ3bAzL2EdFUaEwJOBOgENyFj3R7oTzDyyw==
-
 stream-to-array@^2.3.0:
   version "2.3.0"
   resolved "https://verdaccio.games24x7.com/stream-to-array/-/stream-to-array-2.3.0.tgz"
@@ -3401,11 +3100,6 @@ strip-json-comments@^3.1.1:
   version "3.1.1"
   resolved "https://verdaccio.games24x7.com/strip-json-comments/-/strip-json-comments-3.1.1.tgz"
   integrity sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==
-
-strnum@^1.0.5:
-  version "1.0.5"
-  resolved "https://verdaccio.games24x7.com/strnum/-/strnum-1.0.5.tgz"
-  integrity sha512-J8bbNyKKXl5qYcR36TIO8W3mVGVHrmmxsd5PAItGkmyzwJvybiw2IVq5nqd0i4LSNSkB/sx9VHllbfFdr9k1JA==
 
 superagent@^8.0.9, superagent@^8.1.2:
   version "8.1.2"
@@ -3489,7 +3183,7 @@ ts-api-utils@^1.0.1:
   resolved "https://verdaccio.games24x7.com/ts-api-utils/-/ts-api-utils-1.4.3.tgz"
   integrity sha512-i3eMG77UTMD0hZhgRS562pv83RC6ukSAC2GMNWc+9dieh/+jDM5u5YG+NHX6VNDRHQcHwmsTHctP9LhbC3WxVw==
 
-tslib@^2.2.0, tslib@^2.6.2, tslib@^2.7.0:
+tslib@^2.6.2, tslib@^2.7.0:
   version "2.8.1"
   resolved "https://verdaccio.games24x7.com/tslib/-/tslib-2.8.1.tgz"
   integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
@@ -3599,11 +3293,6 @@ uuid@8.0.0:
   version "8.0.0"
   resolved "https://verdaccio.games24x7.com/uuid/-/uuid-8.0.0.tgz"
   integrity sha512-jOXGuXZAWdsTH7eZLtyXMqUb9EcWMGZNbL9YcGBJl4MH4nrxHmZJhEHvyLFrkxo+28uLb/NYRcStH48fnD0Vzw==
-
-uuid@^8.3.0:
-  version "8.3.2"
-  resolved "https://verdaccio.games24x7.com/uuid/-/uuid-8.3.2.tgz"
-  integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
 
 uuid@^9.0.0:
   version "9.0.1"
