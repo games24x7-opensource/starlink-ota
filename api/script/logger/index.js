@@ -66,6 +66,11 @@ const errorLogger = bunyan.createLogger({
   level: bunyan.ERROR,
 });
 
+const API_VERSION_HEADER = "x-codepush-api-version";
+const CLI_VERSION_HEADER = "x-codepush-cli-version";
+const PLUGIN_NAME_HEADER = "x-codepush-plugin-name";
+const PLUGIN_VERSION_HEADER = "x-codepush-plugin-version";
+const SDK_VERSION_HEADER = "x-codepush-sdk-version";
 class Logger {
   constructor(message) {
     this._message = message;
@@ -192,6 +197,10 @@ class Logger {
       this.setAmznTraceId(req.headers['x-amzn-trace-id']);
     }
 
+    if (req.headers) {
+      this._extractCodePushHeaders(req.headers);
+    }
+
     if (req.session) {
       this._extractSessionDetails(req.session);
     }
@@ -205,6 +214,33 @@ class Logger {
     }
 
     return this;
+  }
+
+  _extractCodePushHeaders(headers) {
+    if (!headers) {
+      return;
+    }
+
+    if (headers[API_VERSION_HEADER]) {
+      this._apiVersion = headers[API_VERSION_HEADER];
+    }
+
+    if (headers[CLI_VERSION_HEADER]) {
+      this._cliVersion = headers[CLI_VERSION_HEADER];
+    }
+
+    if (headers[PLUGIN_NAME_HEADER]) {
+      this._pluginName = headers[PLUGIN_NAME_HEADER];
+    }
+
+    if (headers[PLUGIN_VERSION_HEADER]) {
+      this._pluginVersion = headers[PLUGIN_VERSION_HEADER];
+    }
+
+    if (headers[SDK_VERSION_HEADER]) {
+      this._sdkVersion = headers[SDK_VERSION];
+    }
+
   }
 
   log() {
@@ -245,6 +281,12 @@ class Logger {
       url: this._url,
       timeTakenMS: this._timeTakenMS,
       responseStatus: this._responseStatus,
+      //-------------------------//
+      apiVersion: this._apiVersion,
+      cliVersion: this._cliVersion,
+      pluginName: this._pluginName,
+      pluginVersion: this._pluginVersion,
+      sdkVersion: this._sdkVersion,
       //-------------------------//
       req: this._req,
       err: this._error,
