@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import express from "express";
-import semver from "semver";
 import q from "q";
 import queryString from "querystring";
 import URL from "url";
@@ -11,16 +10,15 @@ import * as utils from "../utils/common";
 import * as acquisitionUtils from "../utils/acquisition";
 import * as errorUtils from "../utils/rest-error-handling";
 import * as redis from "../redis-manager";
-import * as restHeaders from "../utils/rest-headers";
 import * as rolloutSelector from "../utils/rollout-selector";
 import * as storageTypes from "../storage/storage";
 import { UpdateCheckCacheResponse, UpdateCheckRequest, UpdateCheckResponse } from "../types/rest-definitions";
 import validationUtils from "../utils/validation";
-
-import Logger from "../logger";
+const Logger = require("../logger");
 
 import Promise = q.Promise;
-const METRICS_BREAKING_VERSION = "1.5.2-beta";
+
+// const METRICS_BREAKING_VERSION = "1.5.2-beta";
 
 export interface AcquisitionConfig {
   storage: storageTypes.Storage;
@@ -73,11 +71,11 @@ function createResponseUsingStorage(
   }
 
   Logger.info("[Starlink::OTA::updateCheck::createResponseUsingStorage")
-  .setExpressReq(req)
-  .setData({
-    updateRequest
-  })
-  .log();
+    .setExpressReq(req)
+    .setData({
+      updateRequest,
+    })
+    .log();
 
   if (validationUtils.isValidUpdateCheckRequest(updateRequest)) {
     return storage.getPackageHistoryFromDeploymentKey(updateRequest.deploymentKey).then((packageHistory: storageTypes.Package[]) => {
@@ -90,14 +88,13 @@ function createResponseUsingStorage(
         }
       }
 
-
       Logger.info("[Starlink::OTA::updateCheck::createResponseUsingStorage] success in getPackageHistoryFromDeploymentKey")
-      .setExpressReq(req)
-      .setData({
-        updateRequest,
-        updateObject
-      })
-      .log();
+        .setExpressReq(req)
+        .setData({
+          updateRequest,
+          updateObject,
+        })
+        .log();
 
       const cacheableResponse: redis.CacheableResponse = {
         statusCode: 200,
@@ -109,38 +106,31 @@ function createResponseUsingStorage(
   } else {
     if (!validationUtils.isValidKeyField(updateRequest.deploymentKey)) {
       Logger.error("[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include a valid deployment key")
-      .setExpressReq(req)
-      .setData({
-        updateRequest
-      })
-      .log();
+        .setExpressReq(req)
+        .setData({
+          updateRequest,
+        })
+        .log();
 
-      errorUtils.sendMalformedRequestError(
-        res,
-        "An update check must include a valid deployment key"
-      );
-
+      errorUtils.sendMalformedRequestError(res, "An update check must include a valid deployment key");
     } else if (!validationUtils.isValidAppVersionField(updateRequest.appVersion)) {
-
       Logger.error("[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include a binary version")
-      .setExpressReq(req)
-      .setData({
-        updateRequest
-      })
-      .log();
+        .setExpressReq(req)
+        .setData({
+          updateRequest,
+        })
+        .log();
 
-      errorUtils.sendMalformedRequestError(
-        res,
-        "An update check must include a binary version"
-      );
+      errorUtils.sendMalformedRequestError(res, "An update check must include a binary version");
     } else {
-
-      Logger.error("[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include a valid deployment key and provide a semver-compliant app version.")
-      .setExpressReq(req)
-      .setData({
-        updateRequest
-      })
-      .log();
+      Logger.error(
+        "[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include a valid deployment key and provide a semver-compliant app version."
+      )
+        .setExpressReq(req)
+        .setData({
+          updateRequest,
+        })
+        .log();
 
       errorUtils.sendMalformedRequestError(
         res,
@@ -234,7 +224,7 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
               url,
               requestQueryParams,
               updateCheckBody,
-              fromCache
+              fromCache,
             })
             .log();
 
@@ -248,16 +238,16 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
         .then(() => {
           if (redisError) {
             Logger.error("[Starlink::OTA::updateCheck::redisError")
-            .setExpressReq(req)
-            .setError(redisError)
-            .setData({
-              deploymentKey,
-              clientUniqueId,
-              url,
-              requestQueryParams,
-              fromCache
-            })
-            .log();
+              .setExpressReq(req)
+              .setError(redisError)
+              .setData({
+                deploymentKey,
+                clientUniqueId,
+                url,
+                requestQueryParams,
+                fromCache,
+              })
+              .log();
 
             //TODO:Suraj why are we throwing here. Can we not simply return some error response back to client
             throw redisError;
@@ -265,16 +255,16 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
         })
         .catch((error: storageTypes.StorageError) => {
           Logger.error("[Starlink::OTA::updateCheck::StorageError")
-          .setExpressReq(req)
-          .setError(error)
-          .setData({
-            deploymentKey,
-            clientUniqueId,
-            url,
-            requestQueryParams,
-            fromCache
-          })
-          .log();
+            .setExpressReq(req)
+            .setError(error)
+            .setData({
+              deploymentKey,
+              clientUniqueId,
+              url,
+              requestQueryParams,
+              fromCache,
+            })
+            .log();
 
           return errorUtils.restErrorHandler(res, error, next);
         });
@@ -290,49 +280,46 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
     const labelOrAppVersion: string = req.body.label || appVersion;
 
     if (!deploymentKey || !appVersion) {
-
       Logger.error("[Starlink::OTA::reportStatusDeploy - A deploy status report must contain a valid appVersion and deploymentKey.")
-      .setExpressReq(req)
-      .setData({
-        deploymentKey,
-        clientUniqueId,
-        appVersion,
-        labelOrAppVersion,
-        previousDeploymentKey,
-        previousLabelOrAppVersion
-      })
-      .log();
+        .setExpressReq(req)
+        .setData({
+          deploymentKey,
+          clientUniqueId,
+          appVersion,
+          labelOrAppVersion,
+          previousDeploymentKey,
+          previousLabelOrAppVersion,
+        })
+        .log();
 
       return errorUtils.sendMalformedRequestError(res, "A deploy status report must contain a valid appVersion and deploymentKey.");
     } else if (req.body.label) {
       if (!req.body.status) {
-
         Logger.error("[Starlink::OTA::reportStatusDeploy - A deploy status report for a labelled package must contain a valid status.")
-        .setExpressReq(req)
-        .setData({
-          deploymentKey,
-          clientUniqueId,
-          appVersion,
-          labelOrAppVersion,
-          previousDeploymentKey,
-          previousLabelOrAppVersion
-        })
-        .log();
+          .setExpressReq(req)
+          .setData({
+            deploymentKey,
+            clientUniqueId,
+            appVersion,
+            labelOrAppVersion,
+            previousDeploymentKey,
+            previousLabelOrAppVersion,
+          })
+          .log();
 
         return errorUtils.sendMalformedRequestError(res, "A deploy status report for a labelled package must contain a valid status.");
       } else if (!redis.Utilities.isValidDeploymentStatus(req.body.status)) {
-
         Logger.error("[Starlink::OTA::reportStatusDeploy - Invalid status: " + req.body.status)
-        .setExpressReq(req)
-        .setData({
-          deploymentKey,
-          clientUniqueId,
-          appVersion,
-          labelOrAppVersion,
-          previousDeploymentKey,
-          previousLabelOrAppVersion
-        })
-        .log();
+          .setExpressReq(req)
+          .setData({
+            deploymentKey,
+            clientUniqueId,
+            appVersion,
+            labelOrAppVersion,
+            previousDeploymentKey,
+            previousLabelOrAppVersion,
+          })
+          .log();
 
         return errorUtils.sendMalformedRequestError(res, "Invalid status: " + req.body.status);
       }
@@ -371,18 +358,18 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
       })
       .catch((error: any) => {
         Logger.error("[Starlink::OTA::reportStatusDeploy::error")
-        .setExpressReq(req)
-        .setError(error)
-        .setData({
-          deploymentKey,
+          .setExpressReq(req)
+          .setError(error)
+          .setData({
+            deploymentKey,
             clientUniqueId,
             appVersion,
             labelOrAppVersion,
             previousDeploymentKey,
             previousLabelOrAppVersion,
             status: req.body.status,
-        })
-        .log();
+          })
+          .log();
 
         errorUtils.sendUnknownError(res, error, next);
       })
@@ -392,13 +379,14 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
   const reportStatusDownload = function (req: express.Request, res: express.Response, next: (err?: any) => void) {
     const deploymentKey = req.body.deploymentKey || req.body.deployment_key;
     if (!req.body || !deploymentKey || !req.body.label) {
-
-      Logger.error("[Starlink::OTA::reportStatusDownload::error] - A download status report must contain a valid deploymentKey and package label.")
-      .setExpressReq(req)
-      .setUpstreamRequestParams({
-        requestBody: req.body
-      })
-      .log();
+      Logger.error(
+        "[Starlink::OTA::reportStatusDownload::error] - A download status report must contain a valid deploymentKey and package label."
+      )
+        .setExpressReq(req)
+        .setUpstreamRequestParams({
+          requestBody: req.body,
+        })
+        .log();
 
       return errorUtils.sendMalformedRequestError(
         res,
@@ -420,13 +408,13 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
       })
       .catch((error: any) => {
         Logger.error("[Starlink::OTA::reportStatusDownload::error")
-        .setExpressReq(req)
-        .setError(error)
-        .setData({
-          deploymentKey,
-          label: req.body.label,
-        })
-        .log();
+          .setExpressReq(req)
+          .setError(error)
+          .setData({
+            deploymentKey,
+            label: req.body.label,
+          })
+          .log();
 
         errorUtils.sendUnknownError(res, error, next);
       })
