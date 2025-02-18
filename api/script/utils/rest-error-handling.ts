@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import  express from "express";
-
+import express from "express";
 import * as errorModule from "../error";
 import * as storageTypes from "../storage/storage";
 import * as passportAuthentication from "../routes/passport-authentication";
-import { AppInsights } from "../routes/app-insights";
 
 const sanitizeHtml = require("sanitize-html");
 
@@ -133,11 +131,7 @@ export function sendUnknownError(res: express.Response, error: any, next: Functi
     console.log(error);
   }
 
-  if (AppInsights.isAppInsightsInstrumented()) {
-    next(error); // Log error with AppInsights.
-  } else {
-    res.sendStatus(500);
-  }
+  res.sendStatus(500);
 }
 
 function storageErrorHandler(res: express.Response, error: storageTypes.StorageError, next: Function): void {

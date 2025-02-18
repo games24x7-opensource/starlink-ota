@@ -6,7 +6,7 @@ const https = require("https");
 const cluster = require("cluster");
 const fs = require("fs");
 import { AggregatorRegistry, Registry, Counter } from "prom-client";
-
+const Logger = require("./logger");
 import * as defaultServer from "./default-server";
 const aggregatorRegistry = new AggregatorRegistry();
 const masterRegistry = new Registry();
@@ -43,13 +43,14 @@ if (cluster?.isPrimary) {
   for (let i = 0; i < numCPUs; i++) {
     cluster.fork();
   }
-
   // Handle worker exits and restart them
   cluster.on("exit", (worker, code, signal) => {
     console.log(`Worker ${worker.process.pid} died. Restarting...`);
     processCrashCounter.inc();
     cluster.fork();
   });
+
+  startMasterMetricsServer();
 } else {
   // Worker processes will run the server
   defaultServer.start(function (err: Error, app: express.Express) {
@@ -123,3 +124,37 @@ const shutdown = (server) => {
     process.exit(1);
   }, 10000); // 10 seconds timeout
 };
+
+// server for cluster metrics
+function startMasterMetricsServer() {
+  const express = require("express");
+  const metricsServer = express();
+
+  // Add basic health check endpoint
+  metricsServer.get("/health", (req, res) => {
+    res.status(200).send({ status: "ok" });
+  });
+
+  // Add error handling for metrics endpoint
+  metricsServer.get("/clusterMetrics", async (req, res) => {
+    try {
+      const [workerMetrics, masterMetrics] = await Promise.all([aggregatorRegistry.clusterMetrics(), masterRegistry.metrics()]);
+
+      const allMetrics = workerMetrics + masterMetrics;
+      res.set("Content-Type", aggregatorRegistry.contentType);
+      res.send(allMetrics);
+    } catch (ex) {
+      Logger.instance("clusterMetrics failed").setError(ex).log();
+      res.status(500).json({
+        error: "Failed to collect metrics",
+        message: ex.message,
+      });
+    }
+  });
+
+  // Add port to env var and logging
+  const metricsPort = process.env.METRICS_PORT || 3001;
+  metricsServer.listen(metricsPort, () => {
+    console.log(`Metrics server listening on port ${metricsPort}`);
+  });
+}

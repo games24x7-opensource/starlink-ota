@@ -50,7 +50,6 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
     .then(() => {
       const app = express();
       const auth = api.auth({ storage: storage });
-      const appInsights = api.appInsights();
       const redisManager = new RedisManager();
 
       // First, to wrap all requests and catch all exceptions.
@@ -108,9 +107,6 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
 
       // If body-parser throws an error, catch it and set the request body to null.
       app.use(bodyParserErrorHandler);
-
-      // Before all other middleware to ensure all requests are tracked.
-      app.use(appInsights.router());
 
       app.get("/", (req: express.Request, res: express.Response, next: (err?: Error) => void): any => {
         res.send("Welcome to the Starlink OTA REST API!");
@@ -172,12 +168,8 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
           app.use(auth.legacyRouter());
         }
       }
-
-      // Error handler needs to be the last middleware so that it can catch all unhandled exceptions
-      app.use(appInsights.errorHandler);
       // Error handling middleware for AWS errors
       app.use(awsErrorMiddleware);
-
       done(null, app, storage);
     })
     .done();
