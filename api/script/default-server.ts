@@ -15,6 +15,9 @@ import { RedisManager } from "./redis-manager";
 import { Storage } from "./storage/storage";
 import { awsErrorMiddleware } from "./utils/awsErrorHandler";
 
+import { v4 as uuidv4 } from "uuid";
+const Logger = require("../logger");
+
 interface Secret {
   id: string;
   value: string;
@@ -52,8 +55,11 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
       const auth = api.auth({ storage: storage });
       const redisManager = new RedisManager();
 
-      // First, to wrap all requests and catch all exceptions.
-      app.use(domain);
+      app.use(function requestStart(req, res, next) {
+        Logger.info("access-log in").setExpressReq(req, true).log();
+
+        next();
+      });
 
       // Monkey-patch res.send and res.setHeader to no-op after the first call and prevent "already sent" errors.
       app.use((req: express.Request, res: express.Response, next: (err?: any) => void): any => {
@@ -78,14 +84,6 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
         next();
       });
 
-      if (process.env.LOGGING) {
-        app.use((req: express.Request, res: express.Response, next: (err?: any) => void): any => {
-          console.log(); // Newline to mark new request
-          console.log(`[REST] Received ${req.method} request at ${req.originalUrl}`);
-          next();
-        });
-      }
-
       // Enforce a timeout on all requests.
       app.use(api.requestTimeoutHandler());
 
@@ -95,13 +93,6 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
       // body-parser must be before the Application Insights router.
       app.use(bodyParser.urlencoded({ extended: true }));
       const jsonOptions: any = { limit: "10kb", strict: true };
-      if (process.env.LOG_INVALID_JSON_REQUESTS === "true") {
-        jsonOptions.verify = (req: express.Request, res: express.Response, buf: Buffer, encoding: string) => {
-          if (buf && buf.length) {
-            (<any>req).rawBody = buf.toString();
-          }
-        };
-      }
 
       app.use(bodyParser.json(jsonOptions));
 
@@ -149,7 +140,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
        * Management routes are disabled by default and enabled only when acquisition routes are off and management is enabled
        */
       if (process.env.DISABLE_ACQUISITION !== "true") {
-        console.log("Acquisition routes are enabled ✅");
+        console.log("CAUTION: Acquisition routes are enabled");
         app.use(api.acquisition({ storage: storage, redisManager: redisManager }));
       } else {
         if (process.env.DISABLE_MANAGEMENT !== "true") {
@@ -162,7 +153,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
           } else {
             app.use(auth.router());
           }
-          console.log("Management routes are enabled ✅");
+          console.log("CAUTION: Management routes are enabled");
           app.use(fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
         } else {
           app.use(auth.legacyRouter());
