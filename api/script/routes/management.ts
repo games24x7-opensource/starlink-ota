@@ -280,7 +280,7 @@ export function getManagementRouter(config: ManagementConfig): Router {
         return q.all(restAppPromises);
       })
       .then((restApps: restTypes.App[]) => {
-        Logger.instance("[Starlink::Admin::").setExpressReq(req).setUpstreamResponse({ body: restApps }).log();
+        Logger.info("[Starlink::Admin::Get-apps").setExpressReq(req).setData({ restApps }).log();
         res.send({ apps: converterUtils.sortAndUpdateDisplayNameOfRestAppsList(restApps) });
       })
       .catch((error: error.CodePushError) => errorUtils.restErrorHandler(res, error, next))
@@ -330,16 +330,12 @@ export function getManagementRouter(config: ManagementConfig): Router {
               res.setHeader("Location", urlEncode([`/apps/${storageApp.name}`]));
               let respData = converterUtils.toRestApp(storageApp, /*displayName=*/ storageApp.name, deploymentNames);
 
-              Logger.instance("[Starlink::Admin::")
-                .setExpressReq(req)
-                .setUpstreamRequestParams(appRequest)
-                .setUpstreamResponse({ body: respData })
-                .log();
+              Logger.info("[Starlink::Admin::Create-App").setExpressReq(req).setData({ respData, appRequest }).log();
               res.status(201).send({ app: respData });
             });
         })
         .catch((error: error.CodePushError) => {
-          Logger.instance("[Starlink::Admin::").setExpressReq(req).setError(error).log();
+          Logger.error("[Starlink::Admin::Create-App").setExpressReq(req).setError(error).log();
           errorUtils.restErrorHandler(res, error, next);
         })
         .done();
@@ -361,7 +357,7 @@ export function getManagementRouter(config: ManagementConfig): Router {
         res.send({ app: converterUtils.toRestApp(storageApp, /*displayName=*/ appName, deploymentNames) });
       })
       .catch((error: error.CodePushError) => {
-        Logger.instance("[Starlink::Admin::").setExpressReq(req).setError(error).log();
+        Logger.error("[Starlink::Admin::").setExpressReq(req).setError(error).log();
         errorUtils.restErrorHandler(res, error, next);
       })
       .done();
@@ -393,11 +389,12 @@ export function getManagementRouter(config: ManagementConfig): Router {
         return storage.removeApp(accountId, appId);
       })
       .then(() => {
+        Logger.log("[Starlink::Admin::Delete-App success").setExpressReq(req).log();
         res.sendStatus(204);
         if (invalidationError) throw invalidationError;
       })
       .catch((error: error.CodePushError) => {
-        Logger.instance("[Starlink::Admin::").setExpressReq(req).setError(error).log();
+        Logger.error("[Starlink::Admin::Delete-App").setExpressReq(req).setError(error).log();
         errorUtils.restErrorHandler(res, error, next);
       })
       .done();
@@ -780,18 +777,18 @@ export function getManagementRouter(config: ManagementConfig): Router {
 
         if (updateRelease) {
           return storage.updatePackageHistory(accountId, appId, storageDeployment.id, packageHistory).then(() => {
-            Logger.instance("[Starlink::Admin::UpdateRelease::success")
+            Logger.info("[Starlink::Admin::UpdateRelease::success")
               .setExpressReq(req)
-              .setUpstreamRequestParams({ appName, deploymentName, accountId, info })
-              .setUpstreamResponse({ body: converterUtils.toRestPackage(packageToUpdate) })
+
+              .setData({ data: converterUtils.toRestPackage(packageToUpdate), appName, deploymentName, accountId, info })
               .log();
             res.send({ package: converterUtils.toRestPackage(packageToUpdate) });
             return invalidateCachedPackage(storageDeployment.key);
           });
         } else {
-          Logger.instance("[Starlink::Admin::UpdateRelease::no")
+          Logger.info("[Starlink::Admin::UpdateRelease::no update")
             .setExpressReq(req)
-            .setUpstreamRequestParams({ appName, deploymentName, accountId, info })
+            .setData({ appName, deploymentName, accountId, info })
             .log();
           res.sendStatus(204);
         }
@@ -998,10 +995,9 @@ export function getManagementRouter(config: ManagementConfig): Router {
         return storage.getPackageHistory(accountId, appId, deployment.id);
       })
       .then((packageHistory: storageTypes.Package[]) => {
-        Logger.instance("[Starlink::Admin::GetPackageHistory")
+        Logger.info("[Starlink::Admin::GetPackageHistory")
           .setExpressReq(req)
-          .setUpstreamRequestParams({ appName, deploymentName, accountId })
-          .setUpstreamResponse({ body: packageHistory })
+          .setData({ packageHistory, appName, deploymentName, accountId })
           .log();
 
         res.send({ history: packageHistory });
@@ -1035,11 +1031,11 @@ export function getManagementRouter(config: ManagementConfig): Router {
         .then((metrics: redis.DeploymentMetrics) => {
           const deploymentMetrics: restTypes.DeploymentMetrics = converterUtils.toRestDeploymentMetrics(metrics);
 
-          Logger.instance("[Starlink::Admin::GetDeploymentMetrics")
+          Logger.info("[Starlink::Admin::GetDeploymentMetrics")
             .setExpressReq(req)
-            .setUpstreamRequestParams({ appName, deploymentName, accountId })
-            .setUpstreamResponse({ body: deploymentMetrics })
+            .setData({ deploymentMetrics, appName, deploymentName, accountId })
             .log();
+
           res.send({ metrics: deploymentMetrics });
         })
         .catch((error: error.CodePushError) => errorUtils.restErrorHandler(res, error, next))

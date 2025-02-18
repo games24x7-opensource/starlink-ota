@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import bodyParser from "body-parser";
-const domain = require("express-domain-middleware");
 import express, { Response } from "express";
 import q from "q";
 import promClient from "prom-client";
@@ -14,9 +13,7 @@ import { JsonStorage } from "./storage/json-storage";
 import { RedisManager } from "./redis-manager";
 import { Storage } from "./storage/storage";
 import { awsErrorMiddleware } from "./utils/awsErrorHandler";
-
-import { v4 as uuidv4 } from "uuid";
-const Logger = require("../logger");
+const Logger = require("./logger");
 
 interface Secret {
   id: string;
@@ -57,7 +54,6 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
 
       app.use(function requestStart(req, res, next) {
         Logger.info("access-log in").setExpressReq(req, true).log();
-
         next();
       });
 

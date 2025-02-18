@@ -523,5 +523,6 @@ function cleanHeaders(headers) {
   return _.omit(headers, ['cookie']);
 }
 
-const logger = (module.exports = Logger);
-logger.getLogStreams = getLogStreams;
+Logger.getLogStreams = getLogStreams;
+
+module.exports = Logger;
