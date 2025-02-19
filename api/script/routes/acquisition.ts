@@ -17,6 +17,7 @@ import validationUtils from "../utils/validation";
 const Logger = require("../logger");
 
 import Promise = q.Promise;
+import { acquisitionInputSanitizer } from "./input-sanitizer";
 
 // const METRICS_BREAKING_VERSION = "1.5.2-beta";
 
@@ -78,31 +79,43 @@ function createResponseUsingStorage(
     .log();
 
   if (validationUtils.isValidUpdateCheckRequest(updateRequest)) {
-    return storage.getPackageHistoryFromDeploymentKey(updateRequest.deploymentKey).then((packageHistory: storageTypes.Package[]) => {
-      const updateObject: UpdateCheckCacheResponse = acquisitionUtils.getUpdatePackageInfo(packageHistory, updateRequest);
-      if ((isMissingPatchVersion || isPlainIntegerNumber) && updateObject.originalPackage.appVersion === updateRequest.appVersion) {
-        // Set the appVersion of the response to the original one with the missing patch version or plain number
-        updateObject.originalPackage.appVersion = originalAppVersion;
-        if (updateObject.rolloutPackage) {
-          updateObject.rolloutPackage.appVersion = originalAppVersion;
+    return storage
+      .getPackageHistoryFromDeploymentKey(updateRequest.deploymentKey)
+      .then((packageHistory: storageTypes.Package[]) => {
+        const updateObject: UpdateCheckCacheResponse = acquisitionUtils.getUpdatePackageInfo(packageHistory, updateRequest);
+        if ((isMissingPatchVersion || isPlainIntegerNumber) && updateObject.originalPackage.appVersion === updateRequest.appVersion) {
+          // Set the appVersion of the response to the original one with the missing patch version or plain number
+          updateObject.originalPackage.appVersion = originalAppVersion;
+          if (updateObject.rolloutPackage) {
+            updateObject.rolloutPackage.appVersion = originalAppVersion;
+          }
         }
-      }
 
-      Logger.info("[Starlink::OTA::updateCheck::createResponseUsingStorage] success in getPackageHistoryFromDeploymentKey")
-        .setExpressReq(req)
-        .setData({
-          updateRequest,
-          updateObject,
-        })
-        .log();
+        Logger.info("[Starlink::OTA::updateCheck::createResponseUsingStorage] success in getPackageHistoryFromDeploymentKey")
+          .setExpressReq(req)
+          .setData({
+            updateRequest,
+            updateObject,
+          })
+          .log();
 
-      const cacheableResponse: redis.CacheableResponse = {
-        statusCode: 200,
-        body: updateObject,
-      };
+        const cacheableResponse: redis.CacheableResponse = {
+          statusCode: 200,
+          body: updateObject,
+        };
 
-      return q(cacheableResponse);
-    });
+        return q(cacheableResponse);
+      })
+      .catch((error: any) => {
+        // Handle all storage errors as deployment key errors
+        Logger.error("[Starlink::OTA::updateCheck::StorageError] Invalid or missing deployment")
+          .setExpressReq(req)
+          .setData({ updateRequest })
+          .log();
+
+        errorUtils.sendMalformedRequestError(res, "Invalid deployment key");
+        return null;
+      });
   } else {
     if (!validationUtils.isValidKeyField(updateRequest.deploymentKey)) {
       Logger.error("[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include a valid deployment key")
@@ -237,35 +250,13 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
         })
         .then(() => {
           if (redisError) {
-            Logger.error("[Starlink::OTA::updateCheck::redisError")
-              .setExpressReq(req)
-              .setError(redisError)
-              .setData({
-                deploymentKey,
-                clientUniqueId,
-                url,
-                requestQueryParams,
-                fromCache,
-              })
-              .log();
-
-            //TODO:Suraj why are we throwing here. Can we not simply return some error response back to client
+            Logger.error("[Starlink::OTA::updateCheck::redisError").setExpressReq(req).setError(redisError).log();
+            //exception handled in catch block
             throw redisError;
           }
         })
         .catch((error: storageTypes.StorageError) => {
-          Logger.error("[Starlink::OTA::updateCheck::StorageError")
-            .setExpressReq(req)
-            .setError(error)
-            .setData({
-              deploymentKey,
-              clientUniqueId,
-              url,
-              requestQueryParams,
-              fromCache,
-            })
-            .log();
-
+          Logger.error("[Starlink::OTA::updateCheck::StorageError").setExpressReq(req).setError(error).log();
           return errorUtils.restErrorHandler(res, error, next);
         });
     };
@@ -421,7 +412,16 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
       .done();
   };
 
+  /**
+   * @lokesh-inumpudi
+   * This middleware is used to sanitize the input for the acquisition endpoints.
+   * It is used to prevent the endpoints from being abused by oversized inputs.
+   * if any input is found to be oversized[>128 chars,configurable with env variable], it will return a 400 error.
+   */
+  router.use(acquisitionInputSanitizer());
+
   router.get("/updateCheck", updateCheck(false));
+  // Games24x7 Apps: Using this endpoint to check for updates
   router.get("/v0.1/public/codepush/update_check", updateCheck(true));
 
   router.post("/reportStatus/deploy", reportStatusDeploy);
