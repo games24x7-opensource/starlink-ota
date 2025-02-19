@@ -413,7 +413,6 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
   };
 
   /**
-   * @lokesh-inumpudi
    * This middleware is used to sanitize the input for the acquisition endpoints.
    * It is used to prevent the endpoints from being abused by oversized inputs.
    * if any input is found to be oversized[>128 chars,configurable with env variable], it will return a 400 error.
