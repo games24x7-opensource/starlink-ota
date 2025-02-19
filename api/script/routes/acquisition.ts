@@ -183,7 +183,6 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
 
   const updateCheck = function (newApi: boolean) {
     return function (req: express.Request, res: express.Response, next: (err?: any) => void) {
-      
       const appVersion: string = String(req.query.appVersion || req.query.app_version);
       const deploymentKey: string = String(req.query.deploymentKey || req.query.deployment_key);
       const key: string = redis.Utilities.getDeploymentKeyHash(deploymentKey);
@@ -191,7 +190,7 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
       const url: string = getUrlKey(req.originalUrl);
 
       // Without clientUniqueId, deploymentKey we can't proceed with update check
-      // so we are returning 400 error immediately
+      // so we are returning 400 error immediately: check for "undefined" cause String(undefined) === "undefined"
       if (deploymentKey === "undefined" || clientUniqueId === "undefined" || appVersion === "undefined") {
         Logger.error("[Starlink::OTA::updateCheck - UpdateCheck must contain a valid clientUniqueId, deploymentKey and appVersion.")
           .setExpressReq(req)
