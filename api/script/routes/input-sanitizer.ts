@@ -1,5 +1,3 @@
-// @lokesh-inumpudi
-
 import express from "express";
 
 export function InputSanitizer(req: express.Request, res: express.Response, next: (err?: any) => void): any {
