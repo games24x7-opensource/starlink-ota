@@ -32,8 +32,6 @@ const MAX_STRING_LENGTH = Number(process.env.MAX_INPUT_STRING_LENGTH) || 128;
  */
 export function acquisitionInputSanitizer(): express.RequestHandler {
   return (req: express.Request, res: express.Response, next: Function) => {
-    console.info(`Input sanitizer initialized with MAX_STRING_LENGTH: ${MAX_STRING_LENGTH}}`);
-
     try {
       // Validate query parameters (GET requests)
       if (req.query) {
