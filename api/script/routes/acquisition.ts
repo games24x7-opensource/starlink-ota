@@ -127,14 +127,14 @@ function createResponseUsingStorage(
 
       errorUtils.sendMalformedRequestError(res, "An update check must include a valid deployment key");
     } else if (!validationUtils.isValidAppVersionField(updateRequest.appVersion)) {
-      Logger.error("[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include a binary version")
+      Logger.error("[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include appVersion")
         .setExpressReq(req)
         .setData({
           updateRequest,
         })
         .log();
 
-      errorUtils.sendMalformedRequestError(res, "An update check must include a binary version");
+      errorUtils.sendMalformedRequestError(res, "An update check must include appVersion");
     } else {
       Logger.error(
         "[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include a valid deployment key and provide a semver-compliant app version."
@@ -183,13 +183,31 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
 
   const updateCheck = function (newApi: boolean) {
     return function (req: express.Request, res: express.Response, next: (err?: any) => void) {
+      
+      const appVersion: string = String(req.query.appVersion || req.query.app_version);
       const deploymentKey: string = String(req.query.deploymentKey || req.query.deployment_key);
       const key: string = redis.Utilities.getDeploymentKeyHash(deploymentKey);
       const clientUniqueId: string = String(req.query.clientUniqueId || req.query.client_unique_id);
       const url: string = getUrlKey(req.originalUrl);
 
-      let requestQueryParams = req.query || {};
+      // Without clientUniqueId, deploymentKey we can't proceed with update check
+      // so we are returning 400 error immediately
+      if (deploymentKey === "undefined" || clientUniqueId === "undefined" || appVersion === "undefined") {
+        Logger.error("[Starlink::OTA::updateCheck - UpdateCheck must contain a valid clientUniqueId, deploymentKey and appVersion.")
+          .setExpressReq(req)
+          .setData({
+            deploymentKey,
+            clientUniqueId,
+          })
+          .log();
 
+        return errorUtils.sendMalformedRequestError(
+          res,
+          "UpdateCheck must contain a valid clientUniqueId, deploymentKey and appVersion."
+        );
+      }
+
+      let requestQueryParams = req.query || {};
       let fromCache: boolean = true;
       let redisError: Error;
 
@@ -268,6 +286,7 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
     const previousDeploymentKey = req.body.previousDeploymentKey || req.body.previous_deployment_key || deploymentKey;
     const previousLabelOrAppVersion = req.body.previousLabelOrAppVersion || req.body.previous_label_or_app_version;
     const clientUniqueId = req.body.clientUniqueId || req.body.client_unique_id;
+
     const labelOrAppVersion: string = req.body.label || appVersion;
 
     if (!deploymentKey || !appVersion) {
