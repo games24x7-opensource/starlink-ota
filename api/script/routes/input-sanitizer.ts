@@ -1,7 +1,18 @@
 import express from "express";
 
+/**
+ * Helper function to send consistent error responses
+ */
+function sendErrorResponse(res: express.Response, message: string, code = 400) {
+  return res.status(code).json({
+    status: "error",
+    message,
+    code,
+  });
+}
+
 export function InputSanitizer(req: express.Request, res: express.Response, next: (err?: any) => void): any {
-  if (req.query) {
+  if (Object.keys(req.query).length > 0) {
     req.query.deploymentKey = trimInvalidCharacters((req.query.deploymentKey || req.query.deployment_key) as string);
   }
 
@@ -34,29 +45,40 @@ export function acquisitionInputSanitizer(): express.RequestHandler {
   return (req: express.Request, res: express.Response, next: Function) => {
     try {
       // Validate query parameters (GET requests)
-      if (req.query) {
+      if (req.method === "GET") {
+        if (!req.query || Object.keys(req.query).length === 0) {
+          return sendErrorResponse(res, "invalid query parameters");
+        }
+
         for (const key in req.query) {
           const value = req.query[key];
-          if (typeof value === "string" && value.length > MAX_STRING_LENGTH) {
-            return res.status(400).json({ error: "INVALID_PARAMS" });
+          if (!value || (typeof value === "string" && value.length > MAX_STRING_LENGTH)) {
+            return sendErrorResponse(res, "invalid query parameters");
           }
         }
       }
 
-      // Validate body parameters (POST requests)
-      if (req.body && typeof req.body === "object") {
+      // Validate body parameters (POST/PUT requests)
+      if (["POST", "PUT"].includes(req.method)) {
+        if (!req.body || Object.keys(req.body).length === 0) {
+          return sendErrorResponse(res, "Invalid request body");
+        }
+
+        if (typeof req.body !== "object" || Array.isArray(req.body)) {
+          return sendErrorResponse(res, "Invalid request body");
+        }
+
         for (const key in req.body) {
           const value = req.body[key];
-          if (typeof value === "string" && value.length > MAX_STRING_LENGTH) {
-            return res.status(400).json({ error: "INVALID_PARAM_LENGTH" });
+          if (!value || (typeof value === "string" && value.length > MAX_STRING_LENGTH)) {
+            return sendErrorResponse(res, "Invalid request body");
           }
         }
       }
 
       next();
     } catch {
-      // Continue on unexpected errors to maintain service availability
-      next();
+      return sendErrorResponse(res, "Invalid request format");
     }
   };
 }

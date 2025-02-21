@@ -12,7 +12,7 @@ import { fileUploadMiddleware } from "./file-upload-manager";
 import { JsonStorage } from "./storage/json-storage";
 import { RedisManager } from "./redis-manager";
 import { Storage } from "./storage/storage";
-import { awsErrorMiddleware } from "./utils/awsErrorHandler";
+import { globalErrorHandler } from "./middleware/error-handler";
 const Logger = require("./logger");
 
 interface Secret {
@@ -155,8 +155,9 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
           app.use(auth.legacyRouter());
         }
       }
-      // Error handling middleware for AWS errors
-      app.use(awsErrorMiddleware);
+
+      // Global error handling - must be added last to catch all errors
+      app.use(globalErrorHandler);
       done(null, app, storage);
     })
     .done();
