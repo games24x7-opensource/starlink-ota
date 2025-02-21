@@ -46,15 +46,16 @@ export function acquisitionInputSanitizer(): express.RequestHandler {
     try {
       // Validate query parameters (GET requests)
       if (req.method === "GET") {
-        if (!req.query || Object.keys(req.query).length === 0) {
-          return sendErrorResponse(res, "invalid query parameters");
-        }
-
-        for (const key in req.query) {
-          const value = req.query[key];
-          if (!value || (typeof value === "string" && value.length > MAX_STRING_LENGTH)) {
-            return sendErrorResponse(res, "invalid query parameters");
+        if (req.query && Object.keys(req.query).length > 0) {
+          for (const key in req.query) {
+            const value = req.query[key];
+            if (!value || (typeof value === "string" && value.length > MAX_STRING_LENGTH)) {
+              return sendErrorResponse(res, "invalid query parameters");
+            }
           }
+        } else {
+          // facilitate normal GET requests without query parameters
+          return next();
         }
       }
 
