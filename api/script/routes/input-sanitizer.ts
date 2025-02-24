@@ -1,16 +1,5 @@
 import express from "express";
 
-/**
- * Helper function to send consistent error responses
- */
-function sendErrorResponse(res: express.Response, message: string, code = 400) {
-  return res.status(code).json({
-    status: "error",
-    message,
-    code,
-  });
-}
-
 export function InputSanitizer(req: express.Request, res: express.Response, next: (err?: any) => void): any {
   if (Object.keys(req.query).length > 0) {
     req.query.deploymentKey = trimInvalidCharacters((req.query.deploymentKey || req.query.deployment_key) as string);
@@ -24,12 +13,6 @@ function trimInvalidCharacters(text: string): string {
 }
 
 /**
- * Single maximum length for all string parameters
- * Set to 128 chars which covers our longest expected input (UUIDs, hashes, etc.)
- * Simplifies maintenance and validation logic
- */
-const MAX_STRING_LENGTH = Number(process.env.MAX_INPUT_STRING_LENGTH) || 128;
-/**
  *
  * @lokesh-inumpudi
  * Middleware to protect acquisition endpoints from oversized inputs
@@ -41,45 +24,56 @@ const MAX_STRING_LENGTH = Number(process.env.MAX_INPUT_STRING_LENGTH) || 128;
  * - No object lookups
  * - Minimal error handling
  */
+
+/**
+ * Single maximum length for all string parameters
+ * Set to 128 chars which covers our longest expected input (UUIDs, hashes, etc.)
+ * Simplifies maintenance and validation logic
+ */
+const MAX_STRING_LENGTH = Number(process.env.MAX_INPUT_STRING_LENGTH) || 128;
+
+/**
+ * Validates object keys and values against length and null checks
+ */
+function validateKeyValuePairs(obj: Record<string, any>): boolean {
+  for (const [key, value] of Object.entries(obj)) {
+    if (!key || !value || key.length > MAX_STRING_LENGTH || (typeof value === "string" && value.length > MAX_STRING_LENGTH)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Helper function to send consistent error responses
+ */
+function sendErrorResponse(res: express.Response, message: string, code = 400) {
+  return res.status(code).json({
+    status: "error",
+    message,
+    code,
+  });
+}
 export function acquisitionInputSanitizer(): express.RequestHandler {
   return (req: express.Request, res: express.Response, next: Function) => {
     try {
-      // Validate query parameters (GET requests)
-      if (req.method === "GET") {
-        if (req.query && Object.keys(req.query).length > 0) {
-          for (const key in req.query) {
-            const value = req.query[key];
-            if (!value || (typeof value === "string" && value.length > MAX_STRING_LENGTH)) {
-              return sendErrorResponse(res, "invalid query parameters");
-            }
-          }
-        } else {
-          // facilitate normal GET requests without query parameters
-          return next();
+      // Validate query parameters if present
+      if (req.query && typeof req.query === "object" && Object.keys(req.query).length > 0) {
+        if (!validateKeyValuePairs(req.query)) {
+          return sendErrorResponse(res, "Invalid request");
         }
       }
 
-      // Validate body parameters (POST/PUT requests)
-      if (["POST", "PUT"].includes(req.method)) {
-        if (!req.body || Object.keys(req.body).length === 0) {
-          return sendErrorResponse(res, "Invalid request body");
-        }
-
-        if (typeof req.body !== "object" || Array.isArray(req.body)) {
-          return sendErrorResponse(res, "Invalid request body");
-        }
-
-        for (const key in req.body) {
-          const value = req.body[key];
-          if (!value || (typeof value === "string" && value.length > MAX_STRING_LENGTH)) {
-            return sendErrorResponse(res, "Invalid request body");
-          }
+      // Validate body if present
+      if (req.body && typeof req.body === "object" && Object.keys(req.body).length > 0) {
+        if (!validateKeyValuePairs(req.body)) {
+          return sendErrorResponse(res, "Invalid request");
         }
       }
 
       next();
-    } catch {
-      return sendErrorResponse(res, "Invalid request format");
+    } catch (error) {
+      return sendErrorResponse(res, "Invalid request");
     }
   };
 }
