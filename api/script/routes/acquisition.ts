@@ -280,9 +280,9 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
   };
 
   const reportStatusDeploy = function (req: express.Request, res: express.Response, next: (err?: any) => void) {
-    const deploymentKey = req.body.deploymentKey || req.body.deployment_key;
-    const appVersion = req.body.appVersion || req.body.app_version;
-    const previousDeploymentKey = req.body.previousDeploymentKey || req.body.previous_deployment_key || deploymentKey;
+    const deploymentKey = req.body?.deploymentKey || req.body?.deployment_key;
+    const appVersion = req.body?.appVersion || req.body?.app_version;
+    const previousDeploymentKey = req.body?.previousDeploymentKey || req.body?.previous_deployment_key || deploymentKey;
     const previousLabelOrAppVersion = req.body.previousLabelOrAppVersion || req.body.previous_label_or_app_version;
     const clientUniqueId = req.body.clientUniqueId || req.body.client_unique_id;
 
@@ -386,8 +386,8 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
   };
 
   const reportStatusDownload = function (req: express.Request, res: express.Response, next: (err?: any) => void) {
-    const deploymentKey = req.body.deploymentKey || req.body.deployment_key;
-    if (!req.body || !deploymentKey || !req.body.label) {
+    const deploymentKey = req.body?.deploymentKey || req.body?.deployment_key;
+    if (!req.body || !deploymentKey || !req.body?.label) {
       Logger.error(
         "[Starlink::OTA::reportStatusDownload::error] - A download status report must contain a valid deploymentKey and package label."
       )
