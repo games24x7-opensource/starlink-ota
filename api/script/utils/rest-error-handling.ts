@@ -57,7 +57,11 @@ export function restErrorHandler(res: express.Response, error: errorModule.CodeP
 
 export function sendMalformedRequestError(res: express.Response, message: string): void {
   if (message) {
-    res.status(400).send(sanitizeHtml(message));
+    res.status(400).json({
+      status: "error",
+      message,
+      code: 400,
+    });
   } else {
     res.sendStatus(400);
   }
@@ -65,7 +69,11 @@ export function sendMalformedRequestError(res: express.Response, message: string
 
 export function sendForbiddenError(res: express.Response, message?: string): void {
   if (message) {
-    res.status(403).send(sanitizeHtml(message));
+    res.status(403).json({
+      status: "error",
+      message,
+      code: 403,
+    });
   } else {
     res.sendStatus(403);
   }
@@ -77,7 +85,11 @@ export function sendForbiddenPage(res: express.Response, message: string): void 
 
 export function sendNotFoundError(res: express.Response, message?: string): void {
   if (message) {
-    res.status(404).send(sanitizeHtml(message));
+    res.status(404).json({
+      status: "error",
+      message,
+      code: 404,
+    });
   } else {
     res.sendStatus(404);
   }
