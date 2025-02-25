@@ -29,7 +29,7 @@ export function restError(errorCode: ErrorCode, message?: string): RestError {
 
 export function restErrorHandler(res: express.Response, error: errorModule.CodePushError, next: Function): void {
   if (!error || (error.source !== errorModule.ErrorSource.Storage && error.source !== errorModule.ErrorSource.Rest)) {
-    Logger.info("Unknown error source");
+    Logger.info("Unknown error source").log();
     sendUnknownError(res, error, next);
   } else if (error.source === errorModule.ErrorSource.Storage) {
     storageErrorHandler(res, <storageTypes.StorageError>error, next);
@@ -49,7 +49,7 @@ export function restErrorHandler(res: express.Response, error: errorModule.CodeP
         sendForbiddenError(res, error.message);
         break;
       default:
-        Logger.info("Unknown REST error");
+        Logger.info("Unknown REST error").log();
         sendUnknownError(res, error, next);
         break;
     }
@@ -139,9 +139,9 @@ export function sendUnknownError(res: express.Response, error: any, next: Functi
   error = error || new Error("Unknown error");
 
   if (typeof error["stack"] === "string") {
-    Logger.info(error["stack"]);
+    Logger.info(error["stack"]).log();
   } else {
-    Logger.info(error);
+    Logger.info(error).setError(error).log();
   }
 
   res.sendStatus(500);
@@ -166,7 +166,7 @@ function storageErrorHandler(res: express.Response, error: storageTypes.StorageE
       break;
     case storageTypes.ErrorCode.Other:
     default:
-      Logger.info("Unknown storage error.");
+      Logger.error("Unknown storage error.").setError(error).log();
       sendUnknownError(res, error, next);
       break;
   }
