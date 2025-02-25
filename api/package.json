@@ -17,11 +17,13 @@
     "prettier": "prettier --write \"./**/*.ts\"",
     "lint": "npx eslint ./script/**/*.ts",
     "lint:fix": "npx eslint ./script/**/*.ts --fix",
-    "test": "jest acquisition.test.ts --watch --coverage",
+    "test": "jest acquisition.test.ts",
+    "test:coverage": "jest acquisition.test.ts --watch --coverage",
     "test:watch": "jest --watch",
     "test:unit": "jest test/unit",
     "test:integration": "jest test/integration --runInBand",
-    "test:acquisition": "jest acquisition.test.ts --watch --coverage"
+    "test:acquisition": "jest acquisition.test.ts --watch --coverage",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -92,5 +94,16 @@
   "resolutions": {
     "@types/express": "^4.17.17",
     "@types/express-serve-static-core": "^4.17.17"
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "yarn test"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "yarn lint",
+      "yarn prettier"
+    ]
   }
 }
