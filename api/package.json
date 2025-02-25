@@ -17,11 +17,11 @@
     "prettier": "prettier --write \"./**/*.ts\"",
     "lint": "npx eslint ./script/**/*.ts",
     "lint:fix": "npx eslint ./script/**/*.ts --fix",
-    "test": "jest --coverage",
+    "test": "jest acquisition.test.ts --watch --coverage",
     "test:watch": "jest --watch",
     "test:unit": "jest test/unit",
     "test:integration": "jest test/integration --runInBand",
-    "test:acquisition": "jest acquisition.test.ts --watch"
+    "test:acquisition": "jest acquisition.test.ts --watch --coverage"
   },
   "repository": {
     "type": "git",

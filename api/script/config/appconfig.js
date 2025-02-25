@@ -1,13 +1,13 @@
 const events = require('events');
-
+const Logger = require('../logger');
 const appConfig = {};
 
 appConfig.emitter = new events.EventEmitter();
 appConfig.updateCallback = function (strPropertyName) {
-  console.log('+++++++++++++++appConfig updateCallback++++++++++++++++++++');
-  console.log(strPropertyName);
-  console.log(appConfig[strPropertyName]);
-  console.log('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+  Logger.info('+++++++++++++++appConfig updateCallback++++++++++++++++++++');
+  Logger.info(strPropertyName);
+  Logger.info(appConfig[strPropertyName]);
+  Logger.info('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
   appConfig.emitter.emit('appConfigChanged');
 };
 

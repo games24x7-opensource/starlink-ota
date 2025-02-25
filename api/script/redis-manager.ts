@@ -4,6 +4,7 @@
 import assert from "assert";
 import q from "q";
 import redis from "redis";
+const Logger = require("./logger");
 
 import Promise = q.Promise;
 
@@ -112,49 +113,49 @@ export class RedisManager {
         cluster: false,
       };
 
-      console.log("Initializing Redis with config:", {
+      Logger.info("Initializing Redis with config:", {
         ...redisConfig,
         host: redisConfig.host,
         port: redisConfig.port,
         tls: !!redisConfig.tls,
-      });
+      }).log();
 
       this._opsClient = redis.createClient(redisConfig);
       this._metricsClient = redis.createClient(redisConfig);
 
       // Add end event handlers
       this._opsClient.on("connect", () => {
-        console.log(`✅ Redis ops client connected successfully to ${redisConfig.host}:${redisConfig.port}`);
+        Logger.info(`✅ Redis ops client connected successfully to ${redisConfig.host}:${redisConfig.port}`).log();
         this._isConnected = true;
       });
 
       this._metricsClient.on("connect", () => {
-        console.log(`✅Redis metrics client connected successfully to ${redisConfig.host}:${redisConfig.port}`);
+        Logger.info(`✅ Redis metrics client connected successfully to ${redisConfig.host}:${redisConfig.port}`).log();
       });
 
       this._opsClient.on("error", (err) => {
-        console.error("Redis ops client error:", err);
+        Logger.error("Redis ops client error:", err).log();
         this._isConnected = false;
       });
 
       this._metricsClient.on("error", (err) => {
-        console.error("Redis metrics client error:", err);
+        Logger.error("Redis metrics client error:", err).log();
       });
 
       this._opsClient.on("ready", () => {
-        console.log("✅ Redis ops client ready for commands");
+        Logger.info("✅ Redis ops client ready for commands").log();
       });
 
       this._metricsClient.on("ready", () => {
-        console.log("✅ Redis metrics client ready for commands");
+        Logger.info("✅ Redis metrics client ready for commands").log();
       });
 
       this._opsClient.on("end", () => {
-        console.log("Redis ops client connection closed");
+        Logger.info("Redis ops client connection closed").log();
       });
 
       this._metricsClient.on("end", () => {
-        console.log("Redis metrics client connection closed");
+        Logger.info("Redis metrics client connection closed").log();
       });
 
       // Handle process termination
@@ -167,15 +168,15 @@ export class RedisManager {
         .select(RedisManager.METRICS_DB)
         .then(() => this._promisifiedMetricsClient.set("health", "health"));
     } else {
-      console.warn("No REDIS_HOST or REDIS_PORT environment variable configured.");
+      Logger.error("No REDIS_HOST or REDIS_PORT environment variable configured.").log();
     }
   }
 
   // private async gracefulShutdown(): Promise<any> {
-  //   console.log("Initiating graceful shutdown of Redis connections...");
+  //   Logger.info("Initiating graceful shutdown of Redis connections...");
   //   try {
   //     await this.close();
-  //     console.log("Redis connections closed successfully");
+  //     Logger.info("Redis connections closed successfully");
   //   } catch (error) {
   //     console.error("Error during Redis shutdown:", error);
   //   }

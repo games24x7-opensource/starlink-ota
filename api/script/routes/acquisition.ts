@@ -206,6 +206,8 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
         );
       }
 
+      
+
       let requestQueryParams = req.query || {};
       let fromCache: boolean = true;
       let redisError: Error;
@@ -387,6 +389,7 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
 
   const reportStatusDownload = function (req: express.Request, res: express.Response, next: (err?: any) => void) {
     const deploymentKey = req.body?.deploymentKey || req.body?.deployment_key;
+
     if (!req.body || !deploymentKey || !req.body?.label) {
       Logger.error(
         "[Starlink::OTA::reportStatusDownload::error] - A download status report must contain a valid deploymentKey and package label."
@@ -405,14 +408,13 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
     return redisManager
       .incrementLabelStatusCount(deploymentKey, req.body.label, redis.DOWNLOADED)
       .then(() => {
-        Logger.instance("[Starlink::OTA::reportStatusDownload::success")
+        Logger.info("[Starlink::OTA::reportStatusDownload::success")
           .setExpressReq(req)
-          .setUpstreamRequestParams({
+          .setData({
             deploymentKey,
             label: req.body.label,
           })
           .log();
-
         res.sendStatus(200);
       })
       .catch((error: any) => {

@@ -1353,12 +1353,12 @@ export function getManagementRouter(config: ManagementConfig): Router {
       return q(<void>null);
     }
 
-    console.log(`Processing package: ${appPackage.label}`);
+    Logger.info(`Processing package: ${appPackage.label}`);
 
     return packageDiffing
       .generateDiffPackageMap(accountId, appId, deploymentId, appPackage)
       .then((diffPackageMap: storageTypes.PackageHashToBlobInfoMap) => {
-        console.log(`Package processed, adding diff info`);
+        Logger.info(`Package processed, adding diff info`);
         addDiffInfoForPackage(accountId, appId, deploymentId, appPackage, diffPackageMap);
       });
   }

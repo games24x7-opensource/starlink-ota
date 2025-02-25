@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import express from "express";
+const Logger = require("../logger");
 import * as errorModule from "../error";
 import * as storageTypes from "../storage/storage";
 import * as passportAuthentication from "../routes/passport-authentication";
@@ -28,7 +29,7 @@ export function restError(errorCode: ErrorCode, message?: string): RestError {
 
 export function restErrorHandler(res: express.Response, error: errorModule.CodePushError, next: Function): void {
   if (!error || (error.source !== errorModule.ErrorSource.Storage && error.source !== errorModule.ErrorSource.Rest)) {
-    console.log("Unknown error source");
+    Logger.info("Unknown error source");
     sendUnknownError(res, error, next);
   } else if (error.source === errorModule.ErrorSource.Storage) {
     storageErrorHandler(res, <storageTypes.StorageError>error, next);
@@ -48,7 +49,7 @@ export function restErrorHandler(res: express.Response, error: errorModule.CodeP
         sendForbiddenError(res, error.message);
         break;
       default:
-        console.log("Unknown REST error");
+        Logger.info("Unknown REST error");
         sendUnknownError(res, error, next);
         break;
     }
@@ -138,9 +139,9 @@ export function sendUnknownError(res: express.Response, error: any, next: Functi
   error = error || new Error("Unknown error");
 
   if (typeof error["stack"] === "string") {
-    console.log(error["stack"]);
+    Logger.info(error["stack"]);
   } else {
-    console.log(error);
+    Logger.info(error);
   }
 
   res.sendStatus(500);
@@ -165,7 +166,7 @@ function storageErrorHandler(res: express.Response, error: storageTypes.StorageE
       break;
     case storageTypes.ErrorCode.Other:
     default:
-      console.log("Unknown storage error.");
+      Logger.info("Unknown storage error.");
       sendUnknownError(res, error, next);
       break;
   }

@@ -3,6 +3,12 @@ import { Readable } from "stream";
 import redisMock from "redis-mock";
 import AWSMock from "aws-sdk-mock";
 
+// Mock controller to simulate Redis failures
+export const mockController = {
+  shouldRedisOperationsFail: false,
+  redisError: new Error("Redis operation failed"),
+};
+
 // ===== Environment Setup =====
 const setupEnvironment = () => {
   process.env.NODE_ENV = "test";
@@ -37,8 +43,35 @@ const setupAWSMocks = () => {
   // DynamoDB Mocks
   AWSMock.mock("DynamoDB.DocumentClient", "get", (params: any, callback: Function) => {
     if (params.TableName === process.env.TABLE_NAME) {
-      if (params.Key.partitionKey === "health") {
-        console.log("Successfully connected to DynamoDB::from mock");
+      // Extract key parts
+      const [prefix, key] = (params.Key.partitionKey || "").split(" ");
+
+      if (prefix === "deploymentKey") {
+        if (key === "test-key") {
+          return callback(null, {
+            Item: {
+              deploymentKey: "test-key",
+              packageHash: "test-hash-123",
+              appVersion: "1.0.0",
+              isDisabled: false,
+              isMandatory: false,
+              releaseMethod: "Upload",
+              rollout: 100,
+              size: 1000,
+              uploadTime: Date.now(),
+              label: "v1",
+              description: "Test update",
+              blobUrl: "https://test-cdn.example.com/test-package",
+              packageSize: 1024,
+              isEnabled: true,
+              isSynced: true,
+              status: "Active",
+              partitionKey: params.Key.partitionKey,
+              rowKey: "DeploymentKeyRowKey",
+            },
+          });
+        }
+      } else if (params.Key.partitionKey === "health" && params.Key.rowKey === "health") {
         return callback(null, {
           Item: {
             partitionKey: "health",
@@ -47,39 +80,41 @@ const setupAWSMocks = () => {
           },
         });
       }
-
-      // Mock deployment info lookup
-      if (params.Key.deploymentKey) {
-        return callback(null, {
-          Item: {
-            deploymentKey: params.Key.deploymentKey,
-            packageHash: "test-hash-123",
-            appVersion: "1.0.0",
-            isDisabled: false,
-            isMandatory: false,
-            releaseMethod: "Upload",
-            rollout: 100,
-            size: 1000,
-            uploadTime: Date.now(),
-          },
-        });
-      }
     }
+
     callback(null, { Item: null });
   });
 
   AWSMock.mock("DynamoDB.DocumentClient", "query", (params: any, callback: Function) => {
-    callback(null, {
-      Items: [
-        {
-          deploymentKey: "test-key",
-          packageHash: "test-hash-123",
-          appVersion: "1.0.0",
-          isDisabled: false,
-          isMandatory: false,
-        },
-      ],
-    });
+    if (params.TableName === process.env.TABLE_NAME) {
+      const [prefix, key] = (params.ExpressionAttributeValues?.[":deploymentKey"] || "").split(" ");
+
+      if (prefix === "deploymentKey" && key === "test-key") {
+        callback(null, {
+          Items: [
+            {
+              deploymentKey: "test-key",
+              packageHash: "test-hash-123",
+              appVersion: "1.0.0",
+              isDisabled: false,
+              isMandatory: false,
+              label: "v1",
+              description: "Test update",
+              packageSize: 1024,
+              blobUrl: "https://test-cdn.example.com/test-package",
+              uploadTime: Date.now(),
+              rollout: 100,
+              releaseMethod: "Upload",
+              size: 1024,
+              partitionKey: params.ExpressionAttributeValues?.[":deploymentKey"],
+              rowKey: "DeploymentKeyRowKey",
+            },
+          ],
+        });
+      } else {
+        callback(null, { Items: [] });
+      }
+    }
   });
 
   AWSMock.mock("DynamoDB.DocumentClient", "put", (params: any, callback: Function) => {
@@ -127,6 +162,19 @@ const setupAWSMocks = () => {
 
 // ===== Other Service Mocks =====
 const setupServiceMocks = () => {
+  // Mock validation utils
+  jest.mock("../script/utils/validation", () => ({
+    isValidUpdateCheckRequest: (request: any) => {
+      return true;
+    },
+    isValidKeyField: (key: string) => {
+      return true;
+    },
+    isValidAppVersionField: (version: string) => {
+      return true;
+    },
+  }));
+
   // Logger Mock
   jest.mock("../script/logger", () => {
     class Logger {
@@ -156,6 +204,14 @@ const setupServiceMocks = () => {
         return this;
       }
 
+      setUpstreamRequestParams(requestParams: any) {
+        return this;
+      }
+
+      setUpstreamResponse(response: any) {
+        return this;
+      }
+
       setData(data: any) {
         return this;
       }
@@ -175,25 +231,79 @@ const setupServiceMocks = () => {
   // Redis Mock with proper metrics handling
   jest.mock("redis", () => {
     const mock = redisMock;
+    // Helper to promisify callbacks
+    const promisify = (fn: Function) => {
+      return (...args: any[]) => {
+        return new Promise((resolve, reject) => {
+          if (mockController.shouldRedisOperationsFail) {
+            reject(mockController.redisError);
+            return;
+          }
+          fn(...args, (err: Error | null, result: any) => {
+            if (err) reject(err);
+            else resolve(result);
+          });
+        });
+      };
+    };
+
+    mock.RedisClient.prototype.get = function (key: string, cb: Function) {
+      if (mockController.shouldRedisOperationsFail) {
+        cb(mockController.redisError);
+        return;
+      }
+      cb(null, null);
+    };
+
     mock.RedisClient.prototype.hincrby = function (hash, field, value, cb) {
+      if (mockController.shouldRedisOperationsFail) {
+        cb(mockController.redisError);
+        return;
+      }
       cb(null, 1);
     };
-    mock.RedisClient.prototype.hgetall = function (hash, cb) {
-      cb(null, {
-        "metrics.v1.downloaded": "1",
-        "metrics.v1.installed": "1",
-      });
-    };
+
     mock.RedisClient.prototype.multi = function () {
       return {
         hincrby: function () {
           return this;
         },
+        set: function () {
+          return this;
+        },
+        expire: function () {
+          return this;
+        },
         exec: function (cb) {
-          cb(null, [1, 1]);
+          if (mockController.shouldRedisOperationsFail) {
+            cb(mockController.redisError);
+            return;
+          }
+          cb(null, [1, 1, "OK", 1]);
         },
       };
     };
+
+    mock.RedisClient.prototype.exists = function (key: string, cb: Function) {
+      if (mockController.shouldRedisOperationsFail) {
+        cb(mockController.redisError);
+        return;
+      }
+      cb(null, 1);
+    };
+
+    // Add promisified versions
+    mock.RedisClient.prototype.getAsync = promisify(mock.RedisClient.prototype.get);
+    mock.RedisClient.prototype.hincrbyAsync = promisify(mock.RedisClient.prototype.hincrby);
+    mock.RedisClient.prototype.existsAsync = promisify(mock.RedisClient.prototype.exists);
+    mock.RedisClient.prototype.multiAsync = function () {
+      const multi = this.multi();
+      return {
+        ...multi,
+        execAsync: promisify(multi.exec),
+      };
+    };
+
     return mock;
   });
 };

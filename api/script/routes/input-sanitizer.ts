@@ -37,7 +37,7 @@ const MAX_STRING_LENGTH = Number(process.env.MAX_INPUT_STRING_LENGTH) || 128;
  */
 function validateKeyValuePairs(obj: Record<string, any>): boolean {
   for (const [key, value] of Object.entries(obj)) {
-    if (!key || !value || key.length > MAX_STRING_LENGTH || (typeof value === "string" && value.length > MAX_STRING_LENGTH)) {
+    if (!key || key.length > MAX_STRING_LENGTH || (value && typeof value === "string" && value.length > MAX_STRING_LENGTH)) {
       return false;
     }
   }
