@@ -1,7 +1,7 @@
 import express from "express";
 
 export function InputSanitizer(req: express.Request, res: express.Response, next: (err?: any) => void): any {
-  if (req.query) {
+  if (Object.keys(req.query).length > 0) {
     req.query.deploymentKey = trimInvalidCharacters((req.query.deploymentKey || req.query.deployment_key) as string);
   }
 
@@ -12,12 +12,6 @@ function trimInvalidCharacters(text: string): string {
   return text && text.trim();
 }
 
-/**
- * Single maximum length for all string parameters
- * Set to 128 chars which covers our longest expected input (UUIDs, hashes, etc.)
- * Simplifies maintenance and validation logic
- */
-const MAX_STRING_LENGTH = Number(process.env.MAX_INPUT_STRING_LENGTH) || 128;
 /**
  *
  * @lokesh-inumpudi
@@ -30,33 +24,56 @@ const MAX_STRING_LENGTH = Number(process.env.MAX_INPUT_STRING_LENGTH) || 128;
  * - No object lookups
  * - Minimal error handling
  */
+
+/**
+ * Single maximum length for all string parameters
+ * Set to 128 chars which covers our longest expected input (UUIDs, hashes, etc.)
+ * Simplifies maintenance and validation logic
+ */
+const MAX_STRING_LENGTH = Number(process.env.MAX_INPUT_STRING_LENGTH) || 128;
+
+/**
+ * Validates object keys and values against length and null checks
+ */
+function validateKeyValuePairs(obj: Record<string, any>): boolean {
+  for (const [key, value] of Object.entries(obj)) {
+    if (!key || !value || key.length > MAX_STRING_LENGTH || (typeof value === "string" && value.length > MAX_STRING_LENGTH)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Helper function to send consistent error responses
+ */
+function sendErrorResponse(res: express.Response, message: string, code = 400) {
+  return res.status(code).json({
+    status: "error",
+    message,
+    code,
+  });
+}
 export function acquisitionInputSanitizer(): express.RequestHandler {
   return (req: express.Request, res: express.Response, next: Function) => {
     try {
-      // Validate query parameters (GET requests)
-      if (req.query) {
-        for (const key in req.query) {
-          const value = req.query[key];
-          if (typeof value === "string" && value.length > MAX_STRING_LENGTH) {
-            return res.status(400).json({ error: "INVALID_PARAMS" });
-          }
+      // Validate query parameters if present
+      if (req.query && typeof req.query === "object" && Object.keys(req.query).length > 0) {
+        if (!validateKeyValuePairs(req.query)) {
+          return sendErrorResponse(res, "Invalid request");
         }
       }
 
-      // Validate body parameters (POST requests)
-      if (req.body && typeof req.body === "object") {
-        for (const key in req.body) {
-          const value = req.body[key];
-          if (typeof value === "string" && value.length > MAX_STRING_LENGTH) {
-            return res.status(400).json({ error: "INVALID_PARAM_LENGTH" });
-          }
+      // Validate body if present
+      if (req.body && typeof req.body === "object" && Object.keys(req.body).length > 0) {
+        if (!validateKeyValuePairs(req.body)) {
+          return sendErrorResponse(res, "Invalid request");
         }
       }
 
       next();
-    } catch {
-      // Continue on unexpected errors to maintain service availability
-      next();
+    } catch (error) {
+      return sendErrorResponse(res, "Invalid request");
     }
   };
 }
