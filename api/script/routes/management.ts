@@ -779,9 +779,9 @@ export function getManagementRouter(config: ManagementConfig): Router {
           return storage.updatePackageHistory(accountId, appId, storageDeployment.id, packageHistory).then(() => {
             Logger.info("[Starlink::Admin::UpdateRelease::success")
               .setExpressReq(req)
-
               .setData({ data: converterUtils.toRestPackage(packageToUpdate), appName, deploymentName, accountId, info })
               .log();
+
             res.send({ package: converterUtils.toRestPackage(packageToUpdate) });
             return invalidateCachedPackage(storageDeployment.key);
           });
@@ -1353,12 +1353,12 @@ export function getManagementRouter(config: ManagementConfig): Router {
       return q(<void>null);
     }
 
-    Logger.info(`Processing package: ${appPackage.label}`);
+    Logger.info(`Processing package: ${appPackage.label}`).log();
 
     return packageDiffing
       .generateDiffPackageMap(accountId, appId, deploymentId, appPackage)
       .then((diffPackageMap: storageTypes.PackageHashToBlobInfoMap) => {
-        Logger.info(`Package processed, adding diff info`);
+        Logger.info(`Package processed, adding diff info`).log();
         addDiffInfoForPackage(accountId, appId, deploymentId, appPackage, diffPackageMap);
       });
   }

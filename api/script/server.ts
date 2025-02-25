@@ -71,11 +71,11 @@ if (cluster?.isPrimary) {
       };
 
       server = https.createServer(options, app).listen(port, function () {
-        Logger.info(`Worker ${process.pid} - API host listening at https://localhost:${port}`).log();
+        Logger.info(`Worker ${process.pid} - API host listening at ${port}`).log();
       });
     } else {
       server = app.listen(port, function () {
-        Logger.info(`Worker ${process.pid} - API host listening at http://localhost:${port}`).log();
+        Logger.info(`Worker ${process.pid} - API host listening at ${port}`).log();
       });
     }
 
