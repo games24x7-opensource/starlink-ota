@@ -7,16 +7,16 @@ const zkClient = require('./zkClient');
 const zkConfig = require('../config/zkConfig');
 
 let zkConnectionString;
-logger('configmake!!!!!!!!!!!!' + process.env.ZK_URL);
+logger.info('configmake!!!!!!!!!!!!' + process.env.ZK_URL);
 try {
-  logger(process.env.ZK_URL);
+  logger.info(process.env.ZK_URL);
   zkConnectionString = process.env.ZK_URL;
 } catch (e) {}
 
 const maker = {
   init: function (appCallback) {
     const self = this;
-    logger(zkConnectionString);
+    logger.info(zkConnectionString);
     zkClient.init(zkConnectionString, function () {
       async.series(
         [

@@ -4,10 +4,10 @@ const appConfig = {};
 
 appConfig.emitter = new events.EventEmitter();
 appConfig.updateCallback = function (strPropertyName) {
-  Logger.info('+++++++++++++++appConfig updateCallback++++++++++++++++++++');
-  Logger.info(strPropertyName);
-  Logger.info(appConfig[strPropertyName]);
-  Logger.info('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+  Logger.info('+++++++++++++++appConfig updateCallback++++++++++++++++++++').log();
+  Logger.info(strPropertyName).log();
+  Logger.info(appConfig[strPropertyName]).log();
+  Logger.info('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++').log();
   appConfig.emitter.emit('appConfigChanged');
 };
 
