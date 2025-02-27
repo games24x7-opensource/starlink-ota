@@ -230,6 +230,10 @@ export class AwsStorage implements storage.Storage {
               });
           });
 
+          /**
+           * We don't need this check for client server 
+           */
+
           const historyBucketCheck: q.Promise<void> = q.Promise<void>((bucketResolve, bucketReject) => {
             const params = {
               Bucket: AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME,

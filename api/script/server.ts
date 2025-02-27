@@ -92,7 +92,25 @@ if (cluster?.isPrimary) {
       Logger.info("signal=SIGINT; shutting down").log();
       shutdown(server);
     });
+
+    
   });
+
+  // Handle uncaught exceptions
+process.on("uncaughtException", (err) => {
+  console.log("Uncaught Exception:", err);
+  Logger.error("Uncaught Exception:").setError(err).log();
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (reason, promise) => {
+  console.log("Unhandled Rejection at:", reason);
+  Logger.error("Unhandled Rejection at:").setError(reason).log();
+
+  process.exit(1);
+});
+
 }
 
 // Handle uncaught exceptions
@@ -103,7 +121,7 @@ process.on("uncaughtException", (err) => {
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
-  Logger.error("Unhandled Rejection at:").setError(reason).log;
+  Logger.error("Unhandled Rejection at:").setError(reason).log();
   process.exit(1);
 });
 
