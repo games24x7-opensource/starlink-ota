@@ -1,7 +1,7 @@
 {
-  "name": "code-push-server",
-  "version": "0.0.1",
-  "description": "Source code for the CodePush service API",
+  "name": "Starlink OTA Server",
+  "version": "1.0.0",
+  "description": "Source code for the Starlink CodePush service API",
   "main": "./script/server.js",
   "scripts": {
     "ota:stage": "node --inspect -r dotenv/config ./dist/script/server.js dotenv_config_path=.server-stage.env dotenv_config_silent=true",
@@ -20,13 +20,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/microsoft/code-push-server"
+    "url": "https://bitbucket.org/pgbitbucket/code-push-server"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
-  "author": "Microsoft",
+  "author": "Suraj & Lokesh",
   "dependencies": {
     "applicationinsights": "^2.7.0",
     "aws-sdk": "^2.1692.0",
