@@ -1,17 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as assert from "assert";
-import * as shortid from "shortid";
-import * as q from "q";
+import assert from "assert";
+import shortid from "shortid";
+import q from "q";
+import { awsMock } from "./setup";
+import { AwsStorage } from "../script/storage/aws-storage";
+import { Stream } from "stream";
 
 import { JsonStorage } from "../script/storage/json-storage";
 import * as storageTypes from "../script/storage/storage";
 import * as utils from "./utils";
 
-import Promise = q.Promise;
+import qPromise = q.Promise;
 
 describe("JSON Storage", () => storageTests(JsonStorage));
+describe("AWS Storage", () => storageTests(AwsStorage));
 
 function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage, disablePersistence?: boolean) {
   var storage: storageTypes.Storage;
@@ -21,6 +25,8 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
   beforeEach(() => {
     if (StorageType === JsonStorage) {
       storage = new StorageType(disablePersistence);
+    } else if (StorageType === AwsStorage) {
+      storage = new AwsStorage("test-bucket", "us-east-1");
     }
   });
 
@@ -63,7 +69,7 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
 
       return storage
         .addAccessKey(account.id, accessKey)
-        .then((accessKeyId: string): Promise<storageTypes.AccessKey> => {
+        .then((accessKeyId: string): qPromise<storageTypes.AccessKey> => {
           return storage.getAccessKey(account.id, accessKeyId);
         })
         .then((retrievedAccessKey: storageTypes.AccessKey): void => {
@@ -77,7 +83,7 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
 
       return storage
         .addAccessKey(account.id, accessKey)
-        .then((accessKeyId: string): Promise<string> => {
+        .then((accessKeyId: string): qPromise<string> => {
           return storage.getAccountIdFromAccessKey(accessKey.name);
         })
         .then((retrievedAccountId: string): void => {
@@ -90,7 +96,7 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
 
       return storage
         .addAccessKey(account.id, accessKey)
-        .then((accessKeyId: string): Promise<storageTypes.AccessKey> => {
+        .then((accessKeyId: string): qPromise<storageTypes.AccessKey> => {
           return storage.getAccessKey(account.id, "invalid");
         })
         .then(failOnCallSucceeded, (error: storageTypes.StorageError) => {
@@ -103,7 +109,7 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
 
       return storage
         .addAccessKey(account.id, accessKey)
-        .then((accessKeyId: string): Promise<storageTypes.AccessKey[]> => {
+        .then((accessKeyId: string): qPromise<storageTypes.AccessKey[]> => {
           return storage.getAccessKeys(account.id);
         })
         .then((accessKeys: storageTypes.AccessKey[]): void => {
@@ -118,10 +124,10 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
 
       return storage
         .addAccessKey(account.id, accessKey)
-        .then((accessKeyId: string): Promise<void> => {
+        .then((accessKeyId: string): qPromise<void> => {
           return storage.removeAccessKey(account.id, accessKeyId);
         })
-        .then((): Promise<storageTypes.AccessKey> => {
+        .then((): qPromise<storageTypes.AccessKey> => {
           return storage.getAccessKey(account.id, accessKey.id);
         })
         .then(failOnCallSucceeded, (error: storageTypes.StorageError) => {
@@ -134,13 +140,13 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
 
       return storage
         .addAccessKey(account.id, accessKey)
-        .then((addedAccessKeyId: string): Promise<void> => {
+        .then((addedAccessKeyId: string): qPromise<void> => {
           accessKey.id = addedAccessKeyId;
           accessKey.friendlyName = "updated description";
 
           return storage.updateAccessKey(account.id, accessKey);
         })
-        .then((): Promise<storageTypes.AccessKey> => {
+        .then((): qPromise<storageTypes.AccessKey> => {
           return storage.getAccessKey(account.id, accessKey.id);
         })
         .then((retrievedAccessKey: storageTypes.AccessKey): void => {
@@ -165,7 +171,7 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
 
       return storage
         .addAccessKey(account.id, accessKey)
-        .then((addedAccessKeyId: string): Promise<void> => {
+        .then((addedAccessKeyId: string): qPromise<void> => {
           accessKey.id = addedAccessKeyId;
           accessKey.friendlyName = "updated description";
 
@@ -948,12 +954,12 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
 
       return storage
         .addAccount(account)
-        .then((accountId: string): Promise<storageTypes.App> => {
+        .then((accountId: string): qPromise<storageTypes.App> => {
           account.id = accountId;
 
           return storage.addApp(account.id, app);
         })
-        .then((addedApp: storageTypes.App): Promise<string> => {
+        .then((addedApp: storageTypes.App): qPromise<string> => {
           app.id = addedApp.id;
           deployment = utils.makeStorageDeployment();
 
@@ -1087,7 +1093,7 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
 
       beforeEach(() => {
         expectedPackageHistory = [];
-        var promiseChain: Promise<void> = q<void>(null);
+        var promiseChain: qPromise<void> = q<void>(null);
         var packageNumber = 1;
         for (var i = 1; i <= 3; i++) {
           promiseChain = promiseChain
@@ -1210,6 +1216,19 @@ function storageTests(StorageType: new (...args: any[]) => storageTypes.Storage,
             }
           }
         );
+    });
+
+    it("should upload blob to S3", async () => {
+      const fileContents = "test content";
+      const blobId = await storage.addBlob("test-key", utils.makeStreamFromString(fileContents), fileContents.length);
+
+      expect(awsMock.s3.putObject).toHaveBeenCalledWith({
+        Bucket: "test-bucket",
+        Key: expect.stringContaining("test-key"),
+        Body: expect.any(Stream),
+      });
+
+      expect(blobId).toBeDefined();
     });
   });
 }

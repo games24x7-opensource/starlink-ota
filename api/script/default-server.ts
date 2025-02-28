@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import bodyParser from "body-parser";
+import express, { Response } from "express";
+import q from "q";
+import promClient from "prom-client";
+
 import * as api from "./api";
 import { AwsStorage } from "./storage/aws-storage";
 import { fileUploadMiddleware } from "./file-upload-manager";
 import { JsonStorage } from "./storage/json-storage";
 import { RedisManager } from "./redis-manager";
 import { Storage } from "./storage/storage";
-import { Response } from "express";
-import * as promClient from "prom-client";
-
-import * as bodyParser from "body-parser";
-const domain = require("express-domain-middleware");
-import * as express from "express";
-import * as q from "q";
+import { globalErrorHandler } from "./middleware/error-handler";
+const Logger = require("./logger");
 
 interface Secret {
   id: string;
@@ -50,11 +50,12 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
     .then(() => {
       const app = express();
       const auth = api.auth({ storage: storage });
-      const appInsights = api.appInsights();
       const redisManager = new RedisManager();
 
-      // First, to wrap all requests and catch all exceptions.
-      app.use(domain);
+      app.use(function requestStart(req, res, next) {
+        Logger.info("access-log in").setExpressReq(req, true).log();
+        next();
+      });
 
       // Monkey-patch res.send and res.setHeader to no-op after the first call and prevent "already sent" errors.
       app.use((req: express.Request, res: express.Response, next: (err?: any) => void): any => {
@@ -79,14 +80,6 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
         next();
       });
 
-      if (process.env.LOGGING) {
-        app.use((req: express.Request, res: express.Response, next: (err?: any) => void): any => {
-          console.log(); // Newline to mark new request
-          console.log(`[REST] Received ${req.method} request at ${req.originalUrl}`);
-          next();
-        });
-      }
-
       // Enforce a timeout on all requests.
       app.use(api.requestTimeoutHandler());
 
@@ -96,24 +89,14 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
       // body-parser must be before the Application Insights router.
       app.use(bodyParser.urlencoded({ extended: true }));
       const jsonOptions: any = { limit: "10kb", strict: true };
-      if (process.env.LOG_INVALID_JSON_REQUESTS === "true") {
-        jsonOptions.verify = (req: express.Request, res: express.Response, buf: Buffer, encoding: string) => {
-          if (buf && buf.length) {
-            (<any>req).rawBody = buf.toString();
-          }
-        };
-      }
 
       app.use(bodyParser.json(jsonOptions));
 
       // If body-parser throws an error, catch it and set the request body to null.
       app.use(bodyParserErrorHandler);
 
-      // Before all other middleware to ensure all requests are tracked.
-      app.use(appInsights.router());
-
       app.get("/", (req: express.Request, res: express.Response, next: (err?: Error) => void): any => {
-        res.send("Welcome to the CodePush REST API!");
+        res.send("Welcome to the Starlink OTA REST API!");
       });
 
       app.get("/alb/healthCheck", (req: express.Request, res: express.Response, next: (err?: Error) => void): any => {
@@ -140,39 +123,41 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
       app.set("views", __dirname + "/views");
       app.set("view engine", "ejs");
       app.use("/auth/images/", express.static(__dirname + "/views/images"));
-      app.use(api.headers({ origin: process.env.CORS_ORIGIN || "http://localhost:3002" }));
-      app.use(api.health({ storage: storage, redisManager: redisManager }));
+      app.use(api.headers({ origin: process.env.CORS_ORIGIN }));
 
+      /**
+       * TODO: This will actually check S3 object/ dynamo table read etc..
+       * Do we need to check redis health?
+       */
+      // app.use(api.health({ storage: storage, redisManager: redisManager }));
+
+      /**
+       * If acquisition is enabled we make sure management routes are disabled
+       * Management routes are disabled by default and enabled only when acquisition routes are off and management is enabled
+       */
       if (process.env.DISABLE_ACQUISITION !== "true") {
+        Logger.info("CAUTION: Acquisition routes are enabled").log();
         app.use(api.acquisition({ storage: storage, redisManager: redisManager }));
-      }
-
-      if (process.env.DISABLE_MANAGEMENT !== "true") {
-        if (process.env.DEBUG_DISABLE_AUTH === "true") {
-          app.use((req, res, next) => {
-            let userId: string = "default";
-            if (process.env.DEBUG_USER_ID) {
-              userId = process.env.DEBUG_USER_ID;
-            } else {
-              console.log("No DEBUG_USER_ID environment variable configured. Using 'default' as user id");
-            }
-
-            req.user = {
-              id: "g24x7",
-            };
-
-            next();
-          });
-        } else {
-          app.use(auth.router());
-        }
-        app.use(fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
       } else {
-        app.use(auth.legacyRouter());
+        if (process.env.DISABLE_MANAGEMENT !== "true") {
+          if (process.env.DEBUG_DISABLE_AUTH === "true") {
+            app.use((req: express.Request, res: express.Response, next: Function): any => {
+              const userId = process.env.DEBUG_USER_ID || "default";
+              req.user = { id: userId };
+              next();
+            });
+          } else {
+            app.use(auth.router());
+          }
+          Logger.info("CAUTION: Management routes are enabled").log();
+          app.use(fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
+        } else {
+          app.use(auth.legacyRouter());
+        }
       }
 
-      // Error handler needs to be the last middleware so that it can catch all unhandled exceptions
-      app.use(appInsights.errorHandler);
+      // Global error handling - must be added last to catch all errors
+      app.use(globalErrorHandler);
       done(null, app, storage);
     })
     .done();

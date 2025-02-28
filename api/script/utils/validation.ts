@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import semver from "semver";
+import emailValidator = require("email-validator");
+
 import { ALLOWED_KEY_CHARACTERS_TEST } from "./security";
 import * as storageTypes from "../storage/storage";
 import * as restTypes from "../types/rest-definitions";
-import * as semver from "semver";
-
-import emailValidator = require("email-validator");
 
 module Validation {
   function getStringValidator(maxLength: number = 1000, minLength: number = 0): (value: any) => boolean {

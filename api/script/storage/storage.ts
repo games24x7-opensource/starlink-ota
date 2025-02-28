@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as q from "q";
-import * as stream from "stream";
+import q from "q";
+import stream from "stream";
 import * as error from "../error";
 
 import Promise = q.Promise;
@@ -18,7 +18,7 @@ export enum ErrorCode {
   ThrottlingError = 7,
   ServiceError = 8,
   ValidationError = 9,
-  Other = 99
+  Other = 99,
 }
 
 // Human-readable strings
@@ -164,6 +164,7 @@ export interface Storage {
 
   addBlob(blobId: string, addstream: stream.Readable, streamLength: number): Promise<string>;
   getBlobUrl(blobId: string): Promise<string>;
+  getCdnUrl(blobId: string): Promise<string>;
   removeBlob(blobId: string): Promise<void>;
 
   addAccessKey(accountId: string, accessKey: AccessKey): Promise<string>;
@@ -205,7 +206,7 @@ export function getOwnerEmail(app: App): string {
 }
 
 export function isPrototypePollutionKey(key: string): boolean {
-  return ['__proto__', 'constructor', 'prototype'].includes(key);
+  return ["__proto__", "constructor", "prototype"].includes(key);
 }
 
 export function storageError(errorCode: ErrorCode, message?: string): StorageError {

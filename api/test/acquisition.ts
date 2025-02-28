@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as assert from "assert";
-import * as express from "express";
-import * as q from "q";
-import * as queryString from "querystring";
-import * as request from "supertest";
-import Promise = q.Promise;
+import assert from "assert";
+import express from "express";
+import q from "q";
+import queryString from "querystring";
+import request from "supertest";
 
 import * as defaultServer from "../script/default-server";
 import * as storage from "../script/storage/storage";
 import * as redis from "../script/redis-manager";
 import * as utils from "./utils";
 
+import Promise = q.Promise;
 import { JsonStorage } from "../script/storage/json-storage";
 import { UpdateCheckRequest } from "../script/types/rest-definitions";
 import { SDK_VERSION_HEADER } from "../script/utils/rest-headers";

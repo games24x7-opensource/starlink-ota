@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as assert from "assert";
-import * as express from "express";
-import * as q from "q";
-import * as shortid from "shortid";
+import assert from "assert";
+import q from "q";
+import shortid from "shortid";
 import Promise = q.Promise;
 
 import { RedisManager, CacheableResponse } from "../script/redis-manager";

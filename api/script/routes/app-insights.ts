@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as express from "express";
+import express from "express";
+import tryJSON = require("try-json");
+import ApplicationInsights = require("applicationinsights");
 import * as restHeaders from "../utils/rest-headers";
 import * as restTypes from "../types/rest-definitions";
-import ApplicationInsights = require("applicationinsights");
-import tryJSON = require("try-json");
 
 enum ServiceResource {
   AccessKeys,

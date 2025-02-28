@@ -1,25 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as express from "express";
-import * as semver from "semver";
+import express from "express";
+import q from "q";
+import queryString from "querystring";
+import URL from "url";
 
 import * as utils from "../utils/common";
 import * as acquisitionUtils from "../utils/acquisition";
 import * as errorUtils from "../utils/rest-error-handling";
 import * as redis from "../redis-manager";
-import * as restHeaders from "../utils/rest-headers";
 import * as rolloutSelector from "../utils/rollout-selector";
 import * as storageTypes from "../storage/storage";
 import { UpdateCheckCacheResponse, UpdateCheckRequest, UpdateCheckResponse } from "../types/rest-definitions";
-import * as validationUtils from "../utils/validation";
+import validationUtils from "../utils/validation";
+const Logger = require("../logger");
 
-import * as q from "q";
-import * as queryString from "querystring";
-import * as URL from "url";
 import Promise = q.Promise;
+import { acquisitionInputSanitizer } from "./input-sanitizer";
 
-const METRICS_BREAKING_VERSION = "1.5.2-beta";
+// const METRICS_BREAKING_VERSION = "1.5.2-beta";
 
 export interface AcquisitionConfig {
   storage: storageTypes.Storage;
@@ -71,38 +71,80 @@ function createResponseUsingStorage(
     }
   }
 
+  Logger.info("[Starlink::OTA::updateCheck::createResponseUsingStorage")
+    .setExpressReq(req)
+    .setData({
+      updateRequest,
+    })
+    .log();
+
   if (validationUtils.isValidUpdateCheckRequest(updateRequest)) {
-    return storage.getPackageHistoryFromDeploymentKey(updateRequest.deploymentKey).then((packageHistory: storageTypes.Package[]) => {
-      const updateObject: UpdateCheckCacheResponse = acquisitionUtils.getUpdatePackageInfo(packageHistory, updateRequest);
-      if ((isMissingPatchVersion || isPlainIntegerNumber) && updateObject.originalPackage.appVersion === updateRequest.appVersion) {
-        // Set the appVersion of the response to the original one with the missing patch version or plain number
-        updateObject.originalPackage.appVersion = originalAppVersion;
-        if (updateObject.rolloutPackage) {
-          updateObject.rolloutPackage.appVersion = originalAppVersion;
+    return storage
+      .getPackageHistoryFromDeploymentKey(updateRequest.deploymentKey)
+      .then((packageHistory: storageTypes.Package[]) => {
+        const updateObject: UpdateCheckCacheResponse = acquisitionUtils.getUpdatePackageInfo(packageHistory, updateRequest);
+        if ((isMissingPatchVersion || isPlainIntegerNumber) && updateObject.originalPackage.appVersion === updateRequest.appVersion) {
+          // Set the appVersion of the response to the original one with the missing patch version or plain number
+          updateObject.originalPackage.appVersion = originalAppVersion;
+          if (updateObject.rolloutPackage) {
+            updateObject.rolloutPackage.appVersion = originalAppVersion;
+          }
         }
-      }
 
-      const cacheableResponse: redis.CacheableResponse = {
-        statusCode: 200,
-        body: updateObject,
-      };
+        Logger.info("[Starlink::OTA::updateCheck::createResponseUsingStorage] success in getPackageHistoryFromDeploymentKey")
+          .setExpressReq(req)
+          .setData({
+            updateRequest,
+            updateObject,
+          })
+          .log();
 
-      return q(cacheableResponse);
-    });
+        const cacheableResponse: redis.CacheableResponse = {
+          statusCode: 200,
+          body: updateObject,
+        };
+
+        return q(cacheableResponse);
+      })
+      .catch((error: any) => {
+        // Handle all storage errors as deployment key errors
+        Logger.error("[Starlink::OTA::updateCheck::StorageError] Invalid or missing deployment")
+          .setExpressReq(req)
+          .setData({ updateRequest })
+          .log();
+
+        errorUtils.sendMalformedRequestError(res, "Invalid deployment key");
+        return null;
+      });
   } else {
     if (!validationUtils.isValidKeyField(updateRequest.deploymentKey)) {
-      errorUtils.sendMalformedRequestError(
-        res,
-        "An update check must include a valid deployment key - please check that your app has been " +
-          "configured correctly. To view available deployment keys, run 'code-push-standalone deployment ls <appName> -k'."
-      );
+      Logger.error("[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include a valid deployment key")
+        .setExpressReq(req)
+        .setData({
+          updateRequest,
+        })
+        .log();
+
+      errorUtils.sendMalformedRequestError(res, "An update check must include a valid deployment key");
     } else if (!validationUtils.isValidAppVersionField(updateRequest.appVersion)) {
-      errorUtils.sendMalformedRequestError(
-        res,
-        "An update check must include a binary version that conforms to the semver standard (e.g. '1.0.0'). " +
-          "The binary version is normally inferred from the App Store/Play Store version configured with your app."
-      );
+      Logger.error("[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include appVersion")
+        .setExpressReq(req)
+        .setData({
+          updateRequest,
+        })
+        .log();
+
+      errorUtils.sendMalformedRequestError(res, "An update check must include appVersion");
     } else {
+      Logger.error(
+        "[Starlink::OTA::updateCheck::createResponseUsingStorage] An update check must include a valid deployment key and provide a semver-compliant app version."
+      )
+        .setExpressReq(req)
+        .setData({
+          updateRequest,
+        })
+        .log();
+
       errorUtils.sendMalformedRequestError(
         res,
         "An update check must include a valid deployment key and provide a semver-compliant app version."
@@ -141,10 +183,30 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
 
   const updateCheck = function (newApi: boolean) {
     return function (req: express.Request, res: express.Response, next: (err?: any) => void) {
+      const appVersion: string = String(req.query.appVersion || req.query.app_version);
       const deploymentKey: string = String(req.query.deploymentKey || req.query.deployment_key);
       const key: string = redis.Utilities.getDeploymentKeyHash(deploymentKey);
       const clientUniqueId: string = String(req.query.clientUniqueId || req.query.client_unique_id);
       const url: string = getUrlKey(req.originalUrl);
+
+      // Without clientUniqueId, deploymentKey we can't proceed with update check
+      // so we are returning 400 error immediately: check for "undefined" cause String(undefined) === "undefined"
+      if (deploymentKey === "undefined" || clientUniqueId === "undefined" || appVersion === "undefined") {
+        Logger.error("[Starlink::OTA::updateCheck - UpdateCheck must contain a valid clientUniqueId, deploymentKey and appVersion.")
+          .setExpressReq(req)
+          .setData({
+            deploymentKey,
+            clientUniqueId,
+          })
+          .log();
+
+        return errorUtils.sendMalformedRequestError(
+          res,
+          "UpdateCheck must contain a valid clientUniqueId, deploymentKey and appVersion."
+        );
+      }
+
+      let requestQueryParams = req.query || {};
       let fromCache: boolean = true;
       let redisError: Error;
 
@@ -182,8 +244,20 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
 
           // Change in new API
           updateCheckBody.updateInfo.target_binary_range = updateCheckBody.updateInfo.appVersion;
-
           res.locals.fromCache = fromCache;
+
+          Logger.info("[Starlink::OTA::updateCheck")
+            .setExpressReq(req)
+            .setData({
+              deploymentKey,
+              clientUniqueId,
+              url,
+              requestQueryParams,
+              updateCheckBody,
+              fromCache,
+            })
+            .log();
+
           res.status(response.statusCode).send(newApi ? utils.convertObjectToSnakeCase(updateCheckBody) : updateCheckBody);
 
           // Update REDIS cache after sending the response so that we don't block the request.
@@ -193,88 +267,137 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
         })
         .then(() => {
           if (redisError) {
+            Logger.error("[Starlink::OTA::updateCheck::redisError").setExpressReq(req).setError(redisError).log();
+            //exception handled in catch block
             throw redisError;
           }
         })
-        .catch((error: storageTypes.StorageError) => errorUtils.restErrorHandler(res, error, next));
+        .catch((error: storageTypes.StorageError) => {
+          Logger.error("[Starlink::OTA::updateCheck::StorageError").setExpressReq(req).setError(error).log();
+          return errorUtils.restErrorHandler(res, error, next);
+        });
     };
   };
 
   const reportStatusDeploy = function (req: express.Request, res: express.Response, next: (err?: any) => void) {
-    const deploymentKey = req.body.deploymentKey || req.body.deployment_key;
-    const appVersion = req.body.appVersion || req.body.app_version;
-    const previousDeploymentKey = req.body.previousDeploymentKey || req.body.previous_deployment_key || deploymentKey;
-    const previousLabelOrAppVersion = req.body.previousLabelOrAppVersion || req.body.previous_label_or_app_version;
-    const clientUniqueId = req.body.clientUniqueId || req.body.client_unique_id;
+    const deploymentKey = req.body?.deploymentKey || req.body?.deployment_key;
+    const appVersion = req.body?.appVersion || req.body?.app_version;
+    const previousDeploymentKey = req.body?.previousDeploymentKey || req.body?.previous_deployment_key || deploymentKey;
+    const previousLabelOrAppVersion = req.body?.previousLabelOrAppVersion || req.body?.previous_label_or_app_version;
+    const clientUniqueId = req.body?.clientUniqueId || req.body?.client_unique_id;
+
+    const labelOrAppVersion: string = req.body?.label || appVersion;
 
     if (!deploymentKey || !appVersion) {
+      Logger.error("[Starlink::OTA::reportStatusDeploy - A deploy status report must contain a valid appVersion and deploymentKey.")
+        .setExpressReq(req)
+        .setData({
+          deploymentKey,
+          clientUniqueId,
+          appVersion,
+          labelOrAppVersion,
+          previousDeploymentKey,
+          previousLabelOrAppVersion,
+        })
+        .log();
+
       return errorUtils.sendMalformedRequestError(res, "A deploy status report must contain a valid appVersion and deploymentKey.");
-    } else if (req.body.label) {
-      if (!req.body.status) {
+    } else if (req.body?.label) {
+      if (!req.body?.status) {
+        Logger.error("[Starlink::OTA::reportStatusDeploy - A deploy status report for a labelled package must contain a valid status.")
+          .setExpressReq(req)
+          .setData({
+            deploymentKey,
+            clientUniqueId,
+            appVersion,
+            labelOrAppVersion,
+            previousDeploymentKey,
+            previousLabelOrAppVersion,
+          })
+          .log();
+
         return errorUtils.sendMalformedRequestError(res, "A deploy status report for a labelled package must contain a valid status.");
       } else if (!redis.Utilities.isValidDeploymentStatus(req.body.status)) {
+        Logger.error("[Starlink::OTA::reportStatusDeploy - Invalid status: " + req.body.status)
+          .setExpressReq(req)
+          .setData({
+            deploymentKey,
+            clientUniqueId,
+            appVersion,
+            labelOrAppVersion,
+            previousDeploymentKey,
+            previousLabelOrAppVersion,
+          })
+          .log();
+
         return errorUtils.sendMalformedRequestError(res, "Invalid status: " + req.body.status);
       }
     }
 
-    const sdkVersion: string = restHeaders.getSdkVersion(req);
-    if (semver.valid(sdkVersion) && semver.gte(sdkVersion, METRICS_BREAKING_VERSION)) {
-      // If previousDeploymentKey not provided, assume it is the same deployment key.
-      let redisUpdatePromise: q.Promise<void>;
+    // If previousDeploymentKey not provided, assume it is the same deployment key.
+    let redisUpdatePromise: q.Promise<void>;
 
-      if (req.body.label && req.body.status === redis.DEPLOYMENT_FAILED) {
-        redisUpdatePromise = redisManager.incrementLabelStatusCount(deploymentKey, req.body.label, req.body.status);
-      } else {
-        const labelOrAppVersion: string = req.body.label || appVersion;
-        redisUpdatePromise = redisManager.recordUpdate(
-          deploymentKey,
-          labelOrAppVersion,
-          previousDeploymentKey,
-          previousLabelOrAppVersion
-        );
-      }
-
-      redisUpdatePromise
-        .then(() => {
-          res.sendStatus(200);
-          if (clientUniqueId) {
-            redisManager.removeDeploymentKeyClientActiveLabel(previousDeploymentKey, clientUniqueId);
-          }
-        })
-        .catch((error: any) => errorUtils.sendUnknownError(res, error, next))
-        .done();
+    if (req.body?.label && req.body?.status === redis.DEPLOYMENT_FAILED) {
+      redisUpdatePromise = redisManager.incrementLabelStatusCount(deploymentKey, req.body.label, req.body.status);
     } else {
-      if (!clientUniqueId) {
-        return errorUtils.sendMalformedRequestError(
-          res,
-          "A deploy status report must contain a valid appVersion, clientUniqueId and deploymentKey."
-        );
-      }
-
-      return redisManager
-        .getCurrentActiveLabel(deploymentKey, clientUniqueId)
-        .then((currentVersionLabel: string) => {
-          if (req.body.label && req.body.label !== currentVersionLabel) {
-            return redisManager.incrementLabelStatusCount(deploymentKey, req.body.label, req.body.status).then(() => {
-              if (req.body.status === redis.DEPLOYMENT_SUCCEEDED) {
-                return redisManager.updateActiveAppForClient(deploymentKey, clientUniqueId, req.body.label, currentVersionLabel);
-              }
-            });
-          } else if (!req.body.label && appVersion !== currentVersionLabel) {
-            return redisManager.updateActiveAppForClient(deploymentKey, clientUniqueId, appVersion, appVersion);
-          }
-        })
-        .then(() => {
-          res.sendStatus(200);
-        })
-        .catch((error: any) => errorUtils.sendUnknownError(res, error, next))
-        .done();
+      redisUpdatePromise = redisManager.recordUpdate(
+        deploymentKey,
+        labelOrAppVersion,
+        previousDeploymentKey,
+        previousLabelOrAppVersion
+      );
     }
+
+    redisUpdatePromise
+      .then(() => {
+        Logger.info("[Starlink::OTA::reportStatusDeploy::success")
+          .setExpressReq(req)
+          .setData({
+            deploymentKey,
+            clientUniqueId,
+            appVersion,
+            labelOrAppVersion,
+            previousDeploymentKey,
+            previousLabelOrAppVersion,
+            status: req.body.status,
+          })
+          .log();
+
+        res.sendStatus(200);
+      })
+      .catch((error: any) => {
+        Logger.error("[Starlink::OTA::reportStatusDeploy::error")
+          .setExpressReq(req)
+          .setError(error)
+          .setData({
+            deploymentKey,
+            clientUniqueId,
+            appVersion,
+            labelOrAppVersion,
+            previousDeploymentKey,
+            previousLabelOrAppVersion,
+            status: req.body.status,
+          })
+          .log();
+
+        errorUtils.sendUnknownError(res, error, next);
+      })
+      .done();
   };
 
   const reportStatusDownload = function (req: express.Request, res: express.Response, next: (err?: any) => void) {
-    const deploymentKey = req.body.deploymentKey || req.body.deployment_key;
-    if (!req.body || !deploymentKey || !req.body.label) {
+    const deploymentKey = req.body?.deploymentKey || req.body?.deployment_key;
+
+    if (!req.body || !deploymentKey || !req.body?.label) {
+      Logger.error(
+        "[Starlink::OTA::reportStatusDownload::error] - A download status report must contain a valid deploymentKey and package label."
+      )
+        .setExpressReq(req)
+        .setUpstreamRequestParams({
+          requestBody: req.body,
+        })
+        .log();
+
       return errorUtils.sendMalformedRequestError(
         res,
         "A download status report must contain a valid deploymentKey and package label."
@@ -283,13 +406,39 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
     return redisManager
       .incrementLabelStatusCount(deploymentKey, req.body.label, redis.DOWNLOADED)
       .then(() => {
+        Logger.info("[Starlink::OTA::reportStatusDownload::success")
+          .setExpressReq(req)
+          .setData({
+            deploymentKey,
+            label: req.body.label,
+          })
+          .log();
         res.sendStatus(200);
       })
-      .catch((error: any) => errorUtils.sendUnknownError(res, error, next))
+      .catch((error: any) => {
+        Logger.error("[Starlink::OTA::reportStatusDownload::error")
+          .setExpressReq(req)
+          .setError(error)
+          .setData({
+            deploymentKey,
+            label: req.body.label,
+          })
+          .log();
+
+        errorUtils.sendUnknownError(res, error, next);
+      })
       .done();
   };
 
+  /**
+   * This middleware is used to sanitize the input for the acquisition endpoints.
+   * It is used to prevent the endpoints from being abused by oversized inputs.
+   * if any input is found to be oversized[>128 chars,configurable with env variable], it will return a 400 error.
+   */
+  router.use(acquisitionInputSanitizer());
+
   router.get("/updateCheck", updateCheck(false));
+  // Games24x7 Apps: Using this endpoint to check for updates
   router.get("/v0.1/public/codepush/update_check", updateCheck(true));
 
   router.post("/reportStatus/deploy", reportStatusDeploy);

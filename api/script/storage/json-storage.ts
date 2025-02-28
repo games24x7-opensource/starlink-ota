@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as express from "express";
-import * as fs from "fs";
-import * as http from "http";
-import * as q from "q";
-import * as stream from "stream";
+import express from "express";
+import fs from "fs";
+import http from "http";
+import q from "q";
+import stream from "stream";
 
 import * as storage from "./storage";
 
@@ -543,6 +543,11 @@ export class JsonStorage implements storage.Storage {
   }
 
   public getBlobUrl(blobId: string): Promise<string> {
+    return this.getBlobServer().then((server: http.Server) => {
+      return server.address() + "/" + blobId;
+    });
+  }
+  public getCdnUrl(blobId: string): Promise<string> {
     return this.getBlobServer().then((server: http.Server) => {
       return server.address() + "/" + blobId;
     });

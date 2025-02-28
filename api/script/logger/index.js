@@ -1,5 +1,6 @@
 const bunyan = require('bunyan');
 const _ = require('lodash');
+const path = require('path');
 
 /**
  * Why stack-trace npm module?
@@ -8,7 +9,7 @@ const _ = require('lodash');
  * 2. To parse error stack
  *     This module does a pretty good job at parsing error stacks.
  */
-const stackTrace = require('stack-trace');
+import {get,parse} from 'stack-trace';
 
 /**
  * Why custom serializer?
@@ -22,7 +23,7 @@ const serializers = {
   res: bunyan.stdSerializers.res,
 };
 
-const path = require('path');
+
 const getLogStreams = () => {
   const streams = [];
   const {NODE_ENV, ENV} = process.env;
@@ -65,6 +66,11 @@ const errorLogger = bunyan.createLogger({
   level: bunyan.ERROR,
 });
 
+const API_VERSION_HEADER = "x-codepush-api-version";
+const CLI_VERSION_HEADER = "x-codepush-cli-version";
+const PLUGIN_NAME_HEADER = "x-codepush-plugin-name";
+const PLUGIN_VERSION_HEADER = "x-codepush-plugin-version";
+const SDK_VERSION_HEADER = "x-codepush-sdk-version";
 class Logger {
   constructor(message) {
     this._message = message;
@@ -191,6 +197,10 @@ class Logger {
       this.setAmznTraceId(req.headers['x-amzn-trace-id']);
     }
 
+    if (req.headers) {
+      this._extractCodePushHeaders(req.headers);
+    }
+
     if (req.session) {
       this._extractSessionDetails(req.session);
     }
@@ -204,6 +214,33 @@ class Logger {
     }
 
     return this;
+  }
+
+  _extractCodePushHeaders(headers) {
+    if (!headers) {
+      return;
+    }
+
+    if (headers[API_VERSION_HEADER]) {
+      this._apiVersion = headers[API_VERSION_HEADER];
+    }
+
+    if (headers[CLI_VERSION_HEADER]) {
+      this._cliVersion = headers[CLI_VERSION_HEADER];
+    }
+
+    if (headers[PLUGIN_NAME_HEADER]) {
+      this._pluginName = headers[PLUGIN_NAME_HEADER];
+    }
+
+    if (headers[PLUGIN_VERSION_HEADER]) {
+      this._pluginVersion = headers[PLUGIN_VERSION_HEADER];
+    }
+
+    if (headers[SDK_VERSION_HEADER]) {
+      this._sdkVersion = headers[SDK_VERSION_HEADER];
+    }
+
   }
 
   log() {
@@ -244,6 +281,12 @@ class Logger {
       url: this._url,
       timeTakenMS: this._timeTakenMS,
       responseStatus: this._responseStatus,
+      //-------------------------//
+      apiVersion: this._apiVersion,
+      cliVersion: this._cliVersion,
+      pluginName: this._pluginName,
+      pluginVersion: this._pluginVersion,
+      sdkVersion: this._sdkVersion,
       //-------------------------//
       req: this._req,
       err: this._error,
@@ -327,7 +370,7 @@ Logger.status = {
  */
 
 function getCallSite() {
-  const stack = stackTrace.get();
+  const stack = get();
   if (!stack || stack.length < 4) {
     return;
   }
@@ -388,19 +431,27 @@ function getCaller3Info() {
  * @returns {*}
  */
 function errorSerializer(err) {
-  if (!err || !err.stack) return err;
-
-  return {
-    message: err.message,
-    rawUpstreamResponse: err.rawResponse, // this is set when we use super agent to make a rest call
-    status: err.status,
-    upstreamStatusCode: err.statusCode, // this is set when we use super agent to make a rest call
-    code: err.code,
-    signal: err.signal,
-    name: err.name,
-    body: err.body,
-    stack: parseErrorStack(err),
-  };
+  if (!err) return err;
+  
+  try {
+    return {
+      message: err.message,
+      rawUpstreamResponse: err.rawResponse,
+      status: err.status,
+      upstreamStatusCode: err.statusCode,
+      code: err.code,
+      signal: err.signal,
+      name: err.name,
+      body: err.body,
+      stack: err.stack ? parseErrorStack(err) : undefined
+    };
+  } catch (e) {
+    // Fallback if serialization fails
+    return {
+      message: String(err),
+      stack: err.stack || 'Stack trace unavailable'
+    };
+  }
 }
 
 /**
@@ -443,17 +494,20 @@ function parseErrorStack(error) {
     return error;
   }
 
-  const traces = stackTrace.parse(error);
-  const errorInfo = traces.map(function (trace) {
-    return {
-      function: trace.getFunctionName(),
-      file: trace.getFileName(),
-      line: trace.getLineNumber(),
-      column: trace.getColumnNumber(),
-    };
-  });
-
-  return errorInfo;
+  try {
+    const traces = parse(error);
+    return traces.map(function (trace) {
+      return {
+        function: trace.getFunctionName?.() || 'unknown',
+        file: trace.getFileName?.() || 'unknown',
+        line: trace.getLineNumber?.() || 0,
+        column: trace.getColumnNumber?.() || 0,
+      };
+    });
+  } catch (e) {
+    // Fallback if stack-trace parsing fails
+    return error.stack || error.message || String(error);
+  }
 }
 
 function reqSerializer(req, shouldAddReqOptions) {
@@ -480,5 +534,6 @@ function cleanHeaders(headers) {
   return _.omit(headers, ['cookie']);
 }
 
-const logger = (module.exports = Logger);
-logger.getLogStreams = getLogStreams;
+Logger.getLogStreams = getLogStreams;
+
+module.exports = Logger;
