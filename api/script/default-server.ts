@@ -136,7 +136,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
        * Management routes are disabled by default and enabled only when acquisition routes are off and management is enabled
        */
       if (process.env.DISABLE_ACQUISITION !== "true") {
-        console.log("CAUTION: Acquisition routes are enabled");
+        Logger.info("CAUTION: Acquisition routes are enabled").log();
         app.use(api.acquisition({ storage: storage, redisManager: redisManager }));
       } else {
         if (process.env.DISABLE_MANAGEMENT !== "true") {
@@ -149,7 +149,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
           } else {
             app.use(auth.router());
           }
-          console.log("CAUTION: Management routes are enabled");
+          Logger.info("CAUTION: Management routes are enabled").log();
           app.use(fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
         } else {
           app.use(auth.legacyRouter());

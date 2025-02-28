@@ -283,10 +283,10 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
     const deploymentKey = req.body?.deploymentKey || req.body?.deployment_key;
     const appVersion = req.body?.appVersion || req.body?.app_version;
     const previousDeploymentKey = req.body?.previousDeploymentKey || req.body?.previous_deployment_key || deploymentKey;
-    const previousLabelOrAppVersion = req.body.previousLabelOrAppVersion || req.body.previous_label_or_app_version;
-    const clientUniqueId = req.body.clientUniqueId || req.body.client_unique_id;
+    const previousLabelOrAppVersion = req.body?.previousLabelOrAppVersion || req.body?.previous_label_or_app_version;
+    const clientUniqueId = req.body?.clientUniqueId || req.body?.client_unique_id;
 
-    const labelOrAppVersion: string = req.body.label || appVersion;
+    const labelOrAppVersion: string = req.body?.label || appVersion;
 
     if (!deploymentKey || !appVersion) {
       Logger.error("[Starlink::OTA::reportStatusDeploy - A deploy status report must contain a valid appVersion and deploymentKey.")
@@ -302,8 +302,8 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
         .log();
 
       return errorUtils.sendMalformedRequestError(res, "A deploy status report must contain a valid appVersion and deploymentKey.");
-    } else if (req.body.label) {
-      if (!req.body.status) {
+    } else if (req.body?.label) {
+      if (!req.body?.status) {
         Logger.error("[Starlink::OTA::reportStatusDeploy - A deploy status report for a labelled package must contain a valid status.")
           .setExpressReq(req)
           .setData({
@@ -337,7 +337,7 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
     // If previousDeploymentKey not provided, assume it is the same deployment key.
     let redisUpdatePromise: q.Promise<void>;
 
-    if (req.body.label && req.body.status === redis.DEPLOYMENT_FAILED) {
+    if (req.body?.label && req.body?.status === redis.DEPLOYMENT_FAILED) {
       redisUpdatePromise = redisManager.incrementLabelStatusCount(deploymentKey, req.body.label, req.body.status);
     } else {
       redisUpdatePromise = redisManager.recordUpdate(
@@ -387,6 +387,7 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
 
   const reportStatusDownload = function (req: express.Request, res: express.Response, next: (err?: any) => void) {
     const deploymentKey = req.body?.deploymentKey || req.body?.deployment_key;
+
     if (!req.body || !deploymentKey || !req.body?.label) {
       Logger.error(
         "[Starlink::OTA::reportStatusDownload::error] - A download status report must contain a valid deploymentKey and package label."
@@ -405,14 +406,13 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
     return redisManager
       .incrementLabelStatusCount(deploymentKey, req.body.label, redis.DOWNLOADED)
       .then(() => {
-        Logger.instance("[Starlink::OTA::reportStatusDownload::success")
+        Logger.info("[Starlink::OTA::reportStatusDownload::success")
           .setExpressReq(req)
-          .setUpstreamRequestParams({
+          .setData({
             deploymentKey,
             label: req.body.label,
           })
           .log();
-
         res.sendStatus(200);
       })
       .catch((error: any) => {
