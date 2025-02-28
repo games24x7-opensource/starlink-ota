@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import express from "express";
+const Logger = require("../logger");
 import * as errorModule from "../error";
 import * as storageTypes from "../storage/storage";
 import * as passportAuthentication from "../routes/passport-authentication";
@@ -28,7 +29,7 @@ export function restError(errorCode: ErrorCode, message?: string): RestError {
 
 export function restErrorHandler(res: express.Response, error: errorModule.CodePushError, next: Function): void {
   if (!error || (error.source !== errorModule.ErrorSource.Storage && error.source !== errorModule.ErrorSource.Rest)) {
-    console.log("Unknown error source");
+    Logger.info("Unknown error source").log();
     sendUnknownError(res, error, next);
   } else if (error.source === errorModule.ErrorSource.Storage) {
     storageErrorHandler(res, <storageTypes.StorageError>error, next);
@@ -48,7 +49,7 @@ export function restErrorHandler(res: express.Response, error: errorModule.CodeP
         sendForbiddenError(res, error.message);
         break;
       default:
-        console.log("Unknown REST error");
+        Logger.info("Unknown REST error").log();
         sendUnknownError(res, error, next);
         break;
     }
@@ -57,7 +58,11 @@ export function restErrorHandler(res: express.Response, error: errorModule.CodeP
 
 export function sendMalformedRequestError(res: express.Response, message: string): void {
   if (message) {
-    res.status(400).send(sanitizeHtml(message));
+    res.status(400).json({
+      status: "error",
+      message,
+      code: 400,
+    });
   } else {
     res.sendStatus(400);
   }
@@ -65,7 +70,11 @@ export function sendMalformedRequestError(res: express.Response, message: string
 
 export function sendForbiddenError(res: express.Response, message?: string): void {
   if (message) {
-    res.status(403).send(sanitizeHtml(message));
+    res.status(403).json({
+      status: "error",
+      message,
+      code: 403,
+    });
   } else {
     res.sendStatus(403);
   }
@@ -77,7 +86,11 @@ export function sendForbiddenPage(res: express.Response, message: string): void 
 
 export function sendNotFoundError(res: express.Response, message?: string): void {
   if (message) {
-    res.status(404).send(sanitizeHtml(message));
+    res.status(404).json({
+      status: "error",
+      message,
+      code: 404,
+    });
   } else {
     res.sendStatus(404);
   }
@@ -126,9 +139,9 @@ export function sendUnknownError(res: express.Response, error: any, next: Functi
   error = error || new Error("Unknown error");
 
   if (typeof error["stack"] === "string") {
-    console.log(error["stack"]);
+    Logger.info(error["stack"]).log();
   } else {
-    console.log(error);
+    Logger.info(error).setError(error).log();
   }
 
   res.sendStatus(500);
@@ -153,7 +166,7 @@ function storageErrorHandler(res: express.Response, error: storageTypes.StorageE
       break;
     case storageTypes.ErrorCode.Other:
     default:
-      console.log("Unknown storage error.");
+      Logger.error("Unknown storage error.").setError(error).log();
       sendUnknownError(res, error, next);
       break;
   }
