@@ -431,19 +431,27 @@ function getCaller3Info() {
  * @returns {*}
  */
 function errorSerializer(err) {
-  if (!err || !err.stack) return err;
-
-  return {
-    message: err.message,
-    rawUpstreamResponse: err.rawResponse, // this is set when we use super agent to make a rest call
-    status: err.status,
-    upstreamStatusCode: err.statusCode, // this is set when we use super agent to make a rest call
-    code: err.code,
-    signal: err.signal,
-    name: err.name,
-    body: err.body,
-    stack: parseErrorStack(err),
-  };
+  if (!err) return err;
+  
+  try {
+    return {
+      message: err.message,
+      rawUpstreamResponse: err.rawResponse,
+      status: err.status,
+      upstreamStatusCode: err.statusCode,
+      code: err.code,
+      signal: err.signal,
+      name: err.name,
+      body: err.body,
+      stack: err.stack ? parseErrorStack(err) : undefined
+    };
+  } catch (e) {
+    // Fallback if serialization fails
+    return {
+      message: String(err),
+      stack: err.stack || 'Stack trace unavailable'
+    };
+  }
 }
 
 /**
@@ -486,17 +494,20 @@ function parseErrorStack(error) {
     return error;
   }
 
-  const traces = parse(error);
-  const errorInfo = traces.map(function (trace) {
-    return {
-      function: trace.getFunctionName(),
-      file: trace.getFileName(),
-      line: trace.getLineNumber(),
-      column: trace.getColumnNumber(),
-    };
-  });
-
-  return errorInfo;
+  try {
+    const traces = parse(error);
+    return traces.map(function (trace) {
+      return {
+        function: trace.getFunctionName?.() || 'unknown',
+        file: trace.getFileName?.() || 'unknown',
+        line: trace.getLineNumber?.() || 0,
+        column: trace.getColumnNumber?.() || 0,
+      };
+    });
+  } catch (e) {
+    // Fallback if stack-trace parsing fails
+    return error.stack || error.message || String(error);
+  }
 }
 
 function reqSerializer(req, shouldAddReqOptions) {

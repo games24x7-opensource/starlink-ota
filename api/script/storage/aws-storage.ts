@@ -6,6 +6,7 @@ import shortid from "shortid";
 import stream from "stream";
 import { DynamoDB, S3 } from "aws-sdk";
 import AWS = require("aws-sdk");
+const Logger = require("../logger");
 
 import * as storage from "./storage";
 import * as utils from "../utils/common";
@@ -175,7 +176,7 @@ export class AwsStorage implements storage.Storage {
   }
 
   public reinitialize(accountName?: string, accountKey?: string): q.Promise<void> {
-    console.log("Re-initializing Azure storage");
+    Logger.info("Re-initializing Azure storage").log();
     return this.setup();
   }
 
@@ -228,6 +229,10 @@ export class AwsStorage implements storage.Storage {
                 );
               });
           });
+
+          /**
+           * We don't need this check for client server 
+           */
 
           const historyBucketCheck: q.Promise<void> = q.Promise<void>((bucketResolve, bucketReject) => {
             const params = {
@@ -289,7 +294,7 @@ export class AwsStorage implements storage.Storage {
         return account.id;
       })
       .catch((error) => {
-        console.error("AWS DynamoDB Error:", error);
+        Logger.error("AWS DynamoDB Error:").setError(error).log();
         throw error;
       });
   }
@@ -1207,14 +1212,14 @@ export class AwsStorage implements storage.Storage {
   }
 
   private setup(): q.Promise<void> {
-    console.log("\n=== AWS Configuration ===");
-    console.log("DynamoDB Table:", AwsStorage.TABLE_NAME);
-    console.log("Package History Bucket:", AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME);
-    console.log("Package Download Bucket:", AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME);
-    console.log("CDN URL:", AwsStorage.PACKAGE_DOWNLOAD_CDN_URL);
-    console.log("AWS Region:", process.env.AWS_REGION);
-    console.log("Environment:", process.env.NODE_ENV);
-    console.log("=====================\n");
+    Logger.info("\n=== AWS Configuration ===").log();
+    Logger.info("DynamoDB Table:", AwsStorage.TABLE_NAME).log();
+    Logger.info("Package History Bucket:", AwsStorage.PACKAGE_HISTORY_S3_BUCKET_NAME).log();
+    Logger.info("Package Download Bucket:", AwsStorage.PACKAGE_DOWNLOAD_CDN_S3_BUCKET_NAME).log();
+    Logger.info("CDN URL:", AwsStorage.PACKAGE_DOWNLOAD_CDN_URL).log();
+    Logger.info("AWS Region:", process.env.AWS_REGION).log();
+    Logger.info("Environment:", process.env.NODE_ENV).log();
+    Logger.info("=====================\n").log();
 
     return q.Promise<void>((resolve, reject) => {
       try {
@@ -1226,12 +1231,12 @@ export class AwsStorage implements storage.Storage {
         //TODO:  Only add credentials in local development or remove this
         // code and add in readme file for folks to run this locally
         if (process.env.NODE_ENV === "development") {
-          console.log("🔑 Using local AWS credentials");
+          Logger.info("🔑 Using local AWS credentials").log();
           awsConfig.credentials = new AWS.SharedIniFileCredentials({
             profile: "default",
           });
         } else {
-          console.log("🔒 Using IAM role credentials");
+          Logger.info("🔒 Using IAM role credentials").log();
         }
 
         AWS.config.update(awsConfig);
@@ -1251,15 +1256,15 @@ export class AwsStorage implements storage.Storage {
           .get(params)
           .promise()
           .then(() => {
-            console.log("✅ Successfully connected to DynamoDB");
+            Logger.info("✅ Successfully connected to DynamoDB").log();
             resolve();
           })
           .catch((error) => {
-            console.error("❌ Failed to connect to DynamoDB:", error.message);
+            Logger.error("❌ Failed to connect to DynamoDB:", error.message).log();
             reject(error);
           });
       } catch (error) {
-        console.error("❌ Failed to initialize AWS clients:", error.message);
+        Logger.error("❌ Failed to initialize AWS clients:", error.message).log();
         reject(error);
       }
     });
@@ -1636,7 +1641,7 @@ export class AwsStorage implements storage.Storage {
     return q.Promise((resolve, reject) => {
       this._dynamoDBClient.get(params, (error, data) => {
         if (error) {
-          console.error("AWS DynamoDB Error:", error);
+          Logger.error("AWS DynamoDB Error:").setError(error).log();
           return reject(error);
         }
         if (!data.Item) {
@@ -1716,7 +1721,7 @@ export class AwsStorage implements storage.Storage {
 
       return enrichedItems;
     } catch (error) {
-      console.error("Error in getCollectionByHierarchy:", error);
+      Logger.error("Error in getCollectionByHierarchy:").setError(error).log();
       throw error;
     }
   }

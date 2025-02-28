@@ -12,7 +12,7 @@ import { fileUploadMiddleware } from "./file-upload-manager";
 import { JsonStorage } from "./storage/json-storage";
 import { RedisManager } from "./redis-manager";
 import { Storage } from "./storage/storage";
-import { awsErrorMiddleware } from "./utils/awsErrorHandler";
+import { globalErrorHandler } from "./middleware/error-handler";
 const Logger = require("./logger");
 
 interface Secret {
@@ -136,7 +136,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
        * Management routes are disabled by default and enabled only when acquisition routes are off and management is enabled
        */
       if (process.env.DISABLE_ACQUISITION !== "true") {
-        console.log("CAUTION: Acquisition routes are enabled");
+        Logger.info("CAUTION: Acquisition routes are enabled").log();
         app.use(api.acquisition({ storage: storage, redisManager: redisManager }));
       } else {
         if (process.env.DISABLE_MANAGEMENT !== "true") {
@@ -149,14 +149,15 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
           } else {
             app.use(auth.router());
           }
-          console.log("CAUTION: Management routes are enabled");
+          Logger.info("CAUTION: Management routes are enabled").log();
           app.use(fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
         } else {
           app.use(auth.legacyRouter());
         }
       }
-      // Error handling middleware for AWS errors
-      app.use(awsErrorMiddleware);
+
+      // Global error handling - must be added last to catch all errors
+      app.use(globalErrorHandler);
       done(null, app, storage);
     })
     .done();
