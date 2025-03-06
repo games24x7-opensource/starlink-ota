@@ -1,7 +1,8 @@
 {
-  "name": "Starlink OTA Server",
+  "name": "starlink_ota_server",
   "version": "1.0.0",
-  "description": "Source code for the Starlink CodePush service API",
+  "author": "Suraj & Lokesh",
+  "description": "Source code for the Starlink CodePush services, CLI and Admin",
   "main": "./script/server.js",
   "scripts": {
     "ota:stage": "node --inspect -r dotenv/config ./dist/script/server.js dotenv_config_path=.server-stage.env dotenv_config_silent=true",
@@ -33,7 +34,6 @@
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
-  "author": "Suraj & Lokesh",
   "dependencies": {
     "applicationinsights": "^2.7.0",
     "aws-sdk": "^2.1692.0",
