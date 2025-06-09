@@ -1,8 +1,8 @@
-# CodePush Server
+# Starlink Server
 
-The CodePush Server is a Node.js application that powers the CodePush Service. It allows users to deploy and manage over-the-air updates for their react-native applications in a self-hosted environment.
+The Starlink Server is a Node.js application. It allows users to deploy and manage over-the-air updates for their react-native applications in a self-hosted environment.
 
-Please refer to [react-native-code-push](https://github.com/microsoft/react-native-code-push) for instructions on how to onboard your application to CodePush.
+Please refer to [react-native-code-push](https://github.com/microsoft/react-native-code-push) for instructions on how to onboard your client apps to CodePush.
 
 ## Deployment
 
@@ -15,14 +15,14 @@ Please refer to [react-native-code-push](https://github.com/microsoft/react-nati
 
 
 #### Steps
-To run the CodePush Server locally, follow these steps:
+To run the Starlink Server locally, follow these steps:
 1. Clone the CodePush Service repository.
 1. Create a `.env` file and configure the mandatory variables as outlined in the `ENVIRONMENT.md` file.
-1. Install dependencies by running `npm install`.
-1. Build the server by running `npm run build`.
-1. Start the server by running `npm run start:env`.
+1. Install dependencies by running `pnpm install`.
+1. Build the server by running `pnpm run build`.
+1. Start the server by running `pnpm run start:env`.
 
-By default, local CodePush server runs on HTTP. To run CodePush Server on HTTPS:
+By default, local Starlink Server runs on HTTP. To run Starlink Server on HTTPS:
 
 1. Create a `certs` directory and place `cert.key` (private key) and `cert.crt` (certificate) files there.
 2. Set environment variable [HTTPS](./ENVIRONMENT.md#https) to true.
@@ -30,35 +30,6 @@ By default, local CodePush server runs on HTTP. To run CodePush Server on HTTPS:
 
 For more detailed instructions and configuration options, please refer to the [ENVIRONMENT.md](./ENVIRONMENT.md) file.
 
-### Azure
-
-CodePush Server is designed to run as [Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/overview).
-
-#### Prerequisites
-
-To deploy CodePush to Azure, an active Azure account and subscription are needed. 
-For more information, follow Azure's [official documentation](https://azure.microsoft.com/en-us/get-started/).
-During the deployment process, the included bicep script will create bare minimum Azure services needed to run CodePush Server including:
-1. Service plan
-2. App Service
-3. Storage account
-
-Additionally, for user authentication, a GitHub or Microsoft OAuth application is needed. 
-More detailed instructions on how to set up one can be found in the section [OAuth Apps](#oauth-apps).
-
-#### Steps
-
-**NOTE** Please be aware of [project-suffix naming limitations](#project-suffix) for resources in Azure .
-
-1. Login to your Azure account: `az login`
-2. Select subscription for deployment: `az account set --subscription <subscription-id>`
-3. Create resource group for CodePush resources: `az group create --name <resource-group-name> --location <az-location eg. eastus>`
-4. Deploy infrastructure with the next command: `az deployment group create --resource-group <resource-group-name> --template-file ./codepush-infrastructure.bicep --parameters project_suffix=<project-suffix> az_location=<az-location eg. eastus> github_client_id=<github-client-id> github_client_secret=<github-client-secret> microsoft_client_id=<microsoft-client-id> microsoft_client_secret=<microsoft-client-secret>`. OAuth parameters (both GitHub and Microsoft) are optional. It is possible to specify them after the deployment in environment settings of Azure WebApp.
-5. Deploy CodePush to the Azure WebApp created during infrastructure deployment. Follow the Azure WebApp [official documentation](https://learn.microsoft.com/en-us/azure/app-service/) "Deployment and configuration" section for detailed instructions.
-
-> **Warning!** The created Azure Blob Storage has default access settings. 
-> This means that all users within the subscription can access the storage account tables. 
-> Adjusting the storage account access settings to ensure proper security is the responsibility of the owner.
 
 ## Configure react-native-code-push
 
@@ -84,7 +55,7 @@ in `Info.plist` file, add following lines, replacing `server-url` with your serv
 ## OAuth apps
 
 CodePush uses GitHub and Microsoft as identity providers, so for authentication purposes, you need to have an OAuth App registration for CodePush. 
-Client id and client secret created during registration should be provided to the CodePush server in environment variables. 
+Client id and client secret created during registration should be provided to the Starlink Server in environment variables. 
 Below are instructions on how to create OAuth App registrations.
 
 ### GitHub
@@ -129,13 +100,13 @@ Redis is required for Metrics to work.
 
 ----
 
-# CodePush Server: Continuous Deployment for Mobile Apps
+# Starlink Server: Continuous Deployment for Mobile Apps
 
-CodePush Server is a backend service that enables over-the-air updates for mobile applications, allowing developers to push updates directly to users' devices without going through app store review processes.
+Starlink Server is a backend service that enables over-the-air updates for mobile applications, allowing developers to push updates directly to users' devices without going through app store review processes.
 
 ## Project Description
 
-CodePush Server provides a robust infrastructure for managing and deploying mobile app updates. It offers a RESTful API for client SDKs to interact with, handling authentication, app management, and update distribution. The server is designed to work with various storage backends and can be deployed on different cloud platforms.
+Starlink Server provides a robust infrastructure for managing and deploying mobile app updates. It offers a RESTful API for client SDKs to interact with, handling authentication, app management, and update distribution. The server is designed to work with various storage backends and can be deployed on different cloud platforms.
 
 Key features include:
 
@@ -165,22 +136,9 @@ The server is built with Node.js and TypeScript, providing a scalable and mainta
 │   ├── script/             # CLI implementation
 │   ├── test/               # CLI tests
 │   └── package.json        # CLI dependencies
-├── azurite/                # Local Azure storage emulator
-└── deploy.sh               # Deployment script
 ```
 
 ## Usage Instructions
-
-### Installation
-
-Prerequisites:
-- Node.js (v18.0.0 or higher)
-- npm (v9.0.0 or higher)
-
-Steps:
-1. Clone the repository
-2. Navigate to the `api` directory
-3. Run `npm install` to install dependencies
 
 ### Configuration
 
@@ -215,18 +173,12 @@ For detailed logs:
 
 ## Data Flow
 
-1. Client SDK initiates request to CodePush Server
+1. Client SDK initiates request to Starlink Server
 2. Server authenticates request using access keys
 3. Request is routed to appropriate handler (e.g., app management, deployment)
 4. Server interacts with storage backend to retrieve or update data
 5. Response is sent back to client with requested information or confirmation
 
-```
-[Client SDK] <-> [API Routes] <-> [Core Logic] <-> [Storage Layer]
-                     ^
-                     |
-              [Authentication]
-```
 
 ## Deployment
 
@@ -248,7 +200,7 @@ The server uses the following key resources:
   - Purpose: Stores app, deployment, and account data
 
 - S3 Buckets (AWS):
-  - Names: `code-push-server-stage-v1`, `my11circle-logs`
+  - Names: `code-push-server-stage-v1`, `brand-logs`
   - Purpose: Store package files and deployment history
 
 - Azure Table (Azure):
@@ -263,7 +215,7 @@ The infrastructure is designed to be flexible, allowing deployment on either AWS
 
 ## API Flows
 
-CodePush Server provides several APIs for managing apps, deployments, and updates. Here's an overview of the main APIs and their flows:
+Starlink Server provides several APIs for managing apps, deployments, and updates. Here's an overview of the main APIs and their flows:
 
 ### Authentication
 
@@ -344,4 +296,4 @@ CodePush Server provides several APIs for managing apps, deployments, and update
   4. Optionally, stores detailed logs in the history blob container
   5. Responds with acknowledgment
 
-These API flows demonstrate how CodePush Server interacts with various storage layers (Redis, DynamoDB/Azure Table, S3/Azure Blob) to manage apps, deployments, and updates efficiently. The use of caching (Redis) and separation of concerns between different storage types allows for scalable and performant operations.
+These API flows demonstrate how Starlink Server interacts with various storage layers (Redis, DynamoDB/Azure Table, S3/Azure Blob) to manage apps, deployments, and updates efficiently. The use of caching (Redis) and separation of concerns between different storage types allows for scalable and performant operations.
