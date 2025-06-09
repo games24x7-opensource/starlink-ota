@@ -207,7 +207,7 @@ export function getAcquisitionRouter(config: AcquisitionConfig): express.Router 
         );
       }
 
-      let requestQueryParams = req.query || {};
+      const requestQueryParams = req.query || {};
       let fromCache: boolean = true;
       let redisError: Error;
 

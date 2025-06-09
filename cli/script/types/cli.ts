@@ -3,6 +3,7 @@
 
 import AccountManager = require("../management-sdk");
 
+/* eslint-disable no-unused-vars */
 export enum CommandType {
   accessKeyAdd,
   accessKeyPatch,
@@ -225,6 +226,7 @@ export type ReleaseHook = (
   originalCommand: IReleaseCommand,
   sdk: AccountManager
 ) => Q.Promise<IReleaseCommand | void>;
+/* eslint-enable no-unused-vars */
 
 export interface ReleaseFile {
   sourceLocation: string; // The current location of the file on disk

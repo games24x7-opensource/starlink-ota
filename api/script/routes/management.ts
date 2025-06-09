@@ -328,7 +328,7 @@ export function getManagementRouter(config: ManagementConfig): Router {
             })
             .then((deploymentNames: string[]): void => {
               res.setHeader("Location", urlEncode([`/apps/${storageApp.name}`]));
-              let respData = converterUtils.toRestApp(storageApp, /*displayName=*/ storageApp.name, deploymentNames);
+              const respData = converterUtils.toRestApp(storageApp, /*displayName=*/ storageApp.name, deploymentNames);
 
               Logger.info("[Starlink::Admin::Create-App").setExpressReq(req).setData({ respData, appRequest }).log();
               res.status(201).send({ app: respData });

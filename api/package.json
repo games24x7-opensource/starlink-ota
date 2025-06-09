@@ -1,16 +1,16 @@
 {
-  "name": "starlink_ota_server",
+  "name": "@starlink/api",
   "version": "1.0.0",
   "author": "Suraj & Lokesh",
-  "description": "Source code for the Starlink CodePush services, CLI and Admin",
-  "main": "./script/server.js",
+  "description": "Starlink CodePush API Server - Client and Admin services",
+  "main": "./dist/script/server.js",
   "scripts": {
     "ota:stage": "node --inspect -r dotenv/config ./dist/script/server.js dotenv_config_path=.server-stage.env dotenv_config_silent=true",
     "ota:prod": "node -r dotenv/config ./dist/script/server.js dotenv_config_path=.server-prod.env dotenv_config_silent=true",
     "admin:stage": "node --inspect -r dotenv/config ./dist/script/server.js dotenv_config_path=.admin-stage.env dotenv_config_silent=true",
     "admin:prod": "node -r dotenv/config ./dist/script/server.js dotenv_config_path=.admin-prod.env dotenv_config_silent=true",
-    "dev": "NODE_ENV=development nodemon --watch 'script/**/*.ts' --ignore 'dist/' --exec 'yarn build && yarn dev:start' --signal SIGTERM",
-    "dev:admin": "NODE_ENV=development nodemon --watch 'script/**/*.ts' --ignore 'dist/' --exec 'yarn build && yarn admin:stage' --signal SIGTERM",
+    "dev": "NODE_ENV=development nodemon --watch 'script/**/*.ts' --ignore 'dist/' --exec 'pnpm build && pnpm dev:start' --signal SIGTERM",
+    "dev:admin": "NODE_ENV=development nodemon --watch 'script/**/*.ts' --ignore 'dist/' --exec 'pnpm build && pnpm admin:stage' --signal SIGTERM",
     "dev:start": "NODE_ENV=development node --inspect -r dotenv/config ./dist/script/server.js dotenv_config_path=.dev.env dotenv_config_silent=true",
     "dev:debug": "NODE_ENV=development node --inspect-brk -r dotenv/config ./dist/script/server.js dotenv_config_path=.dev.env dotenv_config_silent=true",
     "clean": "rimraf dist",
@@ -28,11 +28,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://bitbucket.org/pgbitbucket/code-push-server"
+    "url": "https://github.com/games24x7/starlink-ota-server"
   },
   "engines": {
     "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "pnpm": ">=8.0.0"
   },
   "dependencies": {
     "applicationinsights": "^2.7.0",
@@ -97,13 +97,13 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "yarn test"
+      "pre-push": "pnpm test"
     }
   },
   "lint-staged": {
     "*.ts": [
-      "yarn lint",
-      "yarn prettier"
+      "pnpm lint",
+      "pnpm prettier"
     ]
   }
 }

@@ -12,7 +12,8 @@ const which = require("which");
 
 interface IDebugPlatform {
   getLogProcess(): any;
-  normalizeLogMessage(message: string): string;
+  // eslint-disable-next-line no-unused-vars
+  normalizeLogMessage(_message: string): string;
 }
 
 class AndroidDebugPlatform implements IDebugPlatform {
@@ -48,20 +49,20 @@ class AndroidDebugPlatform implements IDebugPlatform {
   private getNumberOfAvailableDevices(): number {
     const output = childProcess.execSync("adb devices").toString();
     const matches = output.match(/\b(device)\b/gim);
-    if (matches != null) {
+    if (matches !== null) {
       return matches.length;
     }
     return 0;
   }
 
-  public normalizeLogMessage(message: string): string {
+  public normalizeLogMessage(_message: string): string {
     // Check to see whether the message includes the source URL
     // suffix, and if so, strip it. This can occur in Android Cordova apps.
-    const sourceURLIndex: number = message.indexOf('", source: file:///');
+    const sourceURLIndex: number = _message.indexOf('", source: file:///');
     if (~sourceURLIndex) {
-      return message.substring(0, sourceURLIndex);
+      return _message.substring(0, sourceURLIndex);
     } else {
-      return message;
+      return _message;
     }
   }
 }
@@ -92,8 +93,8 @@ class iOSDebugPlatform implements IDebugPlatform {
     return childProcess.spawn("tail", ["-f", logFilePath]);
   }
 
-  public normalizeLogMessage(message: string): string {
-    return message;
+  public normalizeLogMessage(_message: string): string {
+    return _message;
   }
 }
 
@@ -110,10 +111,10 @@ function processLogData(logData: Buffer) {
 
       // Strip the CodePush-specific, platform agnostic
       // log message prefix that is added to each entry.
-      const message = line.substring(line.indexOf(logMessagePrefix) + logMessagePrefix.length);
+      const messageContent = line.substring(line.indexOf(logMessagePrefix) + logMessagePrefix.length);
 
       const timeStamp = moment().format("hh:mm:ss");
-      return `[${timeStamp}] ${message}`;
+      return `[${timeStamp}] ${messageContent}`;
     })
     .forEach((line: string) => console.log(line));
 }

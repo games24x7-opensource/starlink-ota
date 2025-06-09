@@ -1,0 +1,49 @@
+{
+  "name": "starlink_ota",
+  "version": "1.0.0",
+  "description": "Starlink OTA Server - Extended CodePush Server with AWS Integration",
+  "private": true,
+  "author": "Suraj & Lokesh",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/games24x7/starlink-ota-server"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "build:api": "pnpm --filter @starlink/api build",
+    "build:cli": "pnpm --filter @starlink/cli build",
+    "build:dashboard": "pnpm --filter @starlink/dashboard build",
+    "dev": "pnpm --filter @starlink/api dev",
+    "dev:admin": "pnpm --filter @starlink/api dev:admin",
+    "dev:dashboard": "pnpm --filter @starlink/dashboard dev",
+    "dev:dashboard:local": "pnpm --filter @starlink/dashboard dev:local",
+    "start:api": "pnpm --filter @starlink/api start",
+    "start:cli": "pnpm --filter @starlink/cli start",
+    "start:dashboard": "pnpm --filter @starlink/dashboard start",
+    "test": "pnpm -r test",
+    "test:api": "pnpm --filter @starlink/api test",
+    "test:cli": "pnpm --filter @starlink/cli test",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "prettier": "pnpm -r prettier",
+    "clean": "pnpm -r clean",
+    "prepare": "husky install"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "husky": "^8.0.3",
+    "lint-staged": "^15.0.0",
+    "prettier": "^2.8.8"
+  },
+  "lint-staged": {
+    "*.{ts,js,json,md}": [
+      "prettier --write"
+    ],
+    "*.ts": [
+      "pnpm lint:fix"
+    ]
+  }
+}

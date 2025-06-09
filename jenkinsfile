@@ -13,17 +13,4 @@ pipeline {
                 }
             }
         }
-        // stage("Building Docker ARM Image") {
-        //     agent {
-        //         label 'node_v20.12.0_j11_arm_amazonv3'
-        //     }
-        //      steps {
-        //         script {
-        //             commonProperties.checkoutToSubdirectory(dir: 'assets')
-        //             nodeWorkflow.call(file: 'assets/config-arm64-nodeworkflow.yaml')
-        //             dockerArmWorkflow.call(file: 'assets/config-arm64-dockerarmworkflow.yaml', appName: 'code-push-server')
-        //         }
-        //     }
-        // }
-    }
 }

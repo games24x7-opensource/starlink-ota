@@ -1,12 +1,12 @@
 {
-  "name": "@games24x7/starlink-cli",
+  "name": "@starlink/cli",
   "version": "0.1.0",
-  "description": "Management CLI for the CodePush service",
+  "description": "Starlink CodePush CLI - Management tool for CodePush deployments",
   "main": "./bin/script/cli.js",
   "scripts": {
     "start": "node ./bin/script/cli.js",
     "build": "tsc && chmod +x ./bin/script/cli.js",
-    "prepublishOnly": "yarn build",
+    "prepublishOnly": "pnpm build",
     "prettier": "prettier --write \"./**/*.ts\"",
     "lint": "npx eslint ./script/**/*.ts",
     "lint:fix": "npx eslint ./script/**/*.ts --fix",
@@ -18,14 +18,11 @@
   "bin": {
     "starlink-cli": "./bin/script/cli.js"
   },
-  "publishConfig": {
-    "registry": "https://verdaccio.games24x7.com"
-  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/microsoft/code-push-server"
+    "url": "https://github.com/games24x7/starlink-ota-server"
   },
-  "author": "Microsoft",
+  "author": "Suraj & Lokesh",
   "dependencies": {
     "backslash": "^0.2.0",
     "chalk": "^4.1.2",
