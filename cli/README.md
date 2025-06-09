@@ -1,4 +1,4 @@
-# CodePush CLI
+# Starlink CLI
 
 The CodePush CLI is a Node.js application that allows users to interact with CodePush Server.
 
