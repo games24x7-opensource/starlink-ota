@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "target": "es6",
+    "outDir": "./dist",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "strict": false,
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "exclude": ["./dist", "./node_modules"]
+}
