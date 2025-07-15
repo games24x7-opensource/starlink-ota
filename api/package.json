@@ -1,7 +1,7 @@
 {
   "name": "@starlink/api",
   "version": "1.0.0",
-  "author": "Suraj & Lokesh",
+  "author": "Suraj & Lokesh Inumpudi",
   "description": "Starlink CodePush API Server - Client and Admin services",
   "main": "./dist/script/server.js",
   "scripts": {

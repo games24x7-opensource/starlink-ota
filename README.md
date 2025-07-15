@@ -2,13 +2,13 @@
 
 [![License](https://img.shields.io/badge/license-Placeholder-blue.svg)](LICENSE.txt) <!-- Replace with your actual license badge -->
 
-An extended, self-hosted CodePush server designed for robust and scalable Over-the-Air (OTA) updates for mobile applications. This project builds upon the foundation of Microsoft's CodePush server, providing an AWS-centric backend implementation (DynamoDB, S3, Redis) while maintaining extensibility for other cloud providers. It has been battle-tested in production environments, powering updates for applications like My11Circle.
+An extended, self-hosted starlink-ota server designed for robust and scalable Over-the-Air (OTA) updates for mobile applications. This project builds upon the foundation of Microsoft's starlink-ota server, providing an AWS-centric backend implementation (DynamoDB, S3, Redis) while maintaining extensibility for other cloud providers. It has been battle-tested in production environments, powering updates for applications like My11Circle.
 
 ![Architecture Overview](./docs/arch_overview.png)
 
 ## Overview
 
-This CodePush server allows developers to instantly deploy mobile application updates directly to users' devices without waiting for app store approvals. It provides the backend infrastructure necessary for the `react-native-code-push` client SDK (and potentially other CodePush-compatible SDKs) to check for and download updates.
+This starlink-ota server allows developers to instantly deploy mobile application updates directly to users' devices without waiting for app store approvals. It provides the backend infrastructure necessary for the `react-native-code-push` client SDK (and potentially other CodePush-compatible SDKs) to check for and download updates.
 
 The system comprises:
 
@@ -25,7 +25,7 @@ The system comprises:
   - **S3**: For storing OTA update bundles.
   - **Redis**: For caching update checks and other frequently accessed data to enhance performance.
 - **Extensible Design**: While optimized for AWS, the storage adapter can be extended or replaced to support other cloud providers or on-premise solutions.
-- **Client API (`/api`)**: Core server logic providing endpoints for the CodePush SDK.
+- **Client API (`/api`)**: Core server logic providing endpoints for the CodePush client SDK.
 - **Command-Line Interface (`/cli`)**: Powerful CLI for developers to manage apps, deployments, and releases.
 - **OTA Dashboard (`/dashboard`)**: Modern React-based web interface with real-time metrics, release management, and analytics.
 - **Metrics & Release Management**: Track deployment success/failure rates and manage release history (facilitated by the Admin Server and OTA Dashboard).
@@ -125,7 +125,7 @@ starlink-ota-server/
     pnpm dev:admin
     ```
 
-    By default, the local CodePush server might run on HTTP. Refer to `api/ENVIRONMENT.md` or specific config files for HTTPS setup if needed.
+    By default, the local starlink-ota server might run on HTTP. Refer to `api/ENVIRONMENT.md` or specific config files for HTTPS setup if needed.
 
 ### Available Commands
 
@@ -180,7 +180,7 @@ Detailed configuration options, especially environment variables, should be docu
 
 ### Client SDK Configuration
 
-To make your React Native application use your self-hosted CodePush server, you need to configure it in your app:
+To make your React Native application use your self-hosted starlink-ota server, you need to configure it in your app:
 
 **Android:**
 In `android/app/src/main/res/values/strings.xml`, add:
@@ -233,7 +233,7 @@ The CLI is used to manage your CodePush applications, deployments, and releases.
 
 ### Dashboard Usage
 
-The OTA Dashboard is a modern React-based web interface for managing CodePush deployments.
+The OTA Dashboard is a modern React-based web interface for managing starlink-ota deployments.
 
 1.  **Build the Dashboard (if not already built):**
 
@@ -286,7 +286,7 @@ The API endpoints are primarily consumed by the `react-native-code-push` SDK and
 
 ## Deployment
 
-Deploying this CodePush server to a production environment involves setting up the Client Server and Admin Server, configuring them to use your production AWS resources (DynamoDB, S3, Redis), and ensuring they are scalable and secure.
+Deploying this starlink-ota server to a production environment involves setting up the Client Server and Admin Server, configuring them to use your production AWS resources (DynamoDB, S3, Redis), and ensuring they are scalable and secure.
 
 - **Infrastructure**: Provision your AWS resources (DynamoDB tables with appropriate indexing and capacity, S3 buckets with correct permissions and lifecycle policies, ElastiCache for Redis).
 - **Server Deployment**: Deploy the `api` application (which contains both Client and Admin server logic, or they might be separate deployable units) to a hosting platform (e.g., AWS ECS, EKS, EC2, or an App Service like Azure App Service if adapted).
