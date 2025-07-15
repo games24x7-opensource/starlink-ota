@@ -295,16 +295,3 @@ Deploying this starlink-ota server to a production environment involves setting 
 - **Monitoring & Logging**: Set up comprehensive monitoring and logging for all components.
 - **Security**: Secure your servers, databases, and storage. Ensure proper authentication and authorization for administrative actions.
 
-## Contributing
-
-We welcome contributions! Please read our `CONTRIBUTING.md` (you'll need to create this file) for guidelines on how to contribute, report bugs, or suggest features. This typically includes:
-
-- Forking the repository.
-- Creating a feature branch.
-- Writing tests for your changes.
-- Ensuring code quality and style consistency.
-- Submitting a pull request.
-
-## License
-
-This project is licensed under the [YOUR_LICENSE_NAME](LICENSE.txt). (You'll need to create `LICENSE.txt` and choose an appropriate open-source license, e.g., MIT, Apache 2.0).
